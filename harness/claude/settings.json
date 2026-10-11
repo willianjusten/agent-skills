@@ -92,5 +92,8 @@
       "**Org-specific CLIs**: None configured",
       "No routine-under-prefix qualifiers found"
     ]
+  },
+  "skillOverrides": {
+    "anthropic-skills:skill-creator": "off"
   }
 }
