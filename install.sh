@@ -8,12 +8,11 @@ CLAUDE_HOME="$HOME/.claude"
 GLOBAL_SKILLS="$CLAUDE_HOME/skills"
 SPOKE_DIR="${SPOKE_DIR:-$HOME/Developer/spoke}"
 OWN_SKILLS="$ROOT/skills"
-VENDOR_DIR="$ROOT/vendor/mattpocock"
-VENDOR_STORE="$VENDOR_DIR/.agents/skills"
-VENDOR_SOURCE="mattpocock/skills"
+VENDOR_ROOT="$ROOT/vendor"
 SCOPES_FILE="$ROOT/scopes.json"
 DIST_SPOKE="$ROOT/dist/spoke"
 SKILLS_CLI="skills@1.7.2"
+VALIDATOR="$VENDOR_ROOT/robonuggets/skill-creator-plus/.agents/skills/skill-creator-plus/scripts/validate_skill.py"
 
 # Upstream ships `code-review`, which collides with Claude Code's built-in skill.
 # Format: "<upstream name>:<installed name>".
@@ -29,6 +28,7 @@ usage() {
   cat <<EOF
 Usage:
   ./install.sh [--update] [--force]   link skills and harness config
+  ./install.sh check                  validate own skills (skill-creator-plus validator + scope)
   ./install.sh init-project [dir]     add AGENTS.md and a CLAUDE.md importing it
 
   --update   refresh vendored skills from upstream before linking
@@ -123,52 +123,73 @@ link_harness() {
   link_path "$ROOT/harness/claude/matt-skills" "$CLAUDE_HOME/matt-skills"
 }
 
-# Runs the skills CLI inside the vendor store, showing its output only on failure.
+# Vendored sources are the top-level keys of scopes.json, e.g. "mattpocock/skills".
+vendor_sources() {
+  jq -r 'keys[]' "$SCOPES_FILE"
+}
+
+vendor_store() {
+  echo "$VENDOR_ROOT/$1/.agents/skills"
+}
+
+vendored_scope() {
+  jq -r --arg source "$1" --arg name "$2" '.[$source][$name] // "unlisted"' "$SCOPES_FILE"
+}
+
+# Runs the skills CLI inside one vendor directory, showing its output only on failure.
 run_skills_cli() {
-  local output
-  if ! output="$(cd "$VENDOR_DIR" && npx -y "$SKILLS_CLI" "$@" 2>&1)"; then
+  local source="$1" output
+  shift
+  mkdir -p "$VENDOR_ROOT/$source"
+  if ! output="$(cd "$VENDOR_ROOT/$source" && npx -y "$SKILLS_CLI" "$@" 2>&1)"; then
     echo "$output" >&2
-    echo "skills CLI failed: $*" >&2
+    echo "skills CLI failed in vendor/$source: $*" >&2
     exit 1
   fi
 }
 
-vendored_scope() {
-  jq -r --arg name "$1" '.[$name] // "unlisted"' "$SCOPES_FILE"
-}
+update_vendor_source() {
+  local source="$1" store installed_name upstream_name scope to_add="" to_remove=""
+  store="$(vendor_store "$source")"
+  echo "Updating vendored skills from $source..."
+  [ -f "$VENDOR_ROOT/$source/skills-lock.json" ] && run_skills_cli "$source" update -y
 
-update_vendored() {
-  echo "Updating vendored skills from $VENDOR_SOURCE..."
-  run_skills_cli update -y
-
-  local installed_name upstream_name scope to_add="" to_remove=""
-  for installed_name in $(jq -r 'to_entries[] | select(.value != "off") | .key' "$SCOPES_FILE"); do
+  for installed_name in $(jq -r --arg source "$source" '.[$source] | to_entries[] | select(.value != "off") | .key' "$SCOPES_FILE"); do
     upstream_name="$(upstream_name_of "$installed_name")"
-    [ -d "$VENDOR_STORE/$upstream_name" ] || to_add="$to_add $upstream_name"
+    [ -d "$store/$upstream_name" ] || to_add="$to_add $upstream_name"
   done
-  for upstream_name in $(ls "$VENDOR_STORE"); do
-    scope="$(vendored_scope "$(installed_name_of "$upstream_name")")"
-    case "$scope" in off | unlisted) to_remove="$to_remove $upstream_name" ;; esac
-  done
+  if [ -d "$store" ]; then
+    for upstream_name in $(ls "$store"); do
+      scope="$(vendored_scope "$source" "$(installed_name_of "$upstream_name")")"
+      case "$scope" in off | unlisted) to_remove="$to_remove $upstream_name" ;; esac
+    done
+  fi
   if [ -n "$to_add" ]; then
     # shellcheck disable=SC2086
-    run_skills_cli add "$VENDOR_SOURCE" -s $to_add -y
-    log_change "added vendored skills:$to_add"
+    run_skills_cli "$source" add "$source" -s $to_add -y
+    log_change "added from $source:$to_add"
   fi
   if [ -n "$to_remove" ]; then
     # shellcheck disable=SC2086
-    run_skills_cli remove $to_remove -y
-    log_change "removed vendored skills:$to_remove"
+    run_skills_cli "$source" remove $to_remove -y
+    log_change "removed from $source:$to_remove"
   fi
 
   local upstream_list
-  upstream_list="$(cd "$VENDOR_DIR" && npx -y "$SKILLS_CLI" add "$VENDOR_SOURCE" -l 2>&1 |
+  upstream_list="$(cd "$VENDOR_ROOT/$source" && npx -y "$SKILLS_CLI" add "$source" -l 2>&1 |
     perl -pe 's/\e\[[0-9;]*m//g' | perl -ne 'print "$1\n" if /^\S+\s{4}([a-z0-9][a-z0-9-]*)\s*$/')"
   for upstream_name in $upstream_list; do
-    [ "$(vendored_scope "$(installed_name_of "$upstream_name")")" = "unlisted" ] &&
-      log_manual "new upstream skill, add it to scopes.json to decide: $upstream_name"
+    [ "$(vendored_scope "$source" "$(installed_name_of "$upstream_name")")" = "unlisted" ] &&
+      log_manual "new upstream skill in $source, add it to scopes.json to decide: $upstream_name"
   done
   return 0
+}
+
+update_vendored() {
+  local source
+  for source in $(vendor_sources); do
+    update_vendor_source "$source"
+  done
 }
 
 # Replaces one literal string in a vendored file. Fails loudly when neither the
@@ -186,14 +207,17 @@ patch_file() {
 }
 
 apply_renames() {
-  patch_file "$VENDOR_STORE/code-review/SKILL.md" "name: code-review" "name: matt-code-review"
-  patch_file "$VENDOR_STORE/ask-matt/SKILL.md" '`/code-review`' '`/matt-code-review`'
-  patch_file "$VENDOR_STORE/implement/SKILL.md" '"code-review"' '"matt-code-review"'
-  patch_file "$VENDOR_STORE/implement-spec/SKILL.md" '`code-review`' '`matt-code-review`'
-  patch_file "$VENDOR_STORE/tdd/SKILL.md" 'the `code-review` skill' 'the `matt-code-review` skill'
+  local matt_store
+  matt_store="$(vendor_store mattpocock/skills)"
+  [ -d "$matt_store" ] || return 0
+  patch_file "$matt_store/code-review/SKILL.md" "name: code-review" "name: matt-code-review"
+  patch_file "$matt_store/ask-matt/SKILL.md" '`/code-review`' '`/matt-code-review`'
+  patch_file "$matt_store/implement/SKILL.md" '"code-review"' '"matt-code-review"'
+  patch_file "$matt_store/implement-spec/SKILL.md" '`code-review`' '`matt-code-review`'
+  patch_file "$matt_store/tdd/SKILL.md" 'the `code-review` skill' 'the `matt-code-review` skill'
 
   local leftovers
-  leftovers="$(grep -rnE '(^|[^-])code-review' "$VENDOR_STORE" || true)"
+  leftovers="$(grep -rnE '(^|[^-])code-review' "$matt_store" || true)"
   if [ -n "$leftovers" ]; then
     echo "Unpatched code-review references in vendored skills:" >&2
     echo "$leftovers" >&2
@@ -210,6 +234,7 @@ frontmatter_scope() {
     in_metadata && /^[^ \t]/ { in_metadata = 0 }
     in_metadata && /^[ \t]+scope:/ {
       sub(/^[ \t]+scope:[ \t]*/, "")
+      sub(/[ \t]*#.*$/, "")
       gsub(/["'\'' \t]/, "")
       print
       exit
@@ -217,19 +242,29 @@ frontmatter_scope() {
   ' "$1"
 }
 
+# Own skills live one category deep: skills/<category>/<name>/SKILL.md.
+own_skill_dirs() {
+  local skill_file
+  for skill_file in "$OWN_SKILLS"/*/*/SKILL.md; do
+    [ -f "$skill_file" ] && dirname "$skill_file"
+  done
+  return 0
+}
+
 # Prints "<name> <scope> <path>" for every skill in the repo.
 resolve_skills() {
-  local skill_dir name scope
-  for skill_dir in "$OWN_SKILLS"/*/; do
-    [ -f "$skill_dir/SKILL.md" ] || continue
+  local skill_dir name scope source
+  for skill_dir in $(own_skill_dirs); do
     name="$(basename "$skill_dir")"
     scope="$(frontmatter_scope "$skill_dir/SKILL.md")"
-    echo "$name ${scope:-missing} ${skill_dir%/}"
+    echo "$name ${scope:-missing} $skill_dir"
   done
-  for skill_dir in "$VENDOR_STORE"/*/; do
-    [ -f "$skill_dir/SKILL.md" ] || continue
-    name="$(installed_name_of "$(basename "$skill_dir")")"
-    echo "$name $(vendored_scope "$name") ${skill_dir%/}"
+  for source in $(vendor_sources); do
+    for skill_dir in "$(vendor_store "$source")"/*/; do
+      [ -f "$skill_dir/SKILL.md" ] || continue
+      name="$(installed_name_of "$(basename "$skill_dir")")"
+      echo "$name $(vendored_scope "$source" "$name") ${skill_dir%/}"
+    done
   done
 }
 
@@ -334,6 +369,26 @@ check_cursor_duplicates() {
   done
 }
 
+# Validates own skills: skill-creator-plus validator, a valid scope, and a README.
+check_own_skills() {
+  command -v python3 >/dev/null || { echo "check needs python3" >&2; exit 1; }
+  [ -f "$VALIDATOR" ] || { echo "Validator missing: run ./install.sh --update" >&2; exit 1; }
+  local skill_dir scope failed=0 checked=0
+  for skill_dir in $(own_skill_dirs); do
+    checked=$((checked + 1))
+    echo "== ${skill_dir#"$ROOT"/}"
+    python3 "$VALIDATOR" "$skill_dir" || failed=1
+    scope="$(frontmatter_scope "$skill_dir/SKILL.md")"
+    case "$scope" in
+      personal | both | spoke | off) ;;
+      *) echo "ERROR scope: metadata.scope must be personal, both, spoke or off (found '${scope:-nothing}')"; failed=1 ;;
+    esac
+    [ -f "$skill_dir/README.md" ] || { echo "ERROR readme: missing README.md (see AGENTS.md)"; failed=1; }
+  done
+  [ "$checked" -eq 0 ] && echo "No own skills under skills/<category>/<name>/ yet."
+  return "$failed"
+}
+
 init_project() {
   local project_dir="${1:-.}"
   [ -d "$project_dir" ] || { echo "No such directory: $project_dir" >&2; exit 1; }
@@ -350,10 +405,16 @@ init_project() {
 }
 
 main() {
-  if [ "${1:-}" = "init-project" ]; then
-    init_project "${2:-.}"
-    exit 0
-  fi
+  case "${1:-}" in
+    init-project)
+      init_project "${2:-.}"
+      exit 0
+      ;;
+    check)
+      check_own_skills
+      exit $?
+      ;;
+  esac
   local argument
   for argument in "$@"; do
     case "$argument" in

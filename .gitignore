@@ -1,4 +1,4 @@
 .scratch/
 .DS_Store
 dist/
-vendor/*/.claude/
+vendor/*/*/.claude/
