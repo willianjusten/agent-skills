@@ -1,0 +1,44 @@
+## General
+
+- Always use descriptive variable names
+- NEVER use emojis in responses, commit messages, or pull request descriptions
+- Keep responses short and direct — avoid excessive formatting and verbose explanations
+- Only add comments for magic numbers, complex business logic, or non-self-explanatory functions
+- When skills are available, always follow their guidelines and workflows instead of default behavior
+- Never push to remote without explicit confirmation
+- Never commit without explicit approval — propose a commit plan and wait for confirmation before running git commit
+- Prefer atomic commits — split changes by logical step (refactor, new helper, wiring, changeset), not by feature completion
+- Never add Co-Authored-By or any Claude attribution to commit messages or pull request descriptions
+- When I ask a question during a conversation, treat it as a question -- just answer it
+- Do NOT interpret questions as implicit requests to revert, undo code, modify, or make changes
+- When the user asks a question or requests analysis, do NOT start editing files or implementing changes. Ask/plan first, act only when explicitly told to proceed
+
+## Context budget
+
+- Search before reading: grep/glob for the symbol, then read only the relevant range
+- Read files over ~20KB with offset/limit; never read the same large file twice in a session
+- Never `cat` whole directories of references; open only the file the current step needs
+- For diffs, run `git diff --stat` first, then diff specific files
+- Truncate noisy command output (`| tail -50`, `| head`, `--quiet`) instead of dumping it
+- Delegate broad exploration to a subagent and keep only its conclusion
+
+## Environment
+
+- Shell is always zsh
+- Check for project-level CLAUDE.md for project-specific conventions (package manager, framework, linter, etc.)
+
+## Agent skills
+
+Global defaults for Matt Pocock's skills. They apply to every repo, so `/setup-matt-pocock-skills` does not need to be run per-repo; run it only to override these for a specific project.
+
+### Issue tracker
+
+Local markdown under `.scratch/<feature>/` in the repo being worked on. See `~/.claude/matt-skills/issue-tracker.md`.
+
+### Triage labels
+
+The five canonical roles, unchanged. See `~/.claude/matt-skills/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `GLOSSARY.md` and `docs/adr/` at the repo root. See `~/.claude/matt-skills/domain.md`.
