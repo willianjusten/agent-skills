@@ -38,5 +38,8 @@
     "writing-beats": "off",
     "writing-fragments": "off",
     "writing-shape": "off"
+  },
+  "robonuggets/skill-creator-plus": {
+    "skill-creator-plus": "personal"
   }
 }

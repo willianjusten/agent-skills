@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "skill-creator-plus": {
+      "source": "robonuggets/skill-creator-plus",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "64e7d9d71adcaa344ceffb311bdd85cf54305d8f2609747e92cfedb0e70bb9b0"
+    }
+  }
+}
