@@ -310,6 +310,8 @@ setup_spoke() {
     log_change "updated skillOverrides in $settings_file"
   fi
 
+  # Created even when empty, since agentplan.jsonc lists it as a skill source.
+  mkdir -p "$DIST_SPOKE"
   local name
   for name in $spoke_names; do
     link_path "$(resolve_skills | awk -v name="$name" '$1 == name { print $3 }')" "$DIST_SPOKE/$name"
