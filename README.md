@@ -41,19 +41,19 @@ Then:
 | **codebase-design** | mattpocock | both | model | Shared vocabulary for deep modules, interfaces and seams |
 | **prototype** | mattpocock | both | model | Throwaway prototype to answer a design question |
 | **research** | mattpocock | both | model | Primary-source research captured as a Markdown file |
-| **domain-modeling** | mattpocock | personal | model | Sharpen domain terms in `GLOSSARY.md` and record ADRs |
+| **domain-modeling** | mattpocock | both | model | Sharpen domain terms in `GLOSSARY.md` and record ADRs |
 | **pr** | mattpocock | personal | model | Write a PR body |
 | **wizard** | mattpocock | personal | model | Interactive bash wizard for steps only a human can do |
-| **to-spec** | mattpocock | personal | /name | Turn the conversation into a spec in the issue tracker |
-| **to-tickets** | mattpocock | personal | /name | Split a spec into tracer-bullet tickets with blocking edges |
-| **implement** | mattpocock | personal | /name | Build one piece of work from a spec or tickets |
-| **implement-spec** | mattpocock | personal | /name | Build a whole spec with subagents on an integration branch |
-| **wayfinder** | mattpocock | personal | /name | Plan work too big for one session as a map of decision tickets |
-| **triage** | mattpocock | personal | /name | Move issues and PRs through triage roles into agent-ready briefs |
-| **improve-codebase-architecture** | mattpocock | personal | /name | Find deepening opportunities, report them, grill the chosen one |
-| **grill-with-docs** | mattpocock | personal | /name | Grill a plan and write the glossary and ADRs as you go |
+| **to-spec** | mattpocock | both | /name | Turn the conversation into a spec in the issue tracker |
+| **to-tickets** | mattpocock | both | /name | Split a spec into tracer-bullet tickets with blocking edges |
+| **implement** | mattpocock | both | /name | Build one piece of work from a spec or tickets |
+| **implement-spec** | mattpocock | both | /name | Build a whole spec with subagents on an integration branch |
+| **wayfinder** | mattpocock | both | /name | Plan work too big for one session as a map of decision tickets |
+| **triage** | mattpocock | both | /name | Move issues and PRs through triage roles into agent-ready briefs |
+| **improve-codebase-architecture** | mattpocock | both | /name | Find deepening opportunities, report them, grill the chosen one |
+| **grill-with-docs** | mattpocock | both | /name | Grill a plan and write the glossary and ADRs as you go |
 | **setup-matt-pocock-skills** | mattpocock | personal | /name | Per-repo override of the global issue tracker, labels and docs setup |
-| **retro** | mattpocock | personal | /name | Retrospective on a session, aimed at the agent's environment |
+| **retro** | mattpocock | both | /name | Retrospective on a session, aimed at the agent's environment |
 
 ### Productivity
 
@@ -65,7 +65,7 @@ Then:
 | **wait-what** | mattpocock | both | /name | Re-pitch the last message when it did not land |
 | **writing-for-agents** | mattpocock | personal | model | Write skills, AGENTS.md and CLAUDE.md for agents |
 | **skill-creator-plus** | robonuggets | personal | model | Audit, create and improve skills against Anthropic's authoring rules |
-| **ask-matt** | mattpocock | personal | /name | Router: which skill or flow fits the situation |
+| **ask-matt** | mattpocock | both | /name | Router: which skill or flow fits the situation |
 | **teach** | mattpocock | personal | /name | Teach a new skill or concept within the workspace |
 | **to-questionnaire** | mattpocock | personal | /name | Turn an open decision into a questionnaire for someone else |
 
