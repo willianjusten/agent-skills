@@ -13,6 +13,16 @@
 - Do NOT interpret questions as implicit requests to revert, undo code, modify, or make changes
 - When the user asks a question or requests analysis, do NOT start editing files or implementing changes. Ask/plan first, act only when explicitly told to proceed
 
+## Code design
+
+- When a change edits the same control flow in two or more places, extract it into one function in that change instead of deferring it. Keep each caller's own answer (scope, flags) as an explicit argument; no defaults, shared constants or wrappers that hide it
+- Trust inputs an earlier step already validated or narrowed. The receiving function uses that result and documents the precondition; it does not repeat the check
+- Do not add a wrapper that only forwards an argument to a function that already exists
+- Before moving or extracting a function, check what tests import and mock, and keep it reachable through the module the tests already mock
+- Add a type, branch or error only for a state a caller can reach. Reuse the types callers already share
+- Give each type or helper one import path. Import it from the module that owns it; do not re-export it from a second module
+- In Spoke repos, place new or moved code per spoke-knowledge's code-organization doc: nearest shared boundary on real reuse, explicit named export from the module's public surface
+
 ## Context budget
 
 - Search before reading: grep/glob for the symbol, then read only the relevant range
