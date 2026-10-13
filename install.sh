@@ -215,6 +215,10 @@ apply_renames() {
   patch_file "$matt_store/implement/SKILL.md" '"code-review"' '"matt-code-review"'
   patch_file "$matt_store/implement-spec/SKILL.md" '`code-review`' '`matt-code-review`'
   patch_file "$matt_store/tdd/SKILL.md" 'the `code-review` skill' 'the `matt-code-review` skill'
+  patch_file "$matt_store/code-review/SKILL.md" \
+    '→ extract the shared shape, call it from both.' \
+    '→ extract the shared shape and call it from every copy. When the diff itself edits every copy, report it as a fix for this change, not a follow-up.
+- **Repeated Check**: a function re-validates or re-narrows an input its caller already resolved, so two places encode the same rule. → keep the check in the earlier step; the later function uses the result and documents the precondition.'
 
   local leftovers
   leftovers="$(grep -rnE '(^|[^-])code-review' "$matt_store" || true)"
