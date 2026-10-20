@@ -10,7 +10,7 @@ flowchart TD
     START -->|yes| EX[existing: discover real commands, change nothing that works]
     NEW --> V[verify script: typecheck, lint, test, build]
     EX --> V
-    V --> DOCS[AGENTS.md under 15 lines, CLAUDE.md, docs/architecture.md, docs/patterns/]
+    V --> DOCS[AGENTS.md under 15 lines, CLAUDE.md, docs/architecture.md, docs/patterns/, docs/GOTCHAS.md]
     DOCS --> Q[strict tsconfig, lint and boundary rules, ratchet in verify]
     Q --> WT[scripts/worktree-setup.sh: deps, .env, own port and database]
     WT --> CI[CI runs verify, setup-pre-commit]
@@ -33,7 +33,7 @@ flowchart TD
 
 - `AGENTS.md`, `CLAUDE.md` (`@AGENTS.md`), `verify` and `ratchet` scripts in `package.json`
 - Strict tsconfig flags, lint rules (oxlint or ESLint, whichever the repo uses), `knip.json`, `scripts/ratchet.mjs`, `.ratchet.json`; `stryker.config.mjs` only on request
-- `scripts/worktree-setup.sh`, `docs/architecture.md`, `docs/patterns/`, `docs/adr/0001-stack.md` (new only)
+- `scripts/worktree-setup.sh`, `docs/architecture.md`, `docs/patterns/`, `docs/GOTCHAS.md`, `docs/adr/0001-stack.md` (new only)
 - `.github/workflows/verify.yml`, `.husky/pre-commit`, `.claude/afk.json`, `.scratch/` in `.gitignore`
 
 ## Requirements

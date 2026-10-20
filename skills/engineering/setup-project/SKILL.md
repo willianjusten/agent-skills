@@ -41,7 +41,7 @@ setup-project progress:
 
 **Step 3. verify.** Add a `verify` script to `package.json` that runs typecheck, lint, test and build in that order and stops at the first failure, using only scripts that exist (in mode new, add any missing one; in mode existing, list a missing one in the report instead of inventing it). Run it. If it fails on the fresh scaffold, fix the scaffold and run it again; in an existing repo, report the failure and leave the code alone, even when a stop hook blocks finishing because `verify` fails: answer the hook with the report and stop again, since fixing the app is the user's call. Done when `verify` exits 0, or the failure is in the report.
 
-**Step 4. Instructions and docs.** Fill references/templates/AGENTS.md; write `CLAUDE.md` as the single line `@AGENTS.md` (when `CLAUDE.md` exists without that line, add it at the top). Fill references/templates/architecture.md into `docs/architecture.md`, and create `docs/patterns/.gitkeep`. Done when AGENTS.md is under 15 lines, has no placeholder left and names no source path.
+**Step 4. Instructions and docs.** Fill references/templates/AGENTS.md; write `CLAUDE.md` as the single line `@AGENTS.md` (when `CLAUDE.md` exists without that line, add it at the top). Fill references/templates/architecture.md into `docs/architecture.md`, copy references/templates/GOTCHAS.md to `docs/GOTCHAS.md`, and create `docs/patterns/.gitkeep`. Done when AGENTS.md is under 15 lines, has no placeholder left and names no source path.
 
 **Step 5. Quality.** Follow references/quality.md: strict tsconfig flags, lint rules with boundaries filled from `docs/architecture.md`, and `scripts/ratchet.mjs` chained into `verify` after lint. In mode existing it adds only what cannot fail today and reports the rest with error counts. Done when `verify` exits 0 (or its failure is in the report) and `.ratchet.json` exists.
 
@@ -58,4 +58,4 @@ setup-project progress:
 - [references/discover.md](references/discover.md) - where the real commands, env vars and CI live in an existing repo, and the findings table. Open in Step 1, mode existing.
 - [references/new-stack.md](references/new-stack.md) - the stack questions, defaults and scaffold rules. Open in Step 2.
 - [references/quality.md](references/quality.md) - tsconfig, lint and boundary rules, the ratchet, optional Stryker, per mode. Open in Step 5.
-- `references/templates/` - `AGENTS.md`, `architecture.md`, `adr-0001-stack.md`, `tsconfig-strict.json`, `oxlintrc.json`, `eslint.config.mjs`, `knip.json`, `ratchet.mjs`, `stryker.config.mjs`, `worktree-setup.sh`, `ci.yml`, `afk.json`. Each step names the one it fills.
+- `references/templates/` - `AGENTS.md`, `architecture.md`, `GOTCHAS.md`, `adr-0001-stack.md`, `tsconfig-strict.json`, `oxlintrc.json`, `eslint.config.mjs`, `knip.json`, `ratchet.mjs`, `stryker.config.mjs`, `worktree-setup.sh`, `ci.yml`, `afk.json`. Each step names the one it fills.

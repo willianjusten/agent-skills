@@ -8,3 +8,4 @@
 <- One line per non-standard command, for example `<pm> run db:reset` recreates the dev database.>
 
 Architecture and module boundaries: `docs/architecture.md`. Patterns to copy: `docs/patterns/`. Decisions: `docs/adr/`.
+Known traps: docs/GOTCHAS.md
