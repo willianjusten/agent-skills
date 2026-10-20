@@ -11,7 +11,8 @@ flowchart TD
     NEW --> V[verify script: typecheck, lint, test, build]
     EX --> V
     V --> DOCS[AGENTS.md under 15 lines, CLAUDE.md, docs/architecture.md, docs/patterns/]
-    DOCS --> WT[scripts/worktree-setup.sh: deps, .env, own port and database]
+    DOCS --> Q[strict tsconfig, lint and boundary rules, ratchet in verify]
+    Q --> WT[scripts/worktree-setup.sh: deps, .env, own port and database]
     WT --> CI[CI runs verify, setup-pre-commit]
     CI --> PUSH{remote?}
     PUSH -->|no| MAN[afk.json: manual]
@@ -30,7 +31,8 @@ flowchart TD
 
 ## Output
 
-- `AGENTS.md`, `CLAUDE.md` (`@AGENTS.md`), a `verify` script in `package.json`
+- `AGENTS.md`, `CLAUDE.md` (`@AGENTS.md`), `verify` and `ratchet` scripts in `package.json`
+- Strict tsconfig flags, lint rules (oxlint or ESLint, whichever the repo uses), `knip.json`, `scripts/ratchet.mjs`, `.ratchet.json`; `stryker.config.mjs` only on request
 - `scripts/worktree-setup.sh`, `docs/architecture.md`, `docs/patterns/`, `docs/adr/0001-stack.md` (new only)
 - `.github/workflows/verify.yml`, `.husky/pre-commit`, `.claude/afk.json`, `.scratch/` in `.gitignore`
 
@@ -42,4 +44,5 @@ flowchart TD
 ## FAQ
 
 - Does it commit? No. It ends with a report of what it added, kept or found missing.
+- What does the ratchet do? It fails `verify` when unused code, duplication or complexity warnings grow, and lowers `.ratchet.json` when they shrink.
 - Why worktree-setup.sh? Parallel agents each get a worktree; without their own port and database they collide.

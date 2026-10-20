@@ -20,6 +20,6 @@ Record the answers in `docs/adr/0001-stack.md` before scaffolding, with the reas
 
 1. Use the framework's own generator with its TypeScript template (for example `pnpm create vite . --template react-ts`), run non-interactively in the current folder. Never hand-write what a generator produces.
 2. Add the chosen styling, data client and test runner with their documented setup.
-3. Make sure `package.json` has `typecheck` (`tsc --noEmit`, or `tsc -b` for project references), `lint`, `test` (single run, not watch mode) and `build`. Turn on `strict` in `tsconfig.json` if the generator did not.
+3. Make sure `package.json` has `typecheck` (`tsc --noEmit`, or `tsc -b` for project references), `lint`, `test` (single run, not watch mode) and `build`. Step 5 of SKILL.md makes them strict.
 4. Add one smoke test that renders the root component, so `test` proves something on day one.
 5. Install, then run each of the four scripts. Fix the scaffold until all pass.

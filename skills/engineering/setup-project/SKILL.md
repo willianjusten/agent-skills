@@ -1,6 +1,6 @@
 ---
 name: setup-project
-description: Set up a new or existing TypeScript and React repo for agent work - AGENTS.md, verify, worktree setup, architecture docs, CI, pre-commit and push policy.
+description: Set up a new or existing TypeScript and React repo for agent work - AGENTS.md, verify, quality checks and ratchet, worktree setup, architecture docs, CI, pre-commit and push policy.
 disable-model-invocation: true
 metadata:
   scope: personal
@@ -9,7 +9,7 @@ metadata:
 
 # setup-project
 
-`/setup-project` gives a repo what unattended agents need: one `verify` command that proves work is done, worktrees that do not share a database or port, short instructions, and a push policy. Mode **new** grills the stack and scaffolds an empty folder; mode **existing** fits an existing repo without changing what already works.
+`/setup-project` gives a repo what unattended agents need: one `verify` command that proves work is done, checks that keep quality from slipping, worktrees that do not share a database or port, short instructions, and a push policy. Mode **new** grills the stack and scaffolds an empty folder; mode **existing** fits an existing repo without changing what already works.
 
 ## Rules for every run
 
@@ -28,10 +28,11 @@ setup-project progress:
 - [ ] 2 Stack recorded and scaffolded (new only)
 - [ ] 3 verify script runs green
 - [ ] 4 AGENTS.md, CLAUDE.md, docs/ written
-- [ ] 5 worktree-setup.sh written and run once
-- [ ] 6 CI workflow and pre-commit in place
-- [ ] 7 Push policy in .claude/afk.json; issue tracker switched if branch
-- [ ] 8 .scratch/ ignored, report given
+- [ ] 5 Strict tsconfig, lint rules and ratchet in verify
+- [ ] 6 worktree-setup.sh written and run once
+- [ ] 7 CI workflow and pre-commit in place
+- [ ] 8 Push policy in .claude/afk.json; issue tracker switched if branch
+- [ ] 9 .scratch/ ignored, report given
 ```
 
 **Step 1. Pick the mode.** An empty folder, or one with no `package.json`, is **new**: `git init` it if needed. Anything else is **existing**: follow references/discover.md and keep its findings table for the report. Done when you know the package manager and the real typecheck, lint, test and build commands (or that one is missing).
@@ -42,16 +43,19 @@ setup-project progress:
 
 **Step 4. Instructions and docs.** Fill references/templates/AGENTS.md; write `CLAUDE.md` as the single line `@AGENTS.md` (when `CLAUDE.md` exists without that line, add it at the top). Fill references/templates/architecture.md into `docs/architecture.md`, and create `docs/patterns/.gitkeep`. Done when AGENTS.md is under 15 lines, has no placeholder left and names no source path.
 
-**Step 5. Worktrees.** Copy references/templates/worktree-setup.sh to `scripts/worktree-setup.sh`, make it executable, and set the variables at its top from what Step 1 found (the env var that holds the port, the one that holds the database URL or name). Run it once in the main checkout: it must exit 0 and change nothing there. Done when that run is clean.
+**Step 5. Quality.** Follow references/quality.md: strict tsconfig flags, lint rules with boundaries filled from `docs/architecture.md`, and `scripts/ratchet.mjs` chained into `verify` after lint. In mode existing it adds only what cannot fail today and reports the rest with error counts. Done when `verify` exits 0 (or its failure is in the report) and `.ratchet.json` exists.
 
-**Step 6. CI and pre-commit.** With no CI config, fill references/templates/ci.yml into `.github/workflows/verify.yml`. With one, add nothing: two workflows running the same checks drift apart, so report which `verify` steps it skips and the one-line change that would make it run `verify`. Then, unless a pre-commit hook already exists, invoke the `setup-pre-commit` skill, skipping its final commit step, since this skill reports before anything is committed. Done when a pre-commit hook exists and its staged-file check passes.
+**Step 6. Worktrees.** Copy references/templates/worktree-setup.sh to `scripts/worktree-setup.sh`, make it executable, and set the variables at its top from what Step 1 found (the env var that holds the port, the one that holds the database URL or name). Run it once in the main checkout: it must exit 0 and change nothing there. Done when that run is clean.
 
-**Step 7. Push policy.** Check `git remote -v`. Without a remote, write `.claude/afk.json` as `{ "push": "manual" }` without asking. With one, ask: `manual` (AFK runs push nothing, the default) or `branch` (AFK runs push ticket and integration branches and open a draft PR). Write the answer from references/templates/afk.json. On `branch`, read and follow `~/.claude/skills/setup-matt-pocock-skills/SKILL.md` (it is not model-invocable, so the Skill tool refuses it) and choose GitHub Issues; put its `## Agent skills` block in `AGENTS.md`, not `CLAUDE.md`, so every harness reads it. Done when `afk.json` is valid JSON.
+**Step 7. CI and pre-commit.** With no CI config, fill references/templates/ci.yml into `.github/workflows/verify.yml`. With one, add nothing: two workflows running the same checks drift apart, so report which `verify` steps it skips and the one-line change that would make it run `verify`. Then, unless a pre-commit hook already exists, invoke the `setup-pre-commit` skill, skipping its final commit step, since this skill reports before anything is committed. Done when a pre-commit hook exists and its staged-file check passes.
 
-**Step 8. Finish.** Add `.scratch/` to `.gitignore` if missing. Re-run `verify`; if it now fails, go back to the step that broke it. Then reply with the report: a table of every target from the checklist with `added`, `kept` (already there) or `missing` and why, plus the Step 1 findings in mode existing. Commit nothing unless asked.
+**Step 8. Push policy.** Check `git remote -v`. Without a remote, write `.claude/afk.json` as `{ "push": "manual" }` without asking. With one, ask: `manual` (AFK runs push nothing, the default) or `branch` (AFK runs push ticket and integration branches and open a draft PR). Write the answer from references/templates/afk.json. On `branch`, read and follow `~/.claude/skills/setup-matt-pocock-skills/SKILL.md` (it is not model-invocable, so the Skill tool refuses it) and choose GitHub Issues; put its `## Agent skills` block in `AGENTS.md`, not `CLAUDE.md`, so every harness reads it. Done when `afk.json` is valid JSON.
+
+**Step 9. Finish.** Add `.scratch/` to `.gitignore` if missing. Re-run `verify`; if it now fails, go back to the step that broke it. Then reply with the report: a table of every target from the checklist with `added`, `kept` (already there) or `missing` and why, plus the Step 1 findings in mode existing. Commit nothing unless asked.
 
 ## Resources
 
 - [references/discover.md](references/discover.md) - where the real commands, env vars and CI live in an existing repo, and the findings table. Open in Step 1, mode existing.
 - [references/new-stack.md](references/new-stack.md) - the stack questions, defaults and scaffold rules. Open in Step 2.
-- `references/templates/` - `AGENTS.md`, `architecture.md`, `adr-0001-stack.md`, `worktree-setup.sh`, `ci.yml`, `afk.json`. Each step names the one it fills.
+- [references/quality.md](references/quality.md) - tsconfig, lint and boundary rules, the ratchet, optional Stryker, per mode. Open in Step 5.
+- `references/templates/` - `AGENTS.md`, `architecture.md`, `adr-0001-stack.md`, `tsconfig-strict.json`, `oxlintrc.json`, `eslint.config.mjs`, `knip.json`, `ratchet.mjs`, `stryker.config.mjs`, `worktree-setup.sh`, `ci.yml`, `afk.json`. Each step names the one it fills.
