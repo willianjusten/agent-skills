@@ -228,6 +228,14 @@ On every run it also renames Matt's `code-review` to `matt-code-review`, since t
 
 Requirements: `git` and `jq`; `--update` also needs node >= 22.20; `check` needs `python3`. The `agent-browser` skill needs its CLI: `npm i -g agent-browser@0.39.1 && agent-browser install`.
 
+Library docs come from the Context7 MCP server, installed once at user scope. It works without a key; `install.sh` warns when it is missing but does not install it:
+
+```bash
+claude mcp add --scope user --transport http context7 https://mcp.context7.com/mcp
+```
+
+For higher rate limits, add a free key from context7.com/dashboard with `--header "Authorization: Bearer <key>"`.
+
 ## Spoke
 
 Spoke's own skills come from its workspace and `agentplan`; this repo adds a thin layer on top:
