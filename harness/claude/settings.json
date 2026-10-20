@@ -1,14 +1,39 @@
 {
-  "env": {
-    "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
-  },
   "permissions": {
     "allow": [
       "Bash(grep *)",
       "Bash(find *)",
       "Bash(npm *)",
       "Bash(pnpm *)",
-      "Bash(yarn *)"
+      "Bash(yarn *)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git show *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git switch *)",
+      "Bash(git worktree *)",
+      "Bash(git merge *)",
+      "Bash(git rebase *)",
+      "Bash(npx tsc *)",
+      "Bash(git push -u origin *)",
+      "Bash(gh pr create --draft *)",
+      "Bash(gh issue *)",
+      "Bash(gh pr view *)",
+      "Bash(agent-browser open *)",
+      "Bash(agent-browser snapshot *)",
+      "Bash(agent-browser screenshot *)"
+    ],
+    "deny": [
+      "Bash(git push --force *)",
+      "Bash(gh pr merge *)",
+      "Bash(git reset --hard *)",
+      "Bash(git clean *)",
+      "Bash(rm -rf *)",
+      "Bash(npm run db:reset *)",
+      "Bash(pnpm run db:reset *)",
+      "Read(./.env*)"
     ],
     "defaultMode": "auto"
   },
@@ -101,7 +126,7 @@
       }
     }
   },
-  "effortLevel": "high",
+  "effortLevel": "medium",
   "modelSettings": {
     "claude-fable-5-1": {
       "effortLevel": "medium"
