@@ -41,5 +41,8 @@
   },
   "robonuggets/skill-creator-plus": {
     "skill-creator-plus": "personal"
+  },
+  "vercel-labs/agent-browser": {
+    "agent-browser": "personal"
   }
 }
