@@ -49,6 +49,7 @@ Then:
 | **implement** | mattpocock | both | /name | Build one piece of work from a spec or tickets |
 | **implement-spec** | mattpocock | both | /name | Build a whole spec with subagents on an integration branch |
 | **afk** | own | personal | /name | Run a spec's ticket graph unattended within the usage budget, ending in a report |
+| **agent-browser** | vercel-labs | personal | model | Browser automation CLI; collects UI evidence for AFK tickets |
 | **wayfinder** | mattpocock | both | /name | Plan work too big for one session as a map of decision tickets |
 | **triage** | mattpocock | both | /name | Move issues and PRs through triage roles into agent-ready briefs |
 | **improve-codebase-architecture** | mattpocock | both | /name | Find deepening opportunities, report them, grill the chosen one |
@@ -189,7 +190,8 @@ agent-skills/
 │   └── product/<name>/
 ├── vendor/
 │   ├── mattpocock/skills/          managed by `npx skills`: .agents/skills/ + skills-lock.json
-│   └── robonuggets/skill-creator-plus/
+│   ├── robonuggets/skill-creator-plus/
+│   └── vercel-labs/agent-browser/
 ├── scopes.json                     scope for each vendored skill, grouped by source
 ├── harness/
 │   ├── shared/instructions.md      ~/.claude/CLAUDE.md and Cursor User Rules
@@ -223,7 +225,7 @@ agent-skills/
 
 On every run it also renames Matt's `code-review` to `matt-code-review`, since the original name collides with Claude Code's built-in `/code-review`. Nothing else in `~/.claude` is touched: `skills/synced/` (claude.ai skills), `projects/`, plugins and history stay as they are. A second run prints `No changes.`
 
-Requirements: `git` and `jq`; `--update` also needs node >= 22.20; `check` needs `python3`.
+Requirements: `git` and `jq`; `--update` also needs node >= 22.20; `check` needs `python3`. The `agent-browser` skill needs its CLI: `npm i -g agent-browser@0.39.1 && agent-browser install`.
 
 ## Spoke
 
