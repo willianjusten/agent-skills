@@ -6,8 +6,9 @@ Run a spec's ticket graph unattended and come back to a report.
 
 ```mermaid
 flowchart TD
-    READ[read spec, tickets, afk.json] --> BR[integration branch + explorer notes]
-    BR --> BUD{budget.sh}
+    READ[read spec, tickets, afk.json] --> BR[integration branch]
+    BR --> IS[implement-spec skill, with afk's overrides: explorer notes]
+    IS --> BUD{budget.sh}
     BUD -->|go| FR[frontier.sh: ready, unblocked, max 2, no shared Areas]
     FR --> IMP[implementer per ticket, own worktree]
     IMP --> MRG[merger]
@@ -37,7 +38,7 @@ flowchart TD
 
 ## Requirements
 
-- Sibling skills and agents it calls by name: `implement-spec` (the flow it follows), the `explorer`, `implementer`, `merger` and `reviewer` subagents, and `tdd` (through the implementer).
+- Sibling skills and agents it calls by name: `implement-spec` (its SKILL.md is read and followed with afk's overrides, since it is not model-invocable), the `explorer`, `implementer`, `merger` and `reviewer` subagents, and `tdd` (through the implementer).
 - `jq` and `git`; `gh` only with `"push": "branch"`.
 - The statusline usage cache at `~/.cache/claude-statusline/usage-api.json` for the budget guard. Without it the run carries on, capped only by the 2-implementer limit and the two fix rounds.
 - Tickets in the local markdown tracker format, with `.scratch/` gitignored.
