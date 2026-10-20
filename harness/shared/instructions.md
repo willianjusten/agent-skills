@@ -31,18 +31,7 @@ Applies when working a ticket whose Status is `ready-for-agent` or `in-progress`
 - Only add comments for magic numbers, complex business logic, or non-self-explanatory functions
 - Prefer atomic commits — split changes by logical step (refactor, new helper, wiring, changeset), not by feature completion
 - Never add Co-Authored-By or any Claude attribution to commit messages or pull request descriptions
-- When I ask a question during a conversation, treat it as a question -- just answer it
-- Do NOT interpret questions as implicit requests to revert, undo code, modify, or make changes
-- When the user asks a question or requests analysis, do NOT start editing files or implementing changes. Ask/plan first, act only when explicitly told to proceed
-
-## Code design
-
-- When a change edits the same control flow in two or more places, extract it into one function in that change instead of deferring it. Keep each caller's own answer (scope, flags) as an explicit argument; no defaults, shared constants or wrappers that hide it
-- Trust inputs an earlier step already validated or narrowed. The receiving function uses that result and documents the precondition; it does not repeat the check
-- Do not add a wrapper that only forwards an argument to a function that already exists
-- Before moving or extracting a function, check what tests import and mock, and keep it reachable through the module the tests already mock
-- Add a type, branch or error only for a state a caller can reach. Reuse the types callers already share
-- Give each type or helper one import path. Import it from the module that owns it; do not re-export it from a second module
+- Questions are questions: when I ask a question or request analysis, answer it. Do not edit, revert or implement until I explicitly say to proceed
 
 ## Context budget
 
@@ -61,16 +50,8 @@ Applies when working a ticket whose Status is `ready-for-agent` or `in-progress`
 
 ## Agent skills
 
-Global defaults for Matt Pocock's skills. They apply to every repo, so `/setup-matt-pocock-skills` does not need to be run per-repo; run it only to override these for a specific project.
+Global defaults for Matt Pocock's skills in every repo; run `/setup-matt-pocock-skills` only to override them per project.
 
-### Issue tracker
-
-Local markdown under `.scratch/<feature>/` in the repo being worked on. See `~/.claude/matt-skills/issue-tracker.md`.
-
-### Triage labels
-
-The five canonical roles, unchanged. See `~/.claude/matt-skills/triage-labels.md`.
-
-### Domain docs
-
-Single-context: `GLOSSARY.md` and `docs/adr/` at the repo root. See `~/.claude/matt-skills/domain.md`.
+- **Issue tracker**: local markdown under `.scratch/<feature>/` in the repo being worked on. See `~/.claude/matt-skills/issue-tracker.md`.
+- **Triage labels**: the five canonical roles, unchanged. See `~/.claude/matt-skills/triage-labels.md`.
+- **Domain docs**: single-context, `GLOSSARY.md` and `docs/adr/` at the repo root. See `~/.claude/matt-skills/domain.md`.

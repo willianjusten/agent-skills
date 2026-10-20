@@ -43,8 +43,7 @@ On top of whatever the repo documents, the Standards axis always carries the **s
 Each smell reads *what it is* → *how to fix*; match it against the diff:
 
 - **Mysterious Name**: a function, variable, or type whose name doesn't reveal what it does or holds. → rename it; if no honest name comes, the design's murky.
-- **Duplicated Code**: the same logic shape appears in more than one hunk or file in the change. → extract the shared shape and call it from every copy. When the diff itself edits every copy, report it as a fix for this change, not a follow-up.
-- **Repeated Check**: a function re-validates or re-narrows an input its caller already resolved, so two places encode the same rule. → keep the check in the earlier step; the later function uses the result and documents the precondition.
+- **Duplicated Code**: the same logic shape appears in more than one hunk or file in the change. → extract the shared shape, call it from both.
 - **Feature Envy**: a method that reaches into another object's data more than its own. → move the method onto the data it envies.
 - **Data Clumps**: the same few fields or params keep travelling together (a type wanting to be born). → bundle them into one type, pass that.
 - **Primitive Obsession**: a primitive or string standing in for a domain concept that deserves its own type. → give the concept its own small type.
