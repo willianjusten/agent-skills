@@ -5,7 +5,7 @@ When rules conflict: safety rules > AFK mode > skill instructions > style.
 ## Safety (always)
 
 - Never push to or merge into the default branch, force-push, delete remote branches, or merge PRs.
-- Other pushes follow the project's `.claude/afk.json` (missing file = `manual`).
+- Other pushes follow the project's `.claude/afk.json` (missing file = `manual`: push only when my latest prompt asks for it).
 - Never read or print `.env*` contents or secrets.
 
 ## Interactive mode (default)
