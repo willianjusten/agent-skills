@@ -1,10 +1,13 @@
 #!/bin/bash
 # Tests for the afk skill's scripts: frontier.sh picks which tickets may start,
-# budget.sh turns the statusline usage cache into go, hold or stop.
+# budget.sh turns the statusline usage cache into go, hold or stop, learnings.sh
+# collects ticket learnings, and gotchas.sh flags stale or long docs/GOTCHAS.md.
 
 REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 FRONTIER="$REPO_ROOT/skills/engineering/afk/scripts/frontier.sh"
 BUDGET="$REPO_ROOT/skills/engineering/afk/scripts/budget.sh"
+LEARNINGS="$REPO_ROOT/skills/engineering/afk/scripts/learnings.sh"
+GOTCHAS="$REPO_ROOT/skills/engineering/afk/scripts/gotchas.sh"
 FIXTURE_DIR=$(mktemp -d)
 trap 'rm -rf "$FIXTURE_DIR"' EXIT
 failures=0
@@ -78,5 +81,40 @@ expect "a missing cache is unknown" "go unknown" bash "$BUDGET" "$FIXTURE_DIR/mi
 expect "AFK_USAGE_CACHE points at another cache" "hold 85" env AFK_USAGE_CACHE="$FIXTURE_DIR/mid.json" bash "$BUDGET"
 printf 'not json' >"$FIXTURE_DIR/broken.json"
 expect "an unreadable cache is unknown" "go unknown" bash "$BUDGET" "$FIXTURE_DIR/broken.json"
+
+# Toy run: 01 hit a planted trap and logged two learnings, 02 hit nothing,
+# 03 was done in an earlier run. A "Learning:" line outside ## Done is ignored.
+mkdir -p "$FIXTURE_DIR/lessons/issues"
+printf '# 01: Fixture\n\nStatus: done\n\n## What to build\n\nLearning: not a learning, just ticket text.\n\n## Done\n\n- abc1234\n- Learning: `parseInvoice` rounds half-even, so totals need `roundMoney`.\nLearning: the checkout e2e test is flaky under 2 workers.\n\n## Comments\n\nLearning: a comment, not a learning.\n' \
+  >"$FIXTURE_DIR/lessons/issues/01-fixture.md"
+printf '# 02: Fixture\n\nStatus: done\n\n## Done\n\n- def5678\n' >"$FIXTURE_DIR/lessons/issues/02-fixture.md"
+printf '# 03: Fixture\n\nStatus: done\n\n## Done\n\nLearning: from an earlier run.\n' >"$FIXTURE_DIR/lessons/issues/03-fixture.md"
+
+expect "learnings come only from ## Done, tagged with the ticket" \
+  "$(printf '01: `parseInvoice` rounds half-even, so totals need `roundMoney`.\n01: the checkout e2e test is flaky under 2 workers.\n03: from an earlier run.')" \
+  bash "$LEARNINGS" "$FIXTURE_DIR/lessons"
+expect "learnings narrow to this run's tickets" \
+  "$(printf '01: `parseInvoice` rounds half-even, so totals need `roundMoney`.\n01: the checkout e2e test is flaky under 2 workers.')" \
+  bash "$LEARNINGS" "$FIXTURE_DIR/lessons" 01 02
+expect "no learnings prints nothing" "" bash "$LEARNINGS" "$FIXTURE_DIR/lessons" 2
+
+# Toy repo: parseInvoice and src/money.ts exist, chargeCard was deleted.
+project="$FIXTURE_DIR/project"
+mkdir -p "$project/src" "$project/docs"
+git -C "$project" init -q
+printf 'export function parseInvoice() {}\n' >"$project/src/invoice.ts"
+printf 'export const roundMoney = 1\n' >"$project/src/money.ts"
+printf '# Gotchas\n\n- `parseInvoice` rounds half-even: wrap totals in `roundMoney`.\n- `chargeCard` retries twice: never wrap it in another retry.\n- `src/money.ts` is generated: edit the schema instead.\n- Ports below 1024 need root.\n' >"$project/docs/GOTCHAS.md"
+git -C "$project" add -A
+
+expect "a gotcha naming a deleted function is stale" \
+  'stale 4: `chargeCard` not found' \
+  bash "$GOTCHAS" "$project"
+for filler in $(seq 1 27); do echo "- filler $filler" >>"$project/docs/GOTCHAS.md"; done
+expect "past 30 lines the file is flagged too" \
+  "$(printf 'stale 4: `chargeCard` not found\nlong: 33 lines, limit 30')" \
+  bash "$GOTCHAS" "$project"
+rm "$project/docs/GOTCHAS.md"
+expect "no GOTCHAS.md prints nothing" "" bash "$GOTCHAS" "$project"
 
 [ "$failures" -eq 0 ] || exit 1
