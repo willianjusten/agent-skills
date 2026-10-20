@@ -51,6 +51,7 @@ Then:
 | **afk** | own | personal | /name | Run a spec's ticket graph unattended within the usage budget, ending in a report |
 | **setup-project** | own | personal | /name | Ready a new or existing TS/React repo for agents: verify, quality ratchet, AGENTS.md, worktrees, CI, push policy |
 | **agent-browser** | vercel-labs | personal | model | Browser automation CLI; collects UI evidence for AFK tickets |
+| **frontend-design** | anthropics | personal | model | Distinctive visual direction for new or reshaped UI, instead of templated layouts |
 | **wayfinder** | mattpocock | both | /name | Plan work too big for one session as a map of decision tickets |
 | **triage** | mattpocock | both | /name | Move issues and PRs through triage roles into agent-ready briefs |
 | **improve-codebase-architecture** | mattpocock | both | /name | Find deepening opportunities, report them, grill the chosen one |
@@ -190,6 +191,7 @@ agent-skills/
 │   ├── productivity/<name>/
 │   └── product/<name>/
 ├── vendor/
+│   ├── anthropics/skills/
 │   ├── mattpocock/skills/          managed by `npx skills`: .agents/skills/ + skills-lock.json
 │   ├── robonuggets/skill-creator-plus/
 │   └── vercel-labs/agent-browser/
