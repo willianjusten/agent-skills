@@ -113,6 +113,12 @@ check_prerequisites() {
     fi
   fi
   command -v agentplan >/dev/null || log_warning "agentplan not found; Spoke cannot regenerate its skills"
+  has_context7_mcp || log_warning "context7 MCP server not found; agents cannot look up library docs (see README, What install.sh Touches)"
+}
+
+has_context7_mcp() {
+  jq -e '.mcpServers // {} | has("context7")' "$HOME/.claude.json" >/dev/null 2>&1 && return 0
+  grep -qs '"context7@' "$CLAUDE_HOME/plugins/installed_plugins.json"
 }
 
 link_harness() {
