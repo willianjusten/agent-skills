@@ -49,7 +49,7 @@ Then:
 | **implement** | mattpocock | both | /name | Build one piece of work from a spec or tickets |
 | **implement-spec** | mattpocock | both | /name | Build a whole spec with subagents on an integration branch |
 | **afk** | own | personal | /name | Run a spec's ticket graph unattended within the usage budget, ending in a report |
-| **setup-project** | own | personal | /name | Ready a new or existing TS/React repo for agents: verify, AGENTS.md, worktrees, CI, push policy |
+| **setup-project** | own | personal | /name | Ready a new or existing TS/React repo for agents: verify, quality ratchet, AGENTS.md, worktrees, CI, push policy |
 | **agent-browser** | vercel-labs | personal | model | Browser automation CLI; collects UI evidence for AFK tickets |
 | **wayfinder** | mattpocock | both | /name | Plan work too big for one session as a map of decision tickets |
 | **triage** | mattpocock | both | /name | Move issues and PRs through triage roles into agent-ready briefs |
