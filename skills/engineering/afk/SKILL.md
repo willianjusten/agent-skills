@@ -47,13 +47,15 @@ afk progress:
 | Mark the PR ready, resolve tickets | Skip: implementers already marked their tickets done, and any PR stays a draft. |
 | Clean up worktrees | Remove only the worktrees of merged tickets; keep the rest for inspection. |
 
-**Step 4. Report.** Write `<feature folder>/report.md` from references/report.md. Check it: every ticket file appears exactly once, and every Done row's SHAs exist on the integration branch (`git branch --contains <sha>`). If the check fails, fix the report and return to the start of Step 4.
+**Step 4. Report.** Write `<feature folder>/report.md` from references/report.md, including Learnings and Proposed promotions from `scripts/learnings.sh` and `scripts/gotchas.sh`. Apply no promotion. Check it: every ticket file appears exactly once in Done, Blocked and Needs you, and every Done row's SHAs exist on the integration branch (`git branch --contains <sha>`). If the check fails, fix the report and return to the start of Step 4.
 
 **Step 5. Push or not.** Under `"push": "branch"`, push the integration branch and each merged ticket branch, then open one draft PR: `gh pr create --draft --base <default branch> --head <integration> --body-file <feature folder>/report.md`. If `gh pr list --head <integration>` already shows a PR, update its body (`gh pr edit --body-file`) instead of opening a second. Under `manual`, push nothing. End your reply with the report's path and the PR link, if any.
 
 ## Resources
 
 - [references/subagents.md](references/subagents.md) - what each subagent is given, the worktree layout and the fix-round ticket. Open in Step 3.
-- [references/report.md](references/report.md) - the `report.md` template. Open in Step 4.
+- [references/report.md](references/report.md) - the `report.md` template and the promotion order. Open in Step 4.
 - `scripts/frontier.sh <feature folder> [running...]` - ticket numbers that may start now: `ready-for-agent`, blockers `done` and not running, at most 2 running, no shared Areas.
+- `scripts/learnings.sh <feature folder> [ticket...]` - `NN: <learning>` for each `Learning:` line under a ticket's `## Done`.
+- `scripts/gotchas.sh [repo root]` - `docs/GOTCHAS.md` lines whose backticked names no longer exist, and the file when it passes 30 lines.
 - `scripts/budget.sh [cache]` (or `AFK_USAGE_CACHE`) - `go`, `hold` (80% of the 5-hour window), `stop` (90%), or `go unknown` when the statusline cache is missing or stale.

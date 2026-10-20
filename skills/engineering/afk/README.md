@@ -17,7 +17,7 @@ flowchart TD
     WAIT --> BUD
     BUD -->|stop: 90%| REP
     FR -->|empty| REV[reviewer, up to two fix rounds]
-    REV --> REP[report.md: Done, Blocked, Needs you, budget]
+    REV --> REP[report.md: Done, Blocked, Needs you, budget, learnings and proposed promotions]
     REP --> PUSH{"push: branch?"}
     PUSH -->|yes| PR[push + one draft PR]
     PUSH -->|no| LOCAL[leave local]
@@ -32,7 +32,7 @@ flowchart TD
 
 ## Output
 
-- `<feature folder>/report.md`: Done (tickets and SHAs), Blocked, Needs you, budget used.
+- `<feature folder>/report.md`: Done (tickets and SHAs), Blocked, Needs you, budget used, Learnings, and Proposed promotions (each learning's target, stale or overlong `docs/GOTCHAS.md`).
 - `<feature folder>/review/fix-<N>.md`: one ticket per review fix round.
 - Branches `afk/<feature>-<NN>` and worktrees under `<repo parent>/<repo>-afk/<feature>/`; merged ones are removed at the end.
 
@@ -47,3 +47,4 @@ flowchart TD
 
 - Where does push policy come from? The repo's `.claude/afk.json`; missing means `manual`, and nothing is pushed.
 - Why scripts for scheduling? A long run drifts; `frontier.sh` and `budget.sh` give the same answer every time and are tested in `tests/afk.test.sh`.
+- Does afk edit `docs/GOTCHAS.md` or standards? No. It proposes a home for each learning, strongest first (check, standards, pattern, gotcha); you apply what you approve.
