@@ -204,7 +204,7 @@ agent-skills/
 
 | Command | Effect |
 | ------- | ------ |
-| `./install.sh` | Links `~/.claude/CLAUDE.md`, `CODING_STANDARDS.md`, `settings.json`, `statusline-command.sh`, `matt-skills/` into `harness/`; links each `personal`/`both` skill into `~/.claude/skills/<name>`; removes links into this repo that are no longer wanted; applies the Spoke layer when `~/Developer/spoke` exists |
+| `./install.sh` | Links `~/.claude/CLAUDE.md`, `CODING_STANDARDS.md`, `settings.json`, `statusline-command.sh`, `matt-skills/`, `hooks/` into `harness/`; links each `personal`/`both` skill into `~/.claude/skills/<name>`; removes links into this repo that are no longer wanted; applies the Spoke layer when `~/Developer/spoke` exists |
 | `./install.sh --update` | First runs `npx skills update` per vendor source, adds enabled skills that are missing, removes ones set to `off`, lists new upstream skills as candidates |
 | `./install.sh --force` | Replaces a real file that sits where a link should go |
 | `./install.sh check` | Runs the `skill-creator-plus` validator on every own skill, plus scope and README checks |
