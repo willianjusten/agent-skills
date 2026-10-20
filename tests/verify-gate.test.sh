@@ -105,6 +105,12 @@ clean_repo=$(make_repo clean "$VERIFY_JSON")
 STUB_EXIT=1 expect_exit "no changes from main" 0 "$clean_repo" false
 [ -s "$PM_LOG" ] && fail "no changes from main: verify ran"
 
+default_branch_repo=$(make_repo default-branch "$VERIFY_JSON")
+git -C "$default_branch_repo" checkout -q main
+add_change "$default_branch_repo"
+STUB_EXIT=1 expect_exit "uncommitted changes on the default branch" 0 "$default_branch_repo" false
+[ -s "$PM_LOG" ] && fail "default branch: verify ran"
+
 for case in "pnpm-lock.yaml pnpm" "yarn.lock yarn" "bun.lockb bun" "bun.lock bun" " npm"; do
   read -r lockfile expected_pm <<<"$case"
   [ -z "$expected_pm" ] && expected_pm=$lockfile && lockfile=""

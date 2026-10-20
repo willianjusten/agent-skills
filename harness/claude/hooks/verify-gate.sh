@@ -1,6 +1,7 @@
 #!/bin/bash
 # Stop and SubagentStop hook, no matcher. Blocks an agent from finishing while
 # the project's verify script fails on a branch with changes from the default branch.
+# The default branch itself is never gated: work there is interactive, not a ticket.
 # Output is capped at 40 lines plus a header (spec: Token budget).
 
 INPUT=$(cat)
@@ -10,6 +11,7 @@ HOOK_CWD=$(echo "$INPUT" | jq -r '.cwd // empty')
 
 jq -e '.scripts.verify' package.json >/dev/null 2>&1 || exit 0
 DEFAULT_BRANCH=$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null | sed 's#^origin/##')
+[ "$(git branch --show-current 2>/dev/null)" = "${DEFAULT_BRANCH:-main}" ] && exit 0
 BASE=$(git merge-base HEAD "${DEFAULT_BRANCH:-main}" 2>/dev/null) || exit 0
 git diff --quiet "$BASE" && exit 0
 
