@@ -33,6 +33,7 @@ Follow AFK mode from your global instructions: no questions, atomic commits with
 4. Run `verify` (the ticket's `Verify:` line, or the project's `verify` script) until it passes.
 5. Merge the integration branch tip into your branch and run `verify` again.
 6. Mark the ticket done the way the issue tracker says, and log the attempt in `progress.md`.
+7. If you hit something non-obvious that the next agent would hit too (a trap, a flaky test, a surprising API), add one line per lesson under the ticket's `## Done`: `Learning: <one line>`, with any function, file or command it names in backticks. Add nothing otherwise, and never edit `docs/GOTCHAS.md`, coding standards or patterns yourself.
 
 If blocked after two attempts, follow the tracker's escalate operation and report the blocker.
 
