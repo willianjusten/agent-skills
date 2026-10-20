@@ -166,5 +166,9 @@
       "**Org-specific CLIs**: None configured",
       "No routine-under-prefix qualifiers found"
     ]
+  },
+  "attribution": {
+    "commit": "",
+    "pr": ""
   }
 }
