@@ -48,6 +48,7 @@ Then:
 | **to-tickets** | mattpocock | both | /name | Split a spec into tracer-bullet tickets with blocking edges |
 | **implement** | mattpocock | both | /name | Build one piece of work from a spec or tickets |
 | **implement-spec** | mattpocock | both | /name | Build a whole spec with subagents on an integration branch |
+| **afk** | own | personal | /name | Run a spec's ticket graph unattended within the usage budget, ending in a report |
 | **wayfinder** | mattpocock | both | /name | Plan work too big for one session as a map of decision tickets |
 | **triage** | mattpocock | both | /name | Move issues and PRs through triage roles into agent-ready briefs |
 | **improve-codebase-architecture** | mattpocock | both | /name | Find deepening opportunities, report them, grill the chosen one |
