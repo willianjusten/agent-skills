@@ -7,7 +7,7 @@ Conventions for working in this repository. This file is for agents editing the 
 | Path | Owner | Edit it? |
 | ---- | ----- | -------- |
 | `skills/<category>/<name>/` | this repo | yes: own skills |
-| `vendor/<owner>/<repo>/` | `npx skills` (via `./install.sh --update`) | no: changes are lost on update. Local patches go in `apply_renames` in `install.sh` |
+| `vendor/<owner>/<repo>/` | `npx skills` (via `./install.sh --update`) | no: changes are lost on update. The only local patch is the `code-review` rename in `apply_renames`; policy goes in `harness/` files the skills already read |
 | `scopes.json` | this repo | yes: one line per vendored skill |
 | `harness/` | this repo | yes: linked into `~/.claude`, so edits apply immediately |
 | `dist/` | `install.sh` | no: generated, gitignored |
