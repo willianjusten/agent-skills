@@ -17,8 +17,6 @@
       "Bash(git merge *)",
       "Bash(git rebase *)",
       "Bash(npx tsc *)",
-      "Bash(git push -u origin *)",
-      "Bash(gh pr create --draft *)",
       "Bash(gh issue *)",
       "Bash(gh pr view *)",
       "Bash(agent-browser open *)",
@@ -27,6 +25,17 @@
     ],
     "deny": [
       "Bash(git push --force *)",
+      "Bash(git push * --force*)",
+      "Bash(git push -f *)",
+      "Bash(git push * -f *)",
+      "Bash(git push * +*)",
+      "Bash(git push --delete *)",
+      "Bash(git push * --delete *)",
+      "Bash(git push * :*)",
+      "Bash(git push * main)",
+      "Bash(git push * master)",
+      "Bash(git push *:main)",
+      "Bash(git push *:master)",
       "Bash(gh pr merge *)",
       "Bash(git reset --hard *)",
       "Bash(git clean *)",
@@ -86,15 +95,6 @@
             "type": "command",
             "command": "afplay /System/Library/Sounds/Hero.aiff",
             "async": true
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$HOME/.claude/hooks/block-dangerous-git.sh"
           }
         ]
       }
@@ -165,6 +165,12 @@
       "**Trusted repo**: The git repository the session starts in",
       "**Org-specific CLIs**: None configured",
       "No routine-under-prefix qualifiers found"
+    ],
+    "soft_deny": [
+      "$defaults",
+      "Default branch: never push to the repository default branch (main, master or the branch origin/HEAD names) in any form, including `git -C <dir> push`, `HEAD:main` refspecs or pushing while it is checked out.",
+      "Push policy: do not run `git push` or `gh pr create` unless the repo's committed `.claude/afk.json` sets \"push\": \"branch\" or the user's latest message asks for a push or a PR. Under \"branch\", every PR is opened with `gh pr create --draft`.",
+      "Merges and remote deletes: never run `gh pr merge` and never delete remote branches or tags."
     ]
   },
   "attribution": {
