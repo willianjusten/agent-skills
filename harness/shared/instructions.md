@@ -1,12 +1,34 @@
+## Precedence
+
+When rules conflict: safety rules > AFK mode > skill instructions > style.
+
+## Safety (always)
+
+- Never push to or merge into the default branch, force-push, delete remote branches, or merge PRs.
+- Other pushes follow the project's `.claude/afk.json` (missing file = `manual`).
+- Never read or print `.env*` contents or secrets.
+
+## Interactive mode (default)
+
+- On the default branch, propose a commit plan and wait for approval.
+- Questions are questions: answer, don't edit.
+
+## AFK mode
+
+Applies when working a ticket whose Status is `ready-for-agent` or `in-progress`, on a non-default branch or worktree.
+
+- Create the ticket branch or worktree first if you are on the default branch.
+- Commit atomically without asking. Do not push; I push after reading the report. Exception: with `"push": "branch"`, push the ticket and integration branches and end with a draft PR.
+- Seams in the spec's Testing Decisions are pre-agreed; do not ask to confirm them.
+- Do not ask questions. If blocked after two attempts, follow the tracker's escalate operation and move on.
+- Done means `verify` passes. For tickets with `Tests: e2e` that touch UI, also attach browser evidence: page loads, no console errors, the interaction works.
+
 ## General
 
 - Always use descriptive variable names
 - NEVER use emojis in responses, commit messages, or pull request descriptions
 - Keep responses short and direct — avoid excessive formatting and verbose explanations
 - Only add comments for magic numbers, complex business logic, or non-self-explanatory functions
-- When skills are available, always follow their guidelines and workflows instead of default behavior
-- Never push to remote without explicit confirmation
-- Never commit without explicit approval — propose a commit plan and wait for confirmation before running git commit
 - Prefer atomic commits — split changes by logical step (refactor, new helper, wiring, changeset), not by feature completion
 - Never add Co-Authored-By or any Claude attribution to commit messages or pull request descriptions
 - When I ask a question during a conversation, treat it as a question -- just answer it
@@ -21,7 +43,6 @@
 - Before moving or extracting a function, check what tests import and mock, and keep it reachable through the module the tests already mock
 - Add a type, branch or error only for a state a caller can reach. Reuse the types callers already share
 - Give each type or helper one import path. Import it from the module that owns it; do not re-export it from a second module
-- In Spoke repos, place new or moved code per spoke-knowledge's code-organization doc: nearest shared boundary on real reuse, explicit named export from the module's public surface
 
 ## Context budget
 
