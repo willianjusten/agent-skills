@@ -28,6 +28,16 @@ Budget: 5-hour window <start>% -> <end>%, from `budget.sh` ("unknown" when it pr
 - 06 <title>: not started, budget hold | budget stop
 - advisory: `path:line` - <finding>
 - blocking, after two fix rounds: `path:line` - <finding>
+- security: <count> High finding(s), nothing pushed and no PR opened
+
+## Security
+
+From `/security-review` on the integration branch, or "Skipped: no origin remote".
+
+| Severity | Finding | Location |
+| --- | --- | --- |
+| High (blocking) | <title> | `path:line` |
+| Medium | <title> | `path:line` |
 
 ## Learnings
 

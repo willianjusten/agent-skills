@@ -15,10 +15,13 @@ flowchart TD
     MRG --> BUD
     BUD -->|hold: 80%| WAIT[start nothing, wait for running]
     WAIT --> BUD
-    BUD -->|stop: 90%| REP
+    BUD -->|stop: 90%| SEC
     FR -->|empty| REV[reviewer, up to two fix rounds]
-    REV --> REP[report.md: Done, Blocked, Needs you, budget, learnings and proposed promotions]
-    REP --> PUSH{"push: branch?"}
+    REV --> SEC["/security-review vs origin/HEAD"]
+    SEC --> REP[report.md: Done, Blocked, Needs you, Security, budget, learnings and proposed promotions]
+    REP --> HIGH{High finding?}
+    HIGH -->|yes| LOCAL
+    HIGH -->|no| PUSH{"push: branch?"}
     PUSH -->|yes| PR[push + one draft PR]
     PUSH -->|no| LOCAL[leave local]
 ```
@@ -32,7 +35,7 @@ flowchart TD
 
 ## Output
 
-- `<feature folder>/report.md`: Done (tickets and SHAs), Blocked, Needs you, budget used, Learnings, and Proposed promotions (each learning's target, stale or overlong `docs/GOTCHAS.md`).
+- `<feature folder>/report.md`: Done (tickets and SHAs), Blocked, Needs you, budget used, Security (`/security-review` findings; any High one blocks push and PR), Learnings, and Proposed promotions (each learning's target, stale or overlong `docs/GOTCHAS.md`).
 - `<feature folder>/review/fix-<N>.md`: one ticket per review fix round.
 - Branches `afk/<feature>-<NN>` and worktrees under `<repo parent>/<repo>-afk/<feature>/`; merged ones are removed at the end.
 
@@ -40,6 +43,7 @@ flowchart TD
 
 - Sibling skills and agents it calls by name: `implement-spec` (its SKILL.md is read and followed with afk's overrides, since it is not model-invocable), the `explorer`, `implementer`, `merger` and `reviewer` subagents, and `tdd` (through the implementer).
 - `jq` and `git`; `gh` only with `"push": "branch"`.
+- Claude Code's built-in `/security-review`, which needs `origin/HEAD`; without an `origin` remote the review is skipped and the report says so.
 - The statusline usage cache at `~/.cache/claude-statusline/usage-api.json` for the budget guard. Without it the run carries on, capped only by the 2-implementer limit and the two fix rounds.
 - Tickets in the local markdown tracker format, with `.scratch/` gitignored.
 
