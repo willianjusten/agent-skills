@@ -49,6 +49,7 @@ Then:
 | **implement** | mattpocock | both | /name | Build one piece of work from a spec or tickets |
 | **implement-spec** | mattpocock | both | /name | Build a whole spec with subagents on an integration branch |
 | **afk** | own | personal | /name | Run a spec's ticket graph unattended within the usage budget, ending in a report |
+| **setup-project** | own | personal | /name | Ready a new or existing TS/React repo for agents: verify, AGENTS.md, worktrees, CI, push policy |
 | **agent-browser** | vercel-labs | personal | model | Browser automation CLI; collects UI evidence for AFK tickets |
 | **wayfinder** | mattpocock | both | /name | Plan work too big for one session as a map of decision tickets |
 | **triage** | mattpocock | both | /name | Move issues and PRs through triage roles into agent-ready briefs |
@@ -212,7 +213,7 @@ agent-skills/
 | Update vendored skills | `./install.sh --update`; review `git diff vendor/`; commit |
 | Enable a vendored skill | Set it to `personal` or `both` in `scopes.json`; `./install.sh --update` |
 | Add a vendor source | Add `"<owner>/<repo>": { "<skill>": "personal" }` to `scopes.json`; `./install.sh --update` |
-| Share project instructions | `./install.sh init-project <dir>`: `AGENTS.md` plus a `CLAUDE.md` with `@AGENTS.md` |
+| Set up a project for agents | `/setup-project` in the repo: `AGENTS.md`, `CLAUDE.md` with `@AGENTS.md`, `verify`, worktree setup, CI, push policy |
 
 ## What install.sh Touches
 

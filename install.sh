@@ -29,7 +29,6 @@ usage() {
 Usage:
   ./install.sh [--update] [--force]   link skills and harness config
   ./install.sh check                  validate own skills (skill-creator-plus validator + scope)
-  ./install.sh init-project [dir]     add AGENTS.md and a CLAUDE.md importing it
 
   --update   refresh vendored skills from upstream before linking
   --force    replace real files that sit where a link should go
@@ -392,27 +391,8 @@ check_own_skills() {
   return "$failed"
 }
 
-init_project() {
-  local project_dir="${1:-.}"
-  [ -d "$project_dir" ] || { echo "No such directory: $project_dir" >&2; exit 1; }
-  if [ ! -f "$project_dir/AGENTS.md" ]; then
-    printf '# Agent instructions\n\n' >"$project_dir/AGENTS.md"
-    echo "created $project_dir/AGENTS.md"
-  fi
-  if [ ! -e "$project_dir/CLAUDE.md" ]; then
-    echo "@AGENTS.md" >"$project_dir/CLAUDE.md"
-    echo "created $project_dir/CLAUDE.md"
-  elif ! grep -qx "@AGENTS.md" "$project_dir/CLAUDE.md"; then
-    echo "CLAUDE.md exists without @AGENTS.md; add that line to share instructions with Cursor"
-  fi
-}
-
 main() {
   case "${1:-}" in
-    init-project)
-      init_project "${2:-.}"
-      exit 0
-      ;;
     check)
       check_own_skills
       exit $?
