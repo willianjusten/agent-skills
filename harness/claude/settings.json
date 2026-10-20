@@ -59,6 +59,17 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/ticket-lint.sh"
+          }
+        ]
+      }
     ]
   },
   "statusLine": {
