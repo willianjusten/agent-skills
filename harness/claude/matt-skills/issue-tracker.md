@@ -28,3 +28,27 @@ Used by `/wayfinder`. The **map** is a file with one **child** file per ticket.
 - **Frontier**: scan `.scratch/<effort>/issues/` for files that are open, unblocked, and unclaimed; first by number wins.
 - **Claim**: set `Status: claimed` and save before any work.
 - **Resolve**: append the answer under an `## Answer` heading, set `Status: resolved`, then append a context pointer (gist + link) to the map's Decisions-so-far in `map.md`.
+
+## Status lifecycle
+
+One plain line near the top of every file: `Status: <value>`. Never bold; this overrides the bold `**Status:**` in `to-tickets`' local template.
+
+- Spec files: `spec`. Orchestrators never pick these up.
+- Tickets: `ready-for-agent` | `ready-for-human` -> `in-progress` -> `done`, or `needs-info` when blocked.
+
+## Required ticket fields
+
+Plain `Field: value` lines under the title, never bold:
+
+- `Blocked by: NN, NN` or `None`
+- `Areas:` module or domain names the ticket touches (no paths). Tickets with overlapping Areas never run in parallel. A schema or migration change is always its own ticket and blocks its dependents.
+- `Tests: tdd | e2e | verify-only`
+- `Pattern:` the `docs/patterns/` entry it follows, or `new` (the ticket is then `ready-for-human`); omit in repos without `docs/patterns/`
+- `Verify:` optional; the command that proves it is done (default: the project's `verify` script)
+
+## Operations
+
+- Claim: set `Status: in-progress` and save before any work.
+- Done: set `Status: done`, append the commit SHAs under `## Done`.
+- Escalate: append `## Blocker` (what was tried, what is needed), set `Status: needs-info`, continue the frontier.
+- Log: append one line per attempt to `.scratch/<feature>/progress.md`: ticket, result, commit or blocker.

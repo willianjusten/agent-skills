@@ -1,6 +1,6 @@
 # Triage Labels
 
-The skills speak in terms of five canonical triage roles. This file maps those roles to the label strings used in the local-markdown tracker: they are written verbatim into each issue file's `Status:` line.
+The skills speak in terms of five canonical triage roles, plus three lifecycle statuses of our own. This file maps those roles to the label strings used in the local-markdown tracker: they are written verbatim into each issue file's `Status:` line.
 
 | Label in mattpocock/skills | Label in our tracker | Meaning                                  |
 | -------------------------- | -------------------- | ---------------------------------------- |
@@ -9,6 +9,9 @@ The skills speak in terms of five canonical triage roles. This file maps those r
 | `ready-for-agent`          | `ready-for-agent`    | Fully specified, ready for an AFK agent  |
 | `ready-for-human`          | `ready-for-human`    | Requires human implementation            |
 | `wontfix`                  | `wontfix`            | Will not be actioned                     |
+| -                          | `spec`               | Spec file; orchestrators never pick it up |
+| -                          | `in-progress`        | Claimed by an agent or human             |
+| -                          | `done`               | Finished; commit SHAs under `## Done`    |
 
 When a skill mentions a role (e.g. "apply the AFK-ready triage label"), use the corresponding label string from this table.
 
