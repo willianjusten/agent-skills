@@ -39,6 +39,28 @@
     "writing-fragments": "off",
     "writing-shape": "off"
   },
+  "anthropics/skills": {
+    "frontend-design": "personal",
+    "academy-guide": "off",
+    "claude-api": "off",
+    "discernment-nudge": "off",
+    "docx": "off",
+    "pdf": "off",
+    "pptx": "off",
+    "xlsx": "off",
+    "algorithmic-art": "off",
+    "brand-guidelines": "off",
+    "canvas-design": "off",
+    "doc-coauthoring": "off",
+    "internal-comms": "off",
+    "mcp-builder": "off",
+    "skill-creator": "off",
+    "slack-gif-creator": "off",
+    "theme-factory": "off",
+    "web-artifacts-builder": "off",
+    "webapp-testing": "off",
+    "template-skill": "off"
+  },
   "robonuggets/skill-creator-plus": {
     "skill-creator-plus": "personal"
   },
