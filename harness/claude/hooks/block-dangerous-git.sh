@@ -1,12 +1,14 @@
 #!/bin/bash
 # PreToolUse hook for Bash. Based on mattpocock/skills git-guardrails-claude-code,
 # extended with the per-project push policy in .claude/afk.json:
-#   "manual" (default, also when the file is missing): block every git push.
+#   "manual" (default, also when the file is missing): allow pushing non-default
+#     branches and `gh pr create` only when the user's latest prompt asks for a push or PR.
 #   "branch": allow pushing non-default branches and `gh pr create --draft`.
 # Always blocked: default-branch pushes, force pushes, remote deletes, gh pr merge.
 
 INPUT=$(cat)
 COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
+TRANSCRIPT_PATH=$(echo "$INPUT" | jq -r '.transcript_path // empty')
 HOOK_CWD=$(echo "$INPUT" | jq -r '.cwd // empty')
 [ -n "$HOOK_CWD" ] && [ -d "$HOOK_CWD" ] && cd "$HOOK_CWD"
 
@@ -44,7 +46,29 @@ CURRENT_BRANCH=$(git branch --show-current 2>/dev/null)
 # main and master always count as default, plus whatever origin/HEAD points to.
 DEFAULT_BRANCHES="main master $(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null | sed 's|^origin/||')"
 
-MANUAL_MESSAGE="is not allowed: this repo's push policy is 'manual' (.claude/afk.json is missing or sets \"push\": \"manual\"). Do not push or open PRs. Commit locally and report the branch name; the user pushes after reading the report."
+MANUAL_MESSAGE="is not allowed: this repo's push policy is 'manual' (.claude/afk.json is missing or sets \"push\": \"manual\") and the user's latest prompt did not ask for a push or PR. Commit locally and report the branch name."
+
+# Text of the last prompt the user typed: skips tool results and injected (isMeta) entries.
+latest_user_prompt() {
+  [ -f "$TRANSCRIPT_PATH" ] || return
+  jq -rs '[.[] | select(.type == "user" and .isMeta != true)
+      | .message.content
+      | if type == "string" then .
+        elif type == "array" and all(.[]; .type != "tool_result") then [.[] | .text // empty] | join(" ")
+        else empty end]
+    | last // empty' "$TRANSCRIPT_PATH" 2>/dev/null
+}
+
+USER_ASKED_TO_PUSH=false
+LATEST_PROMPT=$(latest_user_prompt)
+if echo "$LATEST_PROMPT" | grep -qiE "\bpush|\bPR\b|pull request" &&
+  ! echo "$LATEST_PROMPT" | grep -qiE "(don'?t|do not|never|no|without) (push|open|create)"; then
+  USER_ASKED_TO_PUSH=true
+fi
+
+check_manual_policy() {
+  [ "$PUSH_POLICY" = "manual" ] && [ "$USER_ASKED_TO_PUSH" != "true" ] && block "$MANUAL_MESSAGE"
+}
 
 is_default_branch() {
   local branch
@@ -83,7 +107,7 @@ check_git_push() {
     esac
   done
 
-  [ "$PUSH_POLICY" = "manual" ] && block "$MANUAL_MESSAGE"
+  check_manual_policy
 
   if [ ${#refspecs[@]} -eq 0 ]; then
     check_push_target "$CURRENT_BRANCH"
@@ -104,7 +128,8 @@ check_gh_pr() {
     merge)
       block "merges a PR, which is never allowed. Leave the PR open for the user to review and merge." ;;
     create)
-      [ "$PUSH_POLICY" = "manual" ] && block "$MANUAL_MESSAGE"
+      check_manual_policy
+      [ "$PUSH_POLICY" = "manual" ] && return
       case " $* " in
         *" --draft "* | *" -d "*) ;;
         *) block "opens a non-draft PR. Under the 'branch' push policy, use 'gh pr create --draft'." ;;
