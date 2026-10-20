@@ -32,14 +32,14 @@ flowchart TD
 ## Output
 
 - `AGENTS.md`, `CLAUDE.md` (`@AGENTS.md`), `verify` and `ratchet` scripts in `package.json`
-- Strict tsconfig flags, lint rules (oxlint or ESLint, whichever the repo uses), `knip.json`, `scripts/ratchet.mjs`, `.ratchet.json`; `stryker.config.mjs` only on request
+- Strict tsconfig flags, lint rules (oxlint or ESLint, whichever the repo uses), `knip.json`, `scripts/ratchet.mjs`, `.ratchet.json`; an axe-core scan for UI repos (the e2e runner's integration, or `scripts/a11y-scan.sh`); `stryker.config.mjs` only on request
 - `scripts/worktree-setup.sh`, `docs/architecture.md`, `docs/patterns/`, `docs/GOTCHAS.md`, `docs/adr/0001-stack.md` (new only)
 - `.github/workflows/verify.yml`, `.husky/pre-commit`, `.claude/afk.json`, `.scratch/` in `.gitignore`
 
 ## Requirements
 
 - Sibling skills it calls by name: `setup-pre-commit` (always) and `setup-matt-pocock-skills` (only with `"push": "branch"`; its SKILL.md is read and followed, since it is not model-invocable).
-- `git` and `node`; `gh` is not needed.
+- `git` and `node`; `gh` is not needed. `scripts/a11y-scan.sh` also needs the agent-browser CLI.
 
 ## FAQ
 

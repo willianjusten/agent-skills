@@ -45,6 +45,15 @@ Complexity and `max-params` stay at `warn`: the ratchet counts them, so a new on
 
 Done when a second `ratchet` run passes and leaves `.ratchet.json` unchanged.
 
-## 4. Mutation testing (optional, off by default)
+## 4. Accessibility scan (repos with a UI)
+
+UI tickets with `Tests: e2e` run axe-core on the pages they touch, and a serious or critical violation blocks like a failing `verify`.
+
+- With an e2e runner that already drives a browser (Playwright, Cypress), add its axe integration (`@axe-core/playwright`, `cypress-axe`) to the e2e tests and fail on `serious` and `critical` impacts only.
+- Otherwise copy references/templates/a11y-scan.sh to `scripts/a11y-scan.sh`, make it executable, install `axe-core` as a dev dependency, and add `"a11y": "bash scripts/a11y-scan.sh"`. It needs the agent-browser CLI and a running dev server, so it is not chained into `verify`.
+
+Name the command in `AGENTS.md`. Done when a scan of one page exits 0, and exits 1 after removing a form label (put the label back).
+
+## 5. Mutation testing (optional, off by default)
 
 Add only when the user asks for it. Copy references/templates/stryker.config.mjs to the repo root, set `BASE_BRANCH` and `TEST_RUNNER`, install it (`npm install -D @stryker-mutator/core @stryker-mutator/vitest-runner` for Vitest), and add `.stryker-tmp/` and `reports/mutation/` to `.gitignore`. It mutates only the source files changed since the base branch and is never part of `verify`. Otherwise mention in the report that it is available.

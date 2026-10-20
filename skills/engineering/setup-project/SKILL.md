@@ -43,7 +43,7 @@ setup-project progress:
 
 **Step 4. Instructions and docs.** Fill references/templates/AGENTS.md; write `CLAUDE.md` as the single line `@AGENTS.md` (when `CLAUDE.md` exists without that line, add it at the top). Fill references/templates/architecture.md into `docs/architecture.md`, copy references/templates/GOTCHAS.md to `docs/GOTCHAS.md`, and create `docs/patterns/.gitkeep`. Done when AGENTS.md is under 15 lines, has no placeholder left and names no source path.
 
-**Step 5. Quality.** Follow references/quality.md: strict tsconfig flags, lint rules with boundaries filled from `docs/architecture.md`, and `scripts/ratchet.mjs` chained into `verify` after lint. In mode existing it adds only what cannot fail today and reports the rest with error counts. Done when `verify` exits 0 (or its failure is in the report) and `.ratchet.json` exists.
+**Step 5. Quality.** Follow references/quality.md: strict tsconfig flags, lint rules with boundaries filled from `docs/architecture.md`, `scripts/ratchet.mjs` chained into `verify` after lint, and an axe-core scan when the repo has a UI. In mode existing it adds only what cannot fail today and reports the rest with error counts. Done when `verify` exits 0 (or its failure is in the report) and `.ratchet.json` exists.
 
 **Step 6. Worktrees.** Copy references/templates/worktree-setup.sh to `scripts/worktree-setup.sh`, make it executable, and set the variables at its top from what Step 1 found (the env var that holds the port, the one that holds the database URL or name). Run it once in the main checkout: it must exit 0 and change nothing there. Done when that run is clean.
 
@@ -58,4 +58,4 @@ setup-project progress:
 - [references/discover.md](references/discover.md) - where the real commands, env vars and CI live in an existing repo, and the findings table. Open in Step 1, mode existing.
 - [references/new-stack.md](references/new-stack.md) - the stack questions, defaults and scaffold rules. Open in Step 2.
 - [references/quality.md](references/quality.md) - tsconfig, lint and boundary rules, the ratchet, optional Stryker, per mode. Open in Step 5.
-- `references/templates/` - `AGENTS.md`, `architecture.md`, `GOTCHAS.md`, `adr-0001-stack.md`, `tsconfig-strict.json`, `oxlintrc.json`, `eslint.config.mjs`, `knip.json`, `ratchet.mjs`, `stryker.config.mjs`, `worktree-setup.sh`, `ci.yml`, `afk.json`. Each step names the one it fills.
+- `references/templates/` - `AGENTS.md`, `architecture.md`, `GOTCHAS.md`, `adr-0001-stack.md`, `tsconfig-strict.json`, `oxlintrc.json`, `eslint.config.mjs`, `knip.json`, `ratchet.mjs`, `a11y-scan.sh`, `stryker.config.mjs`, `worktree-setup.sh`, `ci.yml`, `afk.json`. Each step names the one it fills.
