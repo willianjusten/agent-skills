@@ -104,6 +104,16 @@ flowchart TD
 
 Dotted arrows are optional handoffs. `ask-matt` routes to the right entry point when unsure. `handoff`, `wait-what`, `teach` and `to-questionnaire` run whenever their own job is needed.
 
+### Which workflow
+
+| Work | Flow |
+| --- | --- |
+| Tiny: one decided behaviour | `tdd`, then `matt-code-review` |
+| One session | `grill-with-docs`, then `implement` |
+| Multi-session | `grill-with-docs`, `to-spec`, `to-tickets`, then `implement` per ticket |
+| Parallel graph | the same planning, then `/afk` |
+| Foggy | `wayfinder`, then the multi-session flow |
+
 ### Using the flow
 
 For a feature:
@@ -111,6 +121,7 @@ For a feature:
 1. `grill-with-docs` (or `grilling`) -> a settled plan; terms land in `GLOSSARY.md`, decisions in `docs/adr/`.
 2. `to-spec` -> the spec as an issue in `.scratch/<feature>/`.
 3. `to-tickets` -> tracer-bullet tickets with blocking edges.
+   Run `/clear` here, once: the tickets carry the plan, so implementation starts from a fresh context.
 4. `implement` per ticket, or `implement-spec` for the whole spec -> code built through `tdd`, closed by `matt-code-review`.
 5. `pr` -> the PR body.
 6. `retro` -> changes to the environment (checks, standards, pointers) after a rough build.
