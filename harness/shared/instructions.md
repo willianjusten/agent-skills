@@ -35,6 +35,7 @@
 ## Environment
 
 - Shell is always zsh
+- Docker is OrbStack. When a tool cannot find Docker (testcontainers, Firebase emulator tests), check `orb status` and set `DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock`; do not ask me to start Docker
 - Check for project-level CLAUDE.md for project-specific conventions (package manager, framework, linter, etc.)
 
 ## Agent skills
