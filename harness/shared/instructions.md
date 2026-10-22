@@ -1,6 +1,6 @@
 ## Precedence
 
-When rules conflict: safety rules > AFK mode > skill instructions > style.
+When rules conflict: safety rules > skill instructions > AFK mode > style. Matt Pocock's skills win over my own rules; mine only fill gaps they leave.
 
 ## Safety (always)
 
@@ -19,7 +19,7 @@ When rules conflict: safety rules > AFK mode > skill instructions > style.
 Applies when working a ticket whose Status is `ready-for-agent` or `in-progress`, on a non-default branch or worktree.
 
 - Create the ticket branch or worktree first if you are on the default branch.
-- Commit atomically without asking. Do not push; I push after reading the report. Exception: with `"push": "branch"`, push the ticket and integration branches and end with a draft PR.
+- Commit atomically without asking. Do not push; I push after reading the report. Exception: with `"push": "branch"`, push the ticket and integration branches; the PR follows the tracker's closing work.
 - Seams in the spec's Testing Decisions are pre-agreed; do not ask to confirm them.
 - Do not ask questions. If blocked after two attempts, follow the tracker's escalate operation and move on.
 - Done means the repo's own checks pass when you run them in your shell: typecheck, lint, test, build, whichever exist (the `verify` script when there is one). Use only commands the repo has (package scripts, `Makefile`, CI workflow, pre-commit config, `AGENTS.md`) and never install a tool. Report a missing or unrunnable check as a gap, never as a pass.
