@@ -48,7 +48,7 @@ Plain `Field: value` lines under the title, never bold:
 
 ## Implementation frontier
 
-A ticket is ready to start when it is `ready-for-agent`, every `Blocked by` ticket is `done`, it is not already running, and its `Areas` do not overlap with a running ticket. At most two tickets run at once.
+A ticket is ready to start when it is `ready-for-agent`, every `Blocked by` ticket is `done`, it is not `in-progress`, and its `Areas` do not overlap with an `in-progress` ticket. At most two tickets are `in-progress` at once.
 
 ## Worktrees
 
@@ -63,4 +63,4 @@ A ticket is ready to start when it is `ready-for-agent`, every `Blocked by` tick
 
 ## Closing work
 
-With `"push": "branch"` in `.claude/afk.json`, work closes through a PR: `implement-spec` opens it as a draft and marks it ready for review at the end. An agent never merges it. Otherwise work closes by ticket status (Done above) and nothing is pushed.
+With `"push": "branch"` in `.claude/afk.json`, work closes through a PR: `implement-spec` opens it as a draft and marks it ready for review at the end. An agent never merges it. Otherwise work closes by ticket status and nothing is pushed. In both cases each ticket still goes through Done.
