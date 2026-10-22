@@ -121,8 +121,11 @@ def file_history(transcript_path, target_real_path):
     tool_results = {}
     format_recognized = False
     for entry in transcript_entries(transcript_path):
-        if entry.get("type") in ("user", "assistant") and isinstance(entry.get("message"), dict):
-            format_recognized = True
+        # Only conversation turns count; other entries (request copies, titles, modes)
+        # repeat or annotate them and carry no timestamp.
+        if entry.get("type") not in ("user", "assistant") or not isinstance(entry.get("message"), dict):
+            continue
+        format_recognized = True
         for block in content_blocks(entry, "tool_use"):
             tool_uses[block.get("id")] = (block, entry_epoch(entry))
         for block in content_blocks(entry, "tool_result"):

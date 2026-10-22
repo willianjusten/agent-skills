@@ -132,6 +132,15 @@ expect "a project that lives under build/ is still checked" deny \
 
 expect "relative path resolves against cwd" deny "$(payload Edit small.txt "$FIXTURE_DIR/no-reads.jsonl")" "small.txt"
 
+# Real transcripts also hold api-request-blob entries: request copies with tool_use
+# blocks and no timestamp. They are not conversation turns and must not break the hook.
+{
+  cat "$FIXTURE_DIR/no-reads.jsonl"
+  jq -cn --arg path "$small_file" \
+    '{type: "api-request-blob", hash: "h", sessionId: "s", message: {role: "assistant", content: [{type: "tool_use", id: "t9", name: "Read", input: {file_path: $path}}]}}'
+} >"$FIXTURE_DIR/with-blob.jsonl"
+expect "request blobs neither break the hook nor count as reads" deny "$(payload Edit "$small_file" "$FIXTURE_DIR/with-blob.jsonl")" "small.txt"
+
 printf 'not json {{\n\x00\x01garbage\n' >"$FIXTURE_DIR/corrupt.jsonl"
 expect "corrupt transcript allows" allow "$(payload Edit "$small_file" "$FIXTURE_DIR/corrupt.jsonl")"
 echo '{"some": "other format"}' >"$FIXTURE_DIR/unknown.jsonl"
