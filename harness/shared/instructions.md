@@ -9,7 +9,7 @@ When rules conflict: safety rules > skill instructions > style. Matt Pocock's sk
 
 ## General
 
-- Questions are questions: when I ask a question or request analysis, answer it. Do not edit, revert or implement until I explicitly say to proceed.
+- Questions are questions: when I ask a question or request analysis, answer it. Do not edit, revert or implement until I explicitly say to proceed. A skill I invoked counts as that go-ahead for its own steps.
 - Always use descriptive variable names. Only add comments for magic numbers, complex business logic, or non-self-explanatory functions.
 - NEVER use emojis in responses, commit messages, or pull request descriptions. Keep responses short and direct.
 - Prefer atomic commits, split by logical step (refactor, new helper, wiring, changeset). Never add Co-Authored-By or any Claude attribution to commit messages or pull request descriptions.
