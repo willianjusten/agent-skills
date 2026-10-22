@@ -41,14 +41,14 @@ One plain line near the top of every file: `Status: <value>`. Never bold; this o
 Plain `Field: value` lines under the title, never bold:
 
 - `Blocked by: NN, NN` or `None`
-- `Areas:` module or domain names the ticket touches (no paths). Tickets with overlapping Areas never run in parallel. A schema or migration change is always its own ticket and blocks its dependents.
+- `Areas:` module or domain names the ticket touches (no paths). A schema or migration change is always its own ticket and blocks its dependents.
 - `Tests: tdd | e2e | verify-only`
 - `Reuses: <path:line>[, <path:line>...]` the existing code the ticket follows, or `Reuses: no-precedent`. Search the codebase for the nearest example before writing the ticket.
 - `Verify:` optional; the command that proves it is done
 
 ## Implementation frontier
 
-A ticket is ready to start when it is `ready-for-agent`, every `Blocked by` ticket is `done`, it is not `in-progress`, and its `Areas` do not overlap with an `in-progress` ticket. At most two tickets are `in-progress` at once.
+A ticket is ready to start when it is `ready-for-agent`, every `Blocked by` ticket is `done`, and it is not `in-progress`.
 
 ## Worktrees
 
