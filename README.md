@@ -6,6 +6,8 @@ My agent harness in one repo: skills, global instructions and Claude Code settin
   <img src="docs/images/flow.svg" alt="Flow map: you plan along the blue line (grill-with-docs, to-spec, to-tickets), agents build along the green line with implement-spec, then you review, write the PR and run a retro." width="100%">
 </p>
 
+<p align="center"><a href="https://claude.ai/artifact/H61kH7FYPoeeJ6Twn9fUPR"><strong>Explore the interactive flow map</strong></a>: every station explained, with the route picker, guardrails and glossary.</p>
+
 ## In One Minute
 
 1. **You get interviewed.** `grill-with-docs` asks questions until nothing is left to decide. Terms go to `GLOSSARY.md`, decisions to `docs/adr/`.
