@@ -63,4 +63,4 @@ A ticket is ready to start when it is `ready-for-agent`, every `Blocked by` tick
 
 ## Closing work
 
-With `"push": "branch"` in `.claude/afk.json`, work closes through a PR: `implement-spec` opens it as a draft and marks it ready for review at the end. An agent never merges it. Otherwise work closes by ticket status and nothing is pushed. In both cases each ticket still goes through Done.
+With `"push": "branch"` in `.claude/afk.json`, work closes through a PR: `implement-spec` opens it as a draft and marks it ready for review at the end. An agent never merges it. Otherwise work closes by ticket status and nothing is pushed, unless the user asks for a PR. In both cases each ticket still goes through Done.
