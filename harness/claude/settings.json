@@ -33,7 +33,6 @@
       "Bash(git push *:main)",
       "Bash(git push *:master)",
       "Bash(gh pr merge *)",
-      "Bash(git reset --hard *)",
       "Bash(git clean *)",
       "Bash(rm -rf *)",
       "Bash(npm run db:reset *)",
