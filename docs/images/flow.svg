@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 480" width="960" height="480" role="img" aria-labelledby="t d">
   <title id="t">From idea to merged code</title>
-  <desc id="d">You plan along the blue line: grill-with-docs, to-spec, to-tickets. After clearing context, agents run the green line with implement-spec: frontier, implementers in worktrees, merge, matt-code-review. You come back to review, then pr and retro.</desc>
+  <desc id="d">You plan along the blue line: grill-with-docs, to-spec, to-tickets. After clearing context, agents run the green line with implement-spec: frontier, implementers in worktrees, merge, matt-code-review. If the change touched the UI, you can run ui-polish first. You come back to review, then pr and retro.</desc>
   <style>
     .card{fill:#F6F8FA;stroke:#D1D9E0}
     .surface{fill:#FFFFFF}
@@ -48,6 +48,7 @@
   <path class="rule" d="M600 150 H860" stroke-width="10" stroke-linecap="round" fill="none"/>
   <path class="green" d="M860 150 V400 H400" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
   <path class="blue" d="M400 400 H70" stroke-width="10" stroke-linecap="round" fill="none"/>
+  <path class="blue" d="M560 400 C560 335 400 335 400 400" stroke-width="3" stroke-dasharray="6 6" fill="none"/>
   <text class="muted sub mono" x="730" y="136" text-anchor="middle">/clear</text>
   <text class="muted sub" x="908" y="275" text-anchor="middle" transform="rotate(90 908 275)">implement-spec runs this line</text>
 
@@ -90,6 +91,9 @@
   <text class="muted sub" x="560" y="452" text-anchor="middle">standards + spec, once</text>
 
   <!-- back to you -->
+  <circle class="surface blue" cx="480" cy="351" r="7" stroke-width="3" stroke-dasharray="3 3"/>
+  <text class="muted sub" x="480" y="331" text-anchor="middle"><tspan class="mono">ui-polish</tspan> when the UI changed</text>
+
   <rect class="surface inkstroke" x="387" y="387" width="26" height="26" rx="7" stroke-width="5"/>
   <text class="ink name" x="400" y="434" text-anchor="middle">You review</text>
   <text class="muted sub" x="400" y="452" text-anchor="middle">accept or send back</text>

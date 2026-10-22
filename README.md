@@ -3,7 +3,7 @@
 My agent harness in one repo: skills, global instructions and Claude Code settings, installed the same way on every machine with one command. The flow is built on [Matt Pocock's skills](https://github.com/mattpocock/skills), run as shipped.
 
 <p align="center">
-  <img src="docs/images/flow.svg" alt="Flow map: you plan along the blue line (grill-with-docs, to-spec, to-tickets), agents build along the green line with implement-spec, then you review, write the PR and run a retro." width="100%">
+  <img src="docs/images/flow.svg" alt="Flow map: you plan along the blue line (grill-with-docs, to-spec, to-tickets), agents build along the green line with implement-spec, then you review (after ui-polish if the UI changed), write the PR and run a retro." width="100%">
 </p>
 
 <p align="center"><a href="https://claude.ai/artifact/H61kH7FYPoeeJ6Twn9fUPR"><strong>Explore the interactive flow map</strong></a>: every station explained, with the route picker, guardrails and glossary.</p>
@@ -62,7 +62,7 @@ For a bug: `/diagnosing-bugs` reproduces it and finds the cause, then the fix go
 | When | Skills |
 | ---- | ------ |
 | **Plan** | `grill-with-docs` (in a repo), `grill-me` (no repo), `prototype`, `research`, `to-spec`, `to-tickets`, `wayfinder` |
-| **Build** | `implement` (one ticket), `implement-spec` (whole spec, parallel), `tdd`, `matt-code-review` |
+| **Build** | `implement` (one ticket), `implement-spec` (whole spec, parallel), `tdd`, `ui-polish` (look at a UI change and fix it, before review), `matt-code-review` |
 | **Ship and learn** | `pr`, `retro` |
 | **Fix and tidy** | `diagnosing-bugs`, `triage`, `improve-codebase-architecture`, `codebase-design`, `domain-modeling` |
 | **Any time** | `ask-matt` (which skill?), `handoff` (pass work to a new session), `wait-what` (re-explain that), `teach`, `to-questionnaire`, `wizard`, `frontend-design`, `writing-for-agents`, `skill-creator-plus` |
@@ -88,6 +88,7 @@ Matt's skills run untouched. Everything this repo layers on top lives in a few f
 | [`harness/shared/instructions.md`](harness/shared/instructions.md) | every session and subagent, as `~/.claude/CLAUDE.md` | Precedence, safety, style, environment, tracker defaults |
 | [`harness/shared/CODING_STANDARDS.md`](harness/shared/CODING_STANDARDS.md) | sessions, as `~/.claude/CODING_STANDARDS.md` | Cross-repo coding standards; a repo's own standards win |
 | [`harness/claude/settings.json`](harness/claude/settings.json) | Claude Code | Deny rules, auto mode, notification sounds, statusline |
+| [`skills/engineering/ui-polish/`](skills/engineering/ui-polish/) | you, after a UI change | Screenshots the touched screens and fixes styles and markup; added because no step in the flow opens the running app |
 
 The only patch to vendored code is renaming Matt's `code-review` to `matt-code-review`, because the original collides with Claude Code's built-in `/code-review`. New additions come only after a pilot, one ticket per `/retro` finding.
 
