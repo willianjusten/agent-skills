@@ -5,7 +5,6 @@ When rules conflict: safety rules > skill instructions > style. Matt Pocock's sk
 ## Safety (always)
 
 - Never merge into the default branch, force-push, delete remote branches, or merge PRs.
-- Push to the default branch only when my latest prompt directly asks for that push. Other pushes follow the project's `.claude/afk.json` (missing file = `manual`: push only when my latest prompt asks for it).
 - Never read or print `.env*` contents or secrets.
 
 ## General

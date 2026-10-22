@@ -140,7 +140,7 @@
     "soft_deny": [
       "$defaults",
       "Default branch: never push to the repository default branch (main, master or the branch origin/HEAD names) in any form, including `git -C <dir> push`, `HEAD:main` refspecs or pushing while it is checked out.",
-      "Push policy: do not run `git push` or `gh pr create` unless the repo's committed `.claude/afk.json` sets \"push\": \"branch\" or the user's latest message asks for a push or a PR. Under \"branch\", every PR is opened with `gh pr create --draft`.",
+      "Push policy: do not run `git push` or `gh pr create` unless the user's latest message asks for a push or a PR.",
       "Merges and remote deletes: never run `gh pr merge` and never delete remote branches or tags."
     ]
   },
