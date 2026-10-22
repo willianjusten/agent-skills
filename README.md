@@ -2,12 +2,6 @@
 
 My agent harness in one repo: skills, global instructions and Claude Code settings, installed the same way on every machine with one command. Works in Claude Code and Cursor.
 
-## What are Skills?
-
-Skills are packaged instructions that teach an agent a workflow. A skill is a folder with a `SKILL.md`: YAML frontmatter tells the agent when to use it, the markdown body tells it what to do, and supporting files (`references/`, `scripts/`) load only when a step needs them, so idle skills cost almost no context.
-
-They follow the [Agent Skills](https://agentskills.io) open standard, so the same folder works in Claude Code, Cursor and other agents. Some skills are **model-invoked** (the agent picks them up when a request matches the description); others are **user-invoked** only (`disable-model-invocation: true`), run by typing `/<name>`.
-
 ## Quick Start
 
 On a new machine:
@@ -27,56 +21,7 @@ Then:
 2. Paste [`harness/shared/instructions.md`](harness/shared/instructions.md) into Cursor > Settings > Rules > User Rules.
 3. For Spoke, see [Spoke](#spoke).
 
-## Skills
-
-**Scope** says where a skill shows up (see [Scopes](#scopes)). **Invoked** says who starts it: `model` (matched from your request) or `/name` (only when you type it).
-
-### Engineering
-
-| Skill | Source | Scope | Invoked | Description |
-| ----- | ------ | ----- | ------- | ----------- |
-| **diagnosing-bugs** | mattpocock | both | model | Diagnosis loop for hard bugs and performance regressions |
-| **tdd** | mattpocock | both | model | Red-green-refactor, one vertical slice at a time |
-| **matt-code-review** | mattpocock | both | model | Two-axis review of a diff: repo standards and the originating spec |
-| **codebase-design** | mattpocock | both | model | Shared vocabulary for deep modules, interfaces and seams |
-| **prototype** | mattpocock | both | model | Throwaway prototype to answer a design question |
-| **research** | mattpocock | both | model | Primary-source research captured as a Markdown file |
-| **domain-modeling** | mattpocock | both | model | Sharpen domain terms in `GLOSSARY.md` and record ADRs |
-| **pr** | mattpocock | personal | model | Write a PR body |
-| **wizard** | mattpocock | personal | model | Interactive bash wizard for steps only a human can do |
-| **to-spec** | mattpocock | both | /name | Turn the conversation into a spec in the issue tracker |
-| **to-tickets** | mattpocock | both | /name | Split a spec into tracer-bullet tickets with blocking edges |
-| **implement** | mattpocock | both | /name | Build one piece of work from a spec or tickets |
-| **implement-spec** | mattpocock | both | /name | Build a whole spec with subagents on an integration branch |
-| **frontend-design** | anthropics | personal | model | Distinctive visual direction for new or reshaped UI, instead of templated layouts |
-| **wayfinder** | mattpocock | both | /name | Plan work too big for one session as a map of decision tickets |
-| **triage** | mattpocock | both | /name | Move issues and PRs through triage roles into agent-ready briefs |
-| **improve-codebase-architecture** | mattpocock | both | /name | Find deepening opportunities, report them, grill the chosen one |
-| **grill-with-docs** | mattpocock | both | /name | Grill a plan and write the glossary and ADRs as you go |
-| **setup-matt-pocock-skills** | mattpocock | personal | /name | Per-repo override of the global issue tracker, labels and docs setup |
-| **retro** | mattpocock | both | /name | Retrospective on a session, aimed at the agent's environment |
-
-### Productivity
-
-| Skill | Source | Scope | Invoked | Description |
-| ----- | ------ | ----- | ------- | ----------- |
-| **grilling** | mattpocock | both | model | Stress-test a plan, decision or idea |
-| **grill-me** | mattpocock | both | /name | Relentless interview to sharpen a plan |
-| **handoff** | mattpocock | both | /name | Compact the conversation into a handoff document |
-| **wait-what** | mattpocock | both | /name | Re-pitch the last message when it did not land |
-| **writing-for-agents** | mattpocock | personal | model | Write skills, AGENTS.md and CLAUDE.md for agents |
-| **skill-creator-plus** | robonuggets | personal | model | Audit, create and improve skills against Anthropic's authoring rules |
-| **ask-matt** | mattpocock | both | /name | Router: which skill or flow fits the situation |
-| **teach** | mattpocock | personal | /name | Teach a new skill or concept within the workspace |
-| **to-questionnaire** | mattpocock | personal | /name | Turn an open decision into a questionnaire for someone else |
-
-### Product
-
-No skills yet. Own skills go in `skills/product/<name>/`.
-
-Upstream skills set to `off` (Matt's misc and in-progress skills) are listed in [`scopes.json`](scopes.json).
-
-## How They Connect
+## The Flow
 
 ```mermaid
 flowchart TD
@@ -103,7 +48,7 @@ flowchart TD
     classDef plain fill:transparent,stroke:transparent
 ```
 
-Dotted arrows are optional handoffs. `ask-matt` routes to the right entry point when unsure. `handoff`, `wait-what`, `teach` and `to-questionnaire` run whenever their own job is needed.
+Dotted arrows are optional handoffs. `ask-matt` routes to the right entry point when unsure. Outside the flow, `handoff`, `wait-what`, `teach`, `to-questionnaire`, `triage`, `wizard`, `frontend-design`, `writing-for-agents` and `skill-creator-plus` run whenever their own job is needed. Every installed skill and its scope is in [`scopes.json`](scopes.json).
 
 ### Which workflow
 
@@ -185,7 +130,7 @@ Everything `install.sh` creates is a symlink into this repo, so editing a file h
 | `spoke` | Spoke only |
 | `off` | nowhere (kept on record, not installed) |
 
-Own skills declare the scope in frontmatter; vendored skills get one line in [`scopes.json`](scopes.json), grouped by source. A vendored skill missing from `scopes.json` is not installed.
+Own skills declare the scope in frontmatter; vendored skills get one line in [`scopes.json`](scopes.json), grouped by source. A vendored skill missing from `scopes.json` is not installed; upstream skills set to `off` stay listed there.
 
 ```yaml
 metadata:

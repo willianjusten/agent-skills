@@ -26,7 +26,7 @@ Conventions for working in this repository. This file is for agents editing the 
 
 4. Add a `README.md` next to `SKILL.md` (shape below).
 5. Run `./install.sh check`, fix every error, then `./install.sh`.
-6. Add the skill to the catalog table in the root `README.md`.
+6. If the skill joins the flow, add it to the diagram under "The Flow" in the root `README.md`.
 
 ## Skill conventions
 
