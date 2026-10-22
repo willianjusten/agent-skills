@@ -11,6 +11,7 @@ Conventions for working in this repository. This file is for agents editing the 
 | `scopes.json` | this repo | yes: one line per vendored skill |
 | `harness/` | this repo | yes: linked into `~/.claude`, so edits apply immediately |
 | `dist/` | `install.sh` | no: generated, gitignored |
+| `docs/images/` | this repo | yes: SVG diagrams for the root README, light and dark via `prefers-color-scheme` |
 | `.scratch/` | anyone | free-form notes, gitignored |
 
 ## Creating or changing a skill
@@ -26,7 +27,7 @@ Conventions for working in this repository. This file is for agents editing the 
 
 4. Add a `README.md` next to `SKILL.md` (shape below).
 5. Run `./install.sh check`, fix every error, then `./install.sh`.
-6. If the skill joins the flow, add it to the diagram under "The Flow" in the root `README.md`.
+6. If the skill joins the flow, add it to "Skills at a Glance" in the root `README.md`, and to `docs/images/flow.svg` or `routes.svg` if it changes the path.
 
 ## Skill conventions
 
