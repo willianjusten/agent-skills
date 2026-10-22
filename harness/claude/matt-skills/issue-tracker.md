@@ -31,4 +31,4 @@ Used by `/wayfinder`. The **map** is a file with one **child** file per ticket.
 
 ## Closing work
 
-Work closes by ticket status, not through PRs: set the ticket's `Status:` line to `done`. A ticket's blockers are done when each file it lists says `Status: done`.
+Work closes by ticket status, not through PRs: set the ticket's Status line to `done`. A ticket's blockers are done when each ticket it lists has a Status of `done`.
