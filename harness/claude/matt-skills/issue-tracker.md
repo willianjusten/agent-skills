@@ -29,38 +29,6 @@ Used by `/wayfinder`. The **map** is a file with one **child** file per ticket.
 - **Claim**: set `Status: claimed` and save before any work.
 - **Resolve**: append the answer under an `## Answer` heading, set `Status: resolved`, then append a context pointer (gist + link) to the map's Decisions-so-far in `map.md`.
 
-## Status lifecycle
-
-One plain line near the top of every file: `Status: <value>`. Never bold; this overrides the bold `**Status:**` in `to-tickets`' local template.
-
-- Spec files: `spec`. Orchestrators never pick these up.
-- Tickets: `ready-for-agent` | `ready-for-human` -> `in-progress` -> `done`, or `needs-info` when blocked.
-
-## Required ticket fields
-
-Plain `Field: value` lines under the title, never bold:
-
-- `Blocked by: NN, NN` or `None`
-- `Areas:` module or domain names the ticket touches (no paths). A schema or migration change is always its own ticket and blocks its dependents.
-- `Tests: tdd | e2e | verify-only`
-- `Reuses: <path:line>[, <path:line>...]` the existing code the ticket follows, or `Reuses: no-precedent`. Search the codebase for the nearest example before writing the ticket.
-- `Verify:` optional; the command that proves it is done
-
-## Implementation frontier
-
-A ticket is ready to start when it is `ready-for-agent`, every `Blocked by` ticket is `done`, and it is not `in-progress`.
-
-## Worktrees
-
-`.scratch/` is gitignored and absent from worktrees. A subagent working in a worktree gets the ticket and spec paths as absolute paths in the main checkout and updates ticket status there.
-
-## Operations
-
-- Claim: set `Status: in-progress` and save before any work.
-- Done: set `Status: done`, append the commit SHAs under `## Done`. Record a small departure from the ticket there as `Deviation: <one line>`; a contradiction with the spec is an Escalate.
-- Escalate: append `## Blocker` (what was tried, what is needed), set `Status: needs-info`, continue the frontier.
-- Log: append one line per attempt to `.scratch/<feature>/progress.md`: ticket, result, commit or blocker.
-
 ## Closing work
 
-With `"push": "branch"` in `.claude/afk.json`, work closes through a PR: `implement-spec` opens it as a draft and marks it ready for review at the end. An agent never merges it. Otherwise work closes by ticket status and nothing is pushed, unless the user asks for a PR. In both cases each ticket still goes through Done.
+Work closes by ticket status, not through PRs: set the ticket's `Status:` line to `done`. A ticket's blockers are done when each file it lists says `Status: done`.
