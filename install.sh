@@ -127,8 +127,6 @@ link_harness() {
   link_path "$ROOT/harness/claude/settings.json" "$CLAUDE_HOME/settings.json"
   link_path "$ROOT/harness/claude/statusline-command.sh" "$CLAUDE_HOME/statusline-command.sh"
   link_path "$ROOT/harness/claude/matt-skills" "$CLAUDE_HOME/matt-skills"
-  link_path "$ROOT/harness/claude/hooks" "$CLAUDE_HOME/hooks"
-  link_path "$ROOT/harness/claude/agents" "$CLAUDE_HOME/agents"
 }
 
 # Vendored sources are the top-level keys of scopes.json, e.g. "mattpocock/skills".
