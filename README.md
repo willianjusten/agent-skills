@@ -48,7 +48,6 @@ Then:
 | **to-tickets** | mattpocock | both | /name | Split a spec into tracer-bullet tickets with blocking edges |
 | **implement** | mattpocock | both | /name | Build one piece of work from a spec or tickets |
 | **implement-spec** | mattpocock | both | /name | Build a whole spec with subagents on an integration branch |
-| **agent-browser** | vercel-labs | personal | model | Browser automation CLI for driving and checking web UIs |
 | **frontend-design** | anthropics | personal | model | Distinctive visual direction for new or reshaped UI, instead of templated layouts |
 | **wayfinder** | mattpocock | both | /name | Plan work too big for one session as a map of decision tickets |
 | **triage** | mattpocock | both | /name | Move issues and PRs through triage roles into agent-ready briefs |
@@ -213,7 +212,7 @@ agent-skills/
 | Update vendored skills | `./install.sh --update`; review `git diff vendor/`; commit |
 | Enable a vendored skill | Set it to `personal` or `both` in `scopes.json`; `./install.sh --update` |
 | Add a vendor source | Add `"<owner>/<repo>": { "<skill>": "personal" }` to `scopes.json`; `./install.sh --update` |
-| Set up a project for agents | `/setup-matt-pocock-skills` in the repo (optionally `/setup-pre-commit`, `/git-guardrails-claude-code`); hand-write `.claude/afk.json` with `{ "push": "branch" }` to opt into branch pushes and draft PRs |
+| Set up a project for agents | `/setup-matt-pocock-skills` in the repo; hand-write `.claude/afk.json` with `{ "push": "branch" }` to opt into branch pushes and draft PRs |
 
 ## What install.sh Touches
 
@@ -226,7 +225,7 @@ agent-skills/
 
 On every run it also renames Matt's `code-review` to `matt-code-review`, since the original name collides with Claude Code's built-in `/code-review`. Nothing else in `~/.claude` is touched: `skills/synced/` (claude.ai skills), `projects/`, plugins and history stay as they are. A second run prints `No changes.`
 
-Requirements: `git` and `jq`; `--update` also needs node >= 22.20; `check` needs `python3`. The `agent-browser` skill needs its CLI: `npm i -g agent-browser@0.39.1 && agent-browser install`.
+Requirements: `git` and `jq`; `--update` also needs node >= 22.20; `check` needs `python3`.
 
 Library docs come from the Context7 MCP server, installed once at user scope. It works without a key; `install.sh` warns when it is missing but does not install it:
 
