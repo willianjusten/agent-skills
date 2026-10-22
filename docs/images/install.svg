@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 380" width="920" height="380" role="img" aria-labelledby="t d">
+  <title id="t">What install.sh does</title>
+  <desc id="d">install.sh reads own skills, vendored skills with scopes.json, and harness files, and symlinks them: personal and both skills into ~/.claude/skills, harness files into ~/.claude, spoke skills into dist/spoke for agentplan, and switches personal skills off in Spoke's settings.local.json.</desc>
+  <style>
+    .card{fill:#F6F8FA;stroke:#D1D9E0}
+    .box{fill:#FFFFFF;stroke:#D1D9E0}
+    .hub{fill:#DDF4FF;stroke:#0969DA}
+    .ink{fill:#1F2328}
+    .muted{fill:#59636E}
+    .arrow{stroke:#818B98}
+    .arrowfill{fill:#818B98}
+    .chip{fill:#DAFBE1}.chiptext{fill:#1A7F37}
+    text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif}
+    .label{font-size:12px;font-weight:600;letter-spacing:.06em}
+    .sub{font-size:12.5px}
+    .mono{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;font-size:13.5px;font-weight:600}
+    .chiptext{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;font-size:11.5px}
+    @media (prefers-color-scheme: dark){
+      .card{fill:#151B23;stroke:#3D444D}
+      .box{fill:#0D1117;stroke:#3D444D}
+      .hub{fill:#0D2341;stroke:#4493F8}
+      .ink{fill:#F0F6FC}
+      .muted{fill:#9198A1}
+      .arrow{stroke:#656C76}
+      .arrowfill{fill:#656C76}
+      .chip{fill:#0F2A18}.chiptext{fill:#3FB950}
+    }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="arrowfill" d="M0 0 L10 5 L0 10 z"/>
+    </marker>
+  </defs>
+
+  <rect class="card" x="1" y="1" width="918" height="378" rx="14"/>
+
+  <text class="muted label" x="24" y="38">THIS REPO</text>
+  <text class="muted label" x="590" y="38">YOUR MACHINE</text>
+
+  <!-- sources -->
+  <rect class="box" x="24" y="60" width="270" height="70" rx="10"/>
+  <text class="ink mono" x="42" y="90">skills/&lt;category&gt;/&lt;name&gt;</text>
+  <text class="muted sub" x="42" y="112">own skills, scope in frontmatter</text>
+
+  <rect class="box" x="24" y="155" width="270" height="70" rx="10"/>
+  <text class="ink mono" x="42" y="185">vendor/ + scopes.json</text>
+  <text class="muted sub" x="42" y="207">upstream skills, one scope each</text>
+
+  <rect class="box" x="24" y="250" width="270" height="70" rx="10"/>
+  <text class="ink mono" x="42" y="280">harness/</text>
+  <text class="muted sub" x="42" y="302">CLAUDE.md, settings, statusline</text>
+
+  <!-- hub -->
+  <rect class="hub" x="350" y="160" width="170" height="60" rx="12" stroke-width="2"/>
+  <text class="ink mono" x="435" y="187" text-anchor="middle">install.sh</text>
+  <text class="muted sub" x="435" y="206" text-anchor="middle">links, never copies</text>
+
+  <line class="arrow" x1="298" y1="95" x2="346" y2="178" stroke-width="2" marker-end="url(#head)"/>
+  <line class="arrow" x1="298" y1="190" x2="346" y2="190" stroke-width="2" marker-end="url(#head)"/>
+  <line class="arrow" x1="298" y1="285" x2="346" y2="202" stroke-width="2" marker-end="url(#head)"/>
+
+  <!-- targets -->
+  <rect class="box" x="590" y="56" width="306" height="64" rx="10"/>
+  <text class="ink mono" x="606" y="82">~/.claude/skills</text>
+  <rect class="chip" x="606" y="93" width="118" height="18" rx="9"/>
+  <text class="chiptext" x="665" y="106" text-anchor="middle">personal + both</text>
+
+  <rect class="box" x="590" y="132" width="306" height="64" rx="10"/>
+  <text class="ink mono" x="606" y="158">~/.claude</text>
+  <text class="muted sub" x="606" y="182">CLAUDE.md, settings.json, statusline</text>
+
+  <rect class="box" x="590" y="208" width="306" height="64" rx="10"/>
+  <text class="ink mono" x="606" y="234">dist/spoke → agentplan</text>
+  <rect class="chip" x="606" y="245" width="52" height="18" rx="9"/>
+  <text class="chiptext" x="632" y="258" text-anchor="middle">spoke</text>
+
+  <rect class="box" x="590" y="284" width="306" height="64" rx="10"/>
+  <text class="ink mono" x="606" y="310">spoke/.claude/settings.local.json</text>
+  <text class="muted sub" x="606" y="334">switches personal skills off in Spoke</text>
+
+  <line class="arrow" x1="524" y1="178" x2="586" y2="90" stroke-width="2" marker-end="url(#head)"/>
+  <line class="arrow" x1="524" y1="186" x2="586" y2="164" stroke-width="2" marker-end="url(#head)"/>
+  <line class="arrow" x1="524" y1="196" x2="586" y2="240" stroke-width="2" marker-end="url(#head)"/>
+  <line class="arrow" x1="524" y1="204" x2="586" y2="314" stroke-width="2" marker-end="url(#head)"/>
+</svg>

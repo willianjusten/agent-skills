@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 532" width="920" height="532" role="img" aria-labelledby="t d">
+  <title id="t">Pick a route</title>
+  <desc id="d">Go down the questions; the first yes picks the route. Broken: diagnosing-bugs then tdd. Tiny: tdd then matt-code-review. One session: grill-with-docs then implement. Multi-session: grill-with-docs, to-spec, to-tickets, then implement-spec or implement per ticket. Foggy: wayfinder first.</desc>
+  <style>
+    .card{fill:#F6F8FA;stroke:#D1D9E0}
+    .box{fill:#FFFFFF;stroke:#D1D9E0}
+    .ink{fill:#1F2328}
+    .muted{fill:#59636E}
+    .arrow{stroke:#818B98}
+    .arrowfill{fill:#818B98}
+    .red{fill:#FFEBE9}.redbar{fill:#CF222E}
+    .blue{fill:#DDF4FF}.bluebar{fill:#0969DA}
+    .green{fill:#DAFBE1}.greenbar{fill:#1A7F37}
+    .amber{fill:#FFF8C5}.amberbar{fill:#9A6700}
+    text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif}
+    .q{font-size:15px}
+    .name{font-size:15px;font-weight:600}
+    .sub{font-size:12.5px}
+    .mono{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;font-size:13px}
+    @media (prefers-color-scheme: dark){
+      .card{fill:#151B23;stroke:#3D444D}
+      .box{fill:#0D1117;stroke:#3D444D}
+      .ink{fill:#F0F6FC}
+      .muted{fill:#9198A1}
+      .arrow{stroke:#656C76}
+      .arrowfill{fill:#656C76}
+      .red{fill:#2D1214}.redbar{fill:#F85149}
+      .blue{fill:#0D2341}.bluebar{fill:#4493F8}
+      .green{fill:#0F2A18}.greenbar{fill:#3FB950}
+      .amber{fill:#2E2410}.amberbar{fill:#D29922}
+    }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="arrowfill" d="M0 0 L10 5 L0 10 z"/>
+    </marker>
+  </defs>
+
+  <rect class="card" x="1" y="1" width="918" height="530" rx="14"/>
+
+  <!-- row 1: broken -->
+  <rect class="box" x="24" y="24" width="356" height="72" rx="10"/>
+  <text class="ink q" x="44" y="66">Is something broken?</text>
+  <line class="arrow" x1="384" y1="60" x2="462" y2="60" stroke-width="2" marker-end="url(#head)"/>
+  <text class="muted sub" x="422" y="52" text-anchor="middle">yes</text>
+  <rect class="red" x="470" y="24" width="426" height="72" rx="10"/>
+  <rect class="redbar" x="470" y="24" width="6" height="72" rx="3"/>
+  <text class="ink name" x="492" y="52">Bug</text>
+  <text class="ink mono" x="492" y="76">diagnosing-bugs → tdd</text>
+
+  <line class="arrow" x1="202" y1="100" x2="202" y2="124" stroke-width="2" marker-end="url(#head)"/>
+  <text class="muted sub" x="212" y="116">no</text>
+
+  <!-- row 2: tiny -->
+  <rect class="box" x="24" y="128" width="356" height="72" rx="10"/>
+  <text class="ink q" x="44" y="160">One small behaviour that is</text>
+  <text class="ink q" x="44" y="180">already decided?</text>
+  <line class="arrow" x1="384" y1="164" x2="462" y2="164" stroke-width="2" marker-end="url(#head)"/>
+  <text class="muted sub" x="422" y="156" text-anchor="middle">yes</text>
+  <rect class="blue" x="470" y="128" width="426" height="72" rx="10"/>
+  <rect class="bluebar" x="470" y="128" width="6" height="72" rx="3"/>
+  <text class="ink name" x="492" y="156">Tiny</text>
+  <text class="ink mono" x="492" y="180">tdd → matt-code-review</text>
+
+  <line class="arrow" x1="202" y1="204" x2="202" y2="228" stroke-width="2" marker-end="url(#head)"/>
+  <text class="muted sub" x="212" y="220">no</text>
+
+  <!-- row 3: one session -->
+  <rect class="box" x="24" y="232" width="356" height="72" rx="10"/>
+  <text class="ink q" x="44" y="264">Do planning and building fit</text>
+  <text class="ink q" x="44" y="284">in one session?</text>
+  <line class="arrow" x1="384" y1="268" x2="462" y2="268" stroke-width="2" marker-end="url(#head)"/>
+  <text class="muted sub" x="422" y="260" text-anchor="middle">yes</text>
+  <rect class="blue" x="470" y="232" width="426" height="72" rx="10"/>
+  <rect class="bluebar" x="470" y="232" width="6" height="72" rx="3"/>
+  <text class="ink name" x="492" y="260">One session</text>
+  <text class="ink mono" x="492" y="284">grill-with-docs → implement</text>
+
+  <line class="arrow" x1="202" y1="308" x2="202" y2="332" stroke-width="2" marker-end="url(#head)"/>
+  <text class="muted sub" x="212" y="324">no</text>
+
+  <!-- row 4: multi-session -->
+  <rect class="box" x="24" y="336" width="356" height="72" rx="10"/>
+  <text class="ink q" x="44" y="368">Can you see the way to the end?</text>
+  <text class="muted sub" x="44" y="388">you know what to build, it is just big</text>
+  <line class="arrow" x1="384" y1="372" x2="462" y2="372" stroke-width="2" marker-end="url(#head)"/>
+  <text class="muted sub" x="422" y="364" text-anchor="middle">yes</text>
+  <rect class="green" x="470" y="336" width="426" height="72" rx="10"/>
+  <rect class="greenbar" x="470" y="336" width="6" height="72" rx="3"/>
+  <text class="ink name" x="492" y="360">Multi-session</text>
+  <text class="ink mono" x="492" y="380">grill-with-docs → to-spec → to-tickets</text>
+  <text class="ink mono" x="492" y="398">→ implement-spec <tspan class="muted">(or implement per ticket)</tspan></text>
+
+  <line class="arrow" x1="202" y1="412" x2="202" y2="436" stroke-width="2" marker-end="url(#head)"/>
+  <text class="muted sub" x="212" y="428">no</text>
+
+  <!-- row 5: foggy -->
+  <rect class="box" x="24" y="440" width="356" height="72" rx="10"/>
+  <text class="ink q" x="44" y="472">Too big and foggy to plan</text>
+  <text class="ink q" x="44" y="492">in one go</text>
+  <line class="arrow" x1="384" y1="476" x2="462" y2="476" stroke-width="2" marker-end="url(#head)"/>
+  <rect class="amber" x="470" y="440" width="426" height="72" rx="10"/>
+  <rect class="amberbar" x="470" y="440" width="6" height="72" rx="3"/>
+  <text class="ink name" x="492" y="468">Foggy</text>
+  <text class="ink mono" x="492" y="492">wayfinder → <tspan class="muted">then the multi-session route</tspan></text>
+</svg>

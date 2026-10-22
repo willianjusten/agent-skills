@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 480" width="960" height="480" role="img" aria-labelledby="t d">
+  <title id="t">From idea to merged code</title>
+  <desc id="d">You plan along the blue line: grill-with-docs, to-spec, to-tickets. After clearing context, agents run the green line with implement-spec: frontier, implementers in worktrees, merge, matt-code-review. You come back to review, then pr and retro.</desc>
+  <style>
+    .card{fill:#F6F8FA;stroke:#D1D9E0}
+    .surface{fill:#FFFFFF}
+    .ink{fill:#1F2328}
+    .muted{fill:#59636E}
+    .blue{stroke:#0969DA}
+    .green{stroke:#1A7F37}
+    .rule{stroke:#D1D9E0}
+    .inkstroke{stroke:#1F2328}
+    .bluefill{fill:#0969DA}
+    .greenfill{fill:#1A7F37}
+    text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif}
+    .name{font-size:15px;font-weight:600}
+    .sub{font-size:12.5px}
+    .mono{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace}
+    @media (prefers-color-scheme: dark){
+      .card{fill:#151B23;stroke:#3D444D}
+      .surface{fill:#0D1117}
+      .ink{fill:#F0F6FC}
+      .muted{fill:#9198A1}
+      .blue{stroke:#4493F8}
+      .green{stroke:#3FB950}
+      .rule{stroke:#3D444D}
+      .inkstroke{stroke:#F0F6FC}
+      .bluefill{fill:#4493F8}
+      .greenfill{fill:#3FB950}
+    }
+  </style>
+
+  <rect class="card" x="1" y="1" width="958" height="478" rx="14"/>
+
+  <!-- legend -->
+  <line class="blue" x1="30" y1="34" x2="58" y2="34" stroke-width="6" stroke-linecap="round"/>
+  <text class="ink sub" x="66" y="38">You: decisions</text>
+  <line class="green" x1="190" y1="34" x2="218" y2="34" stroke-width="6" stroke-linecap="round"/>
+  <text class="ink sub" x="226" y="38">Agents: unattended work</text>
+  <rect class="surface inkstroke" x="402" y="26" width="16" height="16" rx="4" stroke-width="3"/>
+  <text class="ink sub" x="426" y="38">Checkpoint: you look at the work</text>
+  <line class="blue" x1="640" y1="34" x2="668" y2="34" stroke-width="3" stroke-dasharray="5 5"/>
+  <text class="ink sub" x="676" y="38">Optional detour</text>
+
+  <!-- lines -->
+  <path class="blue" d="M70 150 H600" stroke-width="10" stroke-linecap="round" fill="none"/>
+  <path class="blue" d="M235 150 C235 80 420 80 420 150" stroke-width="3" stroke-dasharray="6 6" fill="none"/>
+  <path class="rule" d="M600 150 H860" stroke-width="10" stroke-linecap="round" fill="none"/>
+  <path class="green" d="M860 150 V400 H400" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path class="blue" d="M400 400 H70" stroke-width="10" stroke-linecap="round" fill="none"/>
+  <text class="muted sub mono" x="730" y="136" text-anchor="middle">/clear</text>
+  <text class="muted sub" x="908" y="275" text-anchor="middle" transform="rotate(90 908 275)">implement-spec runs this line</text>
+
+  <!-- planning stations -->
+  <circle class="surface blue" cx="70" cy="150" r="11" stroke-width="5"/>
+  <text class="ink name" x="70" y="184" text-anchor="middle">Idea</text>
+  <text class="muted sub" x="70" y="202" text-anchor="middle">or a problem</text>
+
+  <circle class="surface blue" cx="235" cy="150" r="11" stroke-width="5"/>
+  <text class="ink name mono" x="235" y="184" text-anchor="middle">grill-with-docs</text>
+  <text class="muted sub" x="235" y="202" text-anchor="middle">interview until settled</text>
+
+  <circle class="surface blue" cx="327" cy="97" r="7" stroke-width="3" stroke-dasharray="3 3"/>
+  <text class="muted sub" x="327" y="78" text-anchor="middle"><tspan class="mono">prototype</tspan> when talking is not enough</text>
+
+  <circle class="surface blue" cx="420" cy="150" r="11" stroke-width="5"/>
+  <text class="ink name mono" x="420" y="184" text-anchor="middle">to-spec</text>
+  <text class="muted sub" x="420" y="202" text-anchor="middle">the plan, in .scratch/</text>
+
+  <rect class="surface inkstroke" x="587" y="137" width="26" height="26" rx="7" stroke-width="5"/>
+  <text class="ink name mono" x="600" y="184" text-anchor="middle">to-tickets</text>
+  <text class="muted sub" x="600" y="202" text-anchor="middle">you approve the slices</text>
+
+  <!-- agent stations -->
+  <circle class="surface green" cx="860" cy="245" r="11" stroke-width="5"/>
+  <text class="ink name" x="836" y="243" text-anchor="end">Frontier</text>
+  <text class="muted sub" x="836" y="260" text-anchor="end">tickets with no open blockers</text>
+
+  <circle class="surface green" cx="860" cy="320" r="11" stroke-width="5"/>
+  <text class="ink name" x="836" y="318" text-anchor="end">Implementers</text>
+  <text class="muted sub" x="836" y="335" text-anchor="end">parallel worktrees, each runs tdd</text>
+
+  <circle class="surface green" cx="720" cy="400" r="11" stroke-width="5"/>
+  <text class="muted sub" x="720" y="378" text-anchor="middle">&#8635; next frontier</text>
+  <text class="ink name" x="720" y="434" text-anchor="middle">Merge</text>
+  <text class="muted sub" x="720" y="452" text-anchor="middle">into the integration branch</text>
+
+  <circle class="surface green" cx="560" cy="400" r="11" stroke-width="5"/>
+  <text class="ink name mono" x="560" y="434" text-anchor="middle">matt-code-review</text>
+  <text class="muted sub" x="560" y="452" text-anchor="middle">standards + spec, once</text>
+
+  <!-- back to you -->
+  <rect class="surface inkstroke" x="387" y="387" width="26" height="26" rx="7" stroke-width="5"/>
+  <text class="ink name" x="400" y="434" text-anchor="middle">You review</text>
+  <text class="muted sub" x="400" y="452" text-anchor="middle">accept or send back</text>
+
+  <circle class="surface blue" cx="235" cy="400" r="11" stroke-width="5"/>
+  <text class="ink name mono" x="235" y="434" text-anchor="middle">pr</text>
+  <text class="muted sub" x="235" y="452" text-anchor="middle">writes the PR body</text>
+
+  <circle class="surface blue" cx="70" cy="400" r="11" stroke-width="5"/>
+  <text class="ink name mono" x="70" y="434" text-anchor="middle">retro</text>
+  <text class="muted sub" x="70" y="452" text-anchor="middle">improve the setup</text>
+</svg>
