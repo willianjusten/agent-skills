@@ -43,12 +43,24 @@ Plain `Field: value` lines under the title, never bold:
 - `Blocked by: NN, NN` or `None`
 - `Areas:` module or domain names the ticket touches (no paths). Tickets with overlapping Areas never run in parallel. A schema or migration change is always its own ticket and blocks its dependents.
 - `Tests: tdd | e2e | verify-only`
-- `Pattern:` the `docs/patterns/` entry it follows, or `new` (the ticket is then `ready-for-human`); omit in repos without `docs/patterns/`
-- `Verify:` optional; the command that proves it is done (default: the project's `verify` script)
+- `Reuses: <path:line>[, <path:line>...]` the existing code the ticket follows, or `Reuses: no-precedent`. Search the codebase for the nearest example before writing the ticket.
+- `Verify:` optional; the command that proves it is done
+
+## Implementation frontier
+
+A ticket is ready to start when it is `ready-for-agent`, every `Blocked by` ticket is `done`, it is not already running, and its `Areas` do not overlap with a running ticket. At most two tickets run at once.
+
+## Worktrees
+
+`.scratch/` is gitignored and absent from worktrees. A subagent working in a worktree gets the ticket and spec paths as absolute paths in the main checkout and updates ticket status there.
 
 ## Operations
 
 - Claim: set `Status: in-progress` and save before any work.
-- Done: set `Status: done`, append the commit SHAs under `## Done`.
+- Done: set `Status: done`, append the commit SHAs under `## Done`. Record a small departure from the ticket there as `Deviation: <one line>`; a contradiction with the spec is an Escalate.
 - Escalate: append `## Blocker` (what was tried, what is needed), set `Status: needs-info`, continue the frontier.
 - Log: append one line per attempt to `.scratch/<feature>/progress.md`: ticket, result, commit or blocker.
+
+## Closing work
+
+With `"push": "branch"` in `.claude/afk.json`, work closes through a PR: `implement-spec` opens it as a draft and marks it ready for review at the end. An agent never merges it. Otherwise work closes by ticket status (Done above) and nothing is pushed.
