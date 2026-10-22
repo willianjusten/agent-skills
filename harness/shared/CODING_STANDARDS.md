@@ -23,6 +23,16 @@ Rules for every repo. A repo's own standards win where they conflict.
 
 - New code follows the nearest existing code that does the same job; a departure needs a reason in the ticket or commit message
 
+## UI
+
+- Reuse the repo's existing tokens, theme values and components before adding a colour, size or font; a new value goes into the shared theme, not into a component
+- Take spacing from one scale; no one-off values
+- Leave space around and between content blocks: content never touches a container or viewport edge
+- Give every interactive element visible hover, focus and disabled states
+- Lay out with flexible widths; a changed screen works at 375px and 1280px with no horizontal scroll
+- Cover empty, loading and error states for every view that shows remote or computed data
+- Match the hierarchy of the screens next to it: headings, type sizes and alignment
+
 ## Agent slop
 
 - Comments that narrate what the next line does
@@ -32,6 +42,8 @@ Rules for every repo. A repo's own standards win where they conflict.
 - Leftover debug output
 - Edits outside the ticket's scope
 - Deleted, skipped or loosened tests the ticket did not ask to change
+- Hard-coded colours or sizes next to an existing theme
+- Fixed pixel widths on content
 
 ## Not a finding
 
