@@ -15,6 +15,8 @@ WRITE_TOOLS = ("Edit", "Write", "NotebookEdit")
 LOCKFILE_NAMES = ("package-lock.json", "pnpm-lock.yaml", "bun.lockb")
 GENERATED_DIRS = ("node_modules", "dist", "build", ".next", "coverage")
 
+WHOLE_FILE = (1, float("inf"))
+
 # Slack between a write's recorded result and the file's mtime, so the session's
 # own writes do not count as a change made outside it.
 SESSION_WRITE_TOLERANCE_SECONDS = 5
@@ -50,8 +52,8 @@ def deny(reason):
     }))
 
 
-def same_file(candidate, target_real_path):
-    return os.path.realpath(candidate) == target_real_path
+def target_path(tool_input):
+    return tool_input.get("file_path") or tool_input.get("notebook_path")
 
 
 def session_transcript(payload):
@@ -68,17 +70,21 @@ def session_transcript(payload):
     return os.path.join(session_dir, "subagents", agent_file_name)
 
 
-def transcript_entries(transcript_path):
+def conversation_turns(transcript_path):
+    """Timestamped user and assistant entries. Other entries (request copies, titles,
+    modes) repeat or annotate turns and carry no timestamp."""
     with open(transcript_path, encoding="utf-8") as transcript:
         for line in transcript:
-            line = line.strip()
-            if not line:
-                continue
             try:
                 entry = json.loads(line)
             except ValueError:
                 continue
-            if isinstance(entry, dict):
+            if (
+                isinstance(entry, dict)
+                and entry.get("type") in ("user", "assistant")
+                and isinstance(entry.get("message"), dict)
+                and entry.get("timestamp")
+            ):
                 yield entry
 
 
@@ -88,20 +94,19 @@ def entry_epoch(entry):
 
 
 def content_blocks(entry, block_type):
-    message = entry.get("message")
-    content = message.get("content") if isinstance(message, dict) else None
+    content = entry["message"].get("content")
     if not isinstance(content, list):
         return []
     return [block for block in content if isinstance(block, dict) and block.get("type") == block_type]
 
 
-def read_range(tool_input, tool_use_result):
+def read_range(tool_input, tool_use_result, is_notebook):
     """The (first, last) lines a Read returned, from its result when recorded, else its input.
 
     A notebook Read returns every cell, so it covers the whole file.
     """
-    if isinstance(tool_use_result, dict) and tool_use_result.get("type") == "notebook":
-        return 1, float("inf")
+    if is_notebook:
+        return WHOLE_FILE
     returned_file = tool_use_result.get("file") if isinstance(tool_use_result, dict) else None
     if isinstance(returned_file, dict) and isinstance(returned_file.get("numLines"), int):
         first_line = max(int(returned_file.get("startLine") or 1), 1)
@@ -110,48 +115,49 @@ def read_range(tool_input, tool_use_result):
     return first_line, first_line + int(tool_input.get("limit") or READ_DEFAULT_LIMIT) - 1
 
 
-def file_history(transcript_path, target_real_path):
+def file_history(transcript_path, target_real_path, current_tool_use_id):
     """The session's successful Reads of the target as (epoch called, (first, last) line),
     and the epoch the session last changed it, or None.
 
     A Write counts as a read of the whole file, since the session wrote every line of it.
-    Returns None when no entry looks like a conversation turn: an unknown format.
+    A write with no result yet is still running (parallel calls), so it counts as the
+    latest change. The call being judged is skipped: it cannot vouch for itself.
+    Returns None when the transcript holds no conversation turn: an unknown format.
     """
     tool_uses = {}
     tool_results = {}
     format_recognized = False
-    for entry in transcript_entries(transcript_path):
-        # Only conversation turns count; other entries (request copies, titles, modes)
-        # repeat or annotate them and carry no timestamp.
-        if entry.get("type") not in ("user", "assistant") or not isinstance(entry.get("message"), dict):
-            continue
+    for entry in conversation_turns(transcript_path):
         format_recognized = True
         for block in content_blocks(entry, "tool_use"):
             tool_uses[block.get("id")] = (block, entry_epoch(entry))
         for block in content_blocks(entry, "tool_result"):
             tool_results[block.get("tool_use_id")] = (block, entry.get("toolUseResult"), entry_epoch(entry))
+    if not format_recognized:
+        return None
 
+    is_notebook = target_real_path.endswith(".ipynb")
     reads = []
     last_session_write = None
     for tool_use_id, (tool_use, called_at) in tool_uses.items():
         tool_name = tool_use.get("name")
         tool_input = tool_use.get("input")
-        if tool_name not in ("Read",) + WRITE_TOOLS or not isinstance(tool_input, dict):
+        if tool_use_id == current_tool_use_id or tool_name not in ("Read",) + WRITE_TOOLS:
             continue
-        tool_path = tool_input.get("file_path") or tool_input.get("notebook_path")
-        if not tool_path or not same_file(str(tool_path), target_real_path):
+        if not isinstance(tool_input, dict) or not target_path(tool_input):
             continue
-        result_block, tool_use_result, finished_at = tool_results.get(tool_use_id, ({}, None, called_at))
+        if os.path.realpath(str(target_path(tool_input))) != target_real_path:
+            continue
+        result_block, tool_use_result, finished_at = tool_results.get(tool_use_id, ({}, None, None))
         if result_block.get("is_error"):
             continue
         if tool_name == "Read":
-            reads.append((called_at, read_range(tool_input, tool_use_result)))
+            reads.append((called_at, read_range(tool_input, tool_use_result, is_notebook)))
             continue
-        last_session_write = max(last_session_write or finished_at, finished_at)
+        written_at = float("inf") if finished_at is None else finished_at
+        last_session_write = written_at if last_session_write is None else max(last_session_write, written_at)
         if tool_name == "Write":
-            reads.append((finished_at, (1, float("inf"))))
-    if not format_recognized:
-        return None
+            reads.append((called_at if finished_at is None else finished_at, WHOLE_FILE))
     return reads, last_session_write
 
 
@@ -170,13 +176,23 @@ def first_gap(ranges, first_needed, last_needed):
     return cursor, min(next_starts + [last_needed + 1]) - 1
 
 
+def line_count(file_content):
+    """Lines as the Read tool counts them: only \\n ends a line."""
+    if not file_content:
+        return 0
+    return file_content.count("\n") + (0 if file_content.endswith("\n") else 1)
+
+
 def needed_lines(tool_name, tool_input, file_content, total_lines):
-    """The (first, last) lines the session must have read before this change."""
+    """The (first, last) lines the session must have read before this change, or None
+    when the Edit cannot apply (its old_string is not in the file)."""
     old_string = tool_input.get("old_string")
     if total_lines <= READ_DEFAULT_LIMIT or tool_name != "Edit" or not old_string:
         return 1, total_lines
     match_index = file_content.find(old_string)
     if match_index < 0:
+        return None
+    if tool_input.get("replace_all"):
         return 1, total_lines
     first_line = file_content.count("\n", 0, match_index) + 1
     last_line = first_line + old_string.rstrip("\n").count("\n")
@@ -191,7 +207,7 @@ def main():
     if payload.get("tool_name") not in WRITE_TOOLS:
         return
     tool_input = payload.get("tool_input") or {}
-    file_path = tool_input.get("file_path") or tool_input.get("notebook_path")
+    file_path = target_path(tool_input)
     transcript_path = session_transcript(payload)
     if not file_path or not transcript_path or not os.path.isfile(transcript_path):
         return
@@ -200,14 +216,14 @@ def main():
     if not os.path.isfile(file_path) or is_exempt(file_path, project_dir):
         return
 
-    with open(file_path, encoding="utf-8", errors="replace") as target_file:
+    with open(file_path, encoding="utf-8", errors="replace", newline="") as target_file:
         file_content = target_file.read()
-    total_lines = len(file_content.splitlines())
-    if total_lines == 0:
+    total_lines = line_count(file_content)
+    needed = needed_lines(payload["tool_name"], tool_input, file_content, total_lines)
+    if total_lines == 0 or needed is None:
         return
-    first_needed, last_needed = needed_lines(payload["tool_name"], tool_input, file_content, total_lines)
 
-    history = file_history(transcript_path, os.path.realpath(file_path))
+    history = file_history(transcript_path, os.path.realpath(file_path), payload.get("tool_use_id"))
     if history is None:
         return
     reads, last_session_write = history
@@ -216,10 +232,10 @@ def main():
         last_session_write is not None and changed_at <= last_session_write + SESSION_WRITE_TOLERANCE_SECONDS
     )
     fresh_ranges = [line_range for read_at, line_range in reads if changed_by_session or read_at >= changed_at]
-    gap = first_gap(fresh_ranges, first_needed, last_needed)
+    gap = first_gap(fresh_ranges, *needed)
     if not gap:
         return
-    if first_gap([line_range for _, line_range in reads], first_needed, last_needed) is None:
+    if len(fresh_ranges) < len(reads):
         deny(f"{file_path} changed on disk after it was read (stale read); Read it again before editing.")
     else:
         deny(f"{file_path} was only partially read (lines {gap[0]}-{gap[1]} unread); Read it in full before editing.")

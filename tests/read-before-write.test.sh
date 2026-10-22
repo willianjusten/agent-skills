@@ -176,6 +176,50 @@ tool_call t1 Read "$(jq -cn --arg path "$notebook_file" '{file_path: $path}')" $
 expect "notebook read whole allows NotebookEdit" allow "$(payload NotebookEdit "$notebook_file" "$FIXTURE_DIR/notebook.jsonl" "$notebook_edit")"
 expect "unread notebook denies NotebookEdit" deny "$(payload NotebookEdit "$notebook_file" "$FIXTURE_DIR/no-reads.jsonl" "$notebook_edit")" "analysis.ipynb"
 
+tool_call t1 Read "$(jq -cn --arg path "$notebook_file" '{file_path: $path}')" $((BASE_EPOCH + 60)) >"$FIXTURE_DIR/notebook-untyped.jsonl"
+expect "notebook Read without a recorded type still covers it" allow \
+  "$(payload NotebookEdit "$notebook_file" "$FIXTURE_DIR/notebook-untyped.jsonl" "$notebook_edit")"
+
+{
+  cat "$FIXTURE_DIR/no-reads.jsonl"
+  jq -cn --arg path "$small_file" '{type: "assistant", message: {role: "assistant", content: [{type: "tool_use", id: "t9", name: "Read", input: {file_path: $path}}]}}'
+} >"$FIXTURE_DIR/untimed-turn.jsonl"
+expect "a turn without a timestamp is skipped, not fatal" deny "$(payload Edit "$small_file" "$FIXTURE_DIR/untimed-turn.jsonl")" "small.txt"
+
+# Read counts only \n as a line break; a form feed or \r inside a line is not one.
+printf 'one\fstill one\ntwo\rstill two\n' >"$FIXTURE_DIR/control-chars.txt"
+touch -d "$(iso_at "$BASE_EPOCH")" "$FIXTURE_DIR/control-chars.txt"
+read_call t1 "$FIXTURE_DIR/control-chars.txt" 1 2 2 $((BASE_EPOCH + 60)) >"$FIXTURE_DIR/control-chars.jsonl"
+expect "lines count only newlines, like Read" allow "$(payload Edit "$FIXTURE_DIR/control-chars.txt" "$FIXTURE_DIR/control-chars.jsonl")"
+
+expect "large file Edit whose old_string is not found allows" allow \
+  "$(payload Edit "$large_file" "$FIXTURE_DIR/large-window.jsonl" "$(jq -cn --arg path "$large_file" '{tool_input: {file_path: $path, old_string: "no such text", new_string: "x"}}')")"
+
+expect "large file replace_all needs every line" deny \
+  "$(payload Edit "$large_file" "$FIXTURE_DIR/large-window.jsonl" "$(jq -cn --arg path "$large_file" '{tool_input: {file_path: $path, old_string: "line 3000\n", new_string: "x", replace_all: true}}')")" "large.txt"
+
+{
+  read_call t1 "$small_file" 1 40 40 $((BASE_EPOCH - 60))
+  read_call t2 "$small_file" 1 10 40 $((BASE_EPOCH + 60))
+} >"$FIXTURE_DIR/stale-and-partial.jsonl"
+expect "a stale full read plus a fresh partial one says stale" deny "$(payload Edit "$small_file" "$FIXTURE_DIR/stale-and-partial.jsonl")" "small.txt" "stale"
+
+# Parallel calls: an earlier Edit of the same file may have run with its result not yet
+# in the transcript. It is the session's change, so earlier reads still count.
+{
+  read_call t1 "$small_file" 1 40 40 $((BASE_EPOCH - 60))
+  tool_call t2 Edit "$(jq -cn --arg path "$small_file" '{file_path: $path, old_string: "a", new_string: "b"}')" $((BASE_EPOCH - 30)) | head -1
+} >"$FIXTURE_DIR/in-flight-edit.jsonl"
+expect "an in-flight session edit keeps earlier reads" allow "$(payload Edit "$small_file" "$FIXTURE_DIR/in-flight-edit.jsonl")"
+
+# The call being judged is in the transcript too; it must not vouch for itself.
+{
+  read_call t1 "$small_file" 1 40 40 $((BASE_EPOCH - 60))
+  tool_call current Edit "$(jq -cn --arg path "$small_file" '{file_path: $path, old_string: "a", new_string: "b"}')" $((BASE_EPOCH + 30)) | head -1
+} >"$FIXTURE_DIR/self.jsonl"
+expect "the call being judged does not count as a session write" deny \
+  "$(payload Edit "$small_file" "$FIXTURE_DIR/self.jsonl" '{"tool_use_id": "current"}')" "small.txt" "stale"
+
 # The hook must not reach for node or a PATH python: both fail here.
 fake_bin="$FIXTURE_DIR/fake-bin"
 mkdir -p "$fake_bin"
@@ -186,10 +230,12 @@ done
 HOOK_PATH="$fake_bin" expect "runs with a broken node and python3 on PATH" deny \
   "$(payload Edit "$small_file" "$FIXTURE_DIR/partial.jsonl")" "small.txt" "partial"
 
-if output=$(echo 'not json' | /usr/bin/python3 "$HOOK" 2>&1) && [ -z "$output" ]; then
+output=$(echo 'not json' | /usr/bin/python3 "$HOOK" 2>&1)
+exit_code=$?
+if [ "$exit_code" = 0 ] && [ -z "$output" ]; then
   echo "ok   junk payload allows silently"
 else
-  echo "FAIL junk payload allows silently: exit $?, output: $output"
+  echo "FAIL junk payload allows silently: exit $exit_code, output: $output"
   failures=$((failures + 1))
 fi
 
