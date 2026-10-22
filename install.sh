@@ -367,15 +367,6 @@ setup_spoke() {
   fi
 }
 
-check_cursor_duplicates() {
-  local directory
-  for directory in "$HOME/.agents/skills" "$HOME/.cursor/skills"; do
-    if [ -d "$directory" ] && [ -n "$(ls -A "$directory")" ]; then
-      log_warning "$directory is not empty; Cursor may show skills twice"
-    fi
-  done
-}
-
 # Validates own skills: skill-creator-plus validator, a valid scope, and a README.
 check_own_skills() {
   command -v python3 >/dev/null || { echo "check needs python3" >&2; exit 1; }
@@ -419,7 +410,6 @@ main() {
   apply_renames
   link_skills
   setup_spoke
-  check_cursor_duplicates
 
   echo "Skills linked into $GLOBAL_SKILLS: $(printf '%s' "$global_names" | grep -c . || true)"
   [ -d "$SPOKE_DIR" ] && echo "Spoke-only skills in $DIST_SPOKE: $(printf '%s' "$spoke_names" | grep -c . || true)"
