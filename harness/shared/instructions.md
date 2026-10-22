@@ -22,7 +22,7 @@ Applies when working a ticket whose Status is `ready-for-agent` or `in-progress`
 - Commit atomically without asking. Do not push; I push after reading the report. Exception: with `"push": "branch"`, push the ticket and integration branches and end with a draft PR.
 - Seams in the spec's Testing Decisions are pre-agreed; do not ask to confirm them.
 - Do not ask questions. If blocked after two attempts, follow the tracker's escalate operation and move on.
-- Done means `verify` passes. For tickets with `Tests: e2e` that touch UI, also collect browser evidence with the `agent-browser` skill (page loads, no console errors, the interaction works) and list the screenshot path under the ticket's `## Done`. Run the project's axe-core scan on the touched pages too; a serious or critical violation blocks like a failing `verify`.
+- Done means the repo's own checks pass when you run them in your shell: typecheck, lint, test, build, whichever exist (the `verify` script when there is one). Use only commands the repo has (package scripts, `Makefile`, CI workflow, pre-commit config, `AGENTS.md`) and never install a tool. Report a missing or unrunnable check as a gap, never as a pass.
 
 ## General
 
