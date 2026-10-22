@@ -48,9 +48,7 @@ Then:
 | **to-tickets** | mattpocock | both | /name | Split a spec into tracer-bullet tickets with blocking edges |
 | **implement** | mattpocock | both | /name | Build one piece of work from a spec or tickets |
 | **implement-spec** | mattpocock | both | /name | Build a whole spec with subagents on an integration branch |
-| **afk** | own | personal | /name | Run a spec's ticket graph unattended within the usage budget, ending in a report |
-| **setup-project** | own | personal | /name | Ready a new or existing TS/React repo for agents: verify, quality ratchet, AGENTS.md, worktrees, CI, push policy |
-| **agent-browser** | vercel-labs | personal | model | Browser automation CLI; collects UI evidence for AFK tickets |
+| **agent-browser** | vercel-labs | personal | model | Browser automation CLI for driving and checking web UIs |
 | **frontend-design** | anthropics | personal | model | Distinctive visual direction for new or reshaped UI, instead of templated layouts |
 | **wayfinder** | mattpocock | both | /name | Plan work too big for one session as a map of decision tickets |
 | **triage** | mattpocock | both | /name | Move issues and PRs through triage roles into agent-ready briefs |
@@ -115,7 +113,7 @@ Dotted arrows are optional handoffs. `ask-matt` routes to the right entry point 
 | Tiny: one decided behaviour | `tdd`, then `matt-code-review` |
 | One session | `grill-with-docs`, then `implement` |
 | Multi-session | `grill-with-docs`, `to-spec`, `to-tickets`, then `implement` per ticket |
-| Parallel graph | the same planning, then `/afk` |
+| Parallel graph | the same planning, then `/implement-spec <feature>` |
 | Foggy | `wayfinder`, then the multi-session flow |
 
 ### Using the flow
@@ -198,7 +196,7 @@ agent-skills/
 ├── scopes.json                     scope for each vendored skill, grouped by source
 ├── harness/
 │   ├── shared/instructions.md      ~/.claude/CLAUDE.md and Cursor User Rules
-│   └── claude/                     settings.json, statusline-command.sh, matt-skills/, hooks/, agents/
+│   └── claude/                     settings.json, statusline-command.sh, matt-skills/
 ├── install.sh                      the only command
 ├── AGENTS.md                       conventions for editing this repo (CLAUDE.md imports it)
 └── dist/                           generated, gitignored
@@ -215,13 +213,13 @@ agent-skills/
 | Update vendored skills | `./install.sh --update`; review `git diff vendor/`; commit |
 | Enable a vendored skill | Set it to `personal` or `both` in `scopes.json`; `./install.sh --update` |
 | Add a vendor source | Add `"<owner>/<repo>": { "<skill>": "personal" }` to `scopes.json`; `./install.sh --update` |
-| Set up a project for agents | `/setup-project` in the repo: `AGENTS.md`, `CLAUDE.md` with `@AGENTS.md`, `verify`, worktree setup, CI, push policy |
+| Set up a project for agents | `/setup-matt-pocock-skills` in the repo (optionally `/setup-pre-commit`, `/git-guardrails-claude-code`); hand-write `.claude/afk.json` with `{ "push": "branch" }` to opt into branch pushes and draft PRs |
 
 ## What install.sh Touches
 
 | Command | Effect |
 | ------- | ------ |
-| `./install.sh` | Links `~/.claude/CLAUDE.md`, `CODING_STANDARDS.md`, `settings.json`, `statusline-command.sh`, `matt-skills/`, `hooks/`, `agents/` into `harness/`; links each `personal`/`both` skill into `~/.claude/skills/<name>`; removes links into this repo that are no longer wanted; applies the Spoke layer when `~/Developer/spoke` exists |
+| `./install.sh` | Links `~/.claude/CLAUDE.md`, `CODING_STANDARDS.md`, `settings.json`, `statusline-command.sh`, `matt-skills/` into `harness/`; links each `personal`/`both` skill into `~/.claude/skills/<name>`; removes links into this repo that are no longer wanted; applies the Spoke layer when `~/Developer/spoke` exists |
 | `./install.sh --update` | First runs `npx skills update` per vendor source, adds enabled skills that are missing, removes ones set to `off`, lists new upstream skills as candidates |
 | `./install.sh --force` | Replaces a real file that sits where a link should go |
 | `./install.sh check` | Runs the `skill-creator-plus` validator on every own skill, plus scope and README checks |
