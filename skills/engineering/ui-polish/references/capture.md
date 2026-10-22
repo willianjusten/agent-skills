@@ -1,6 +1,6 @@
 # Capture recipes
 
-Use the first recipe whose tools this session has. Try each recipe once before moving to the next; if none works, stop and tell the user what you tried and what failed.
+Use the first recipe whose tools this session has. Try each recipe once before moving to the next; if none works, go to "When nothing works".
 
 ## Contents
 - Widths and file names
@@ -12,7 +12,7 @@ Use the first recipe whose tools this session has. Try each recipe once before m
 
 ## Widths and file names
 
-Capture at a 375px and a 1280px viewport. Window width is not viewport width: after resizing, check `window.innerWidth` and adjust until it matches, or the phone capture may be a tablet one.
+Capture at a 375px and a 1280px viewport, plus 768px when SKILL.md Step 3 calls for it. Window width is not viewport width: after resizing, check `window.innerWidth` and adjust until it matches, or the phone capture may be a tablet one.
 
 Capture the full page, not only the first screen, when the content scrolls; a broken footer or last row is still part of the change.
 
@@ -40,7 +40,8 @@ When a state needs something the page hides, such as a correct answer or a valid
 3. `claude-in-chrome:navigate` to the route, wait for it to settle, and take a `screenshot` with `claude-in-chrome:computer`. Check that the page is this app: the extension's browser can run on another machine, where `localhost` is a different host. If it is not this app, or the viewport width cannot be matched, move to the next recipe. Scroll and take more when the page is longer than the viewport.
 4. Reach each state with `claude-in-chrome:computer` actions: `left_click`, `type`, `hover`, and `key` with `Tab`. Locate controls with `claude-in-chrome:find` or `claude-in-chrome:read_page` instead of guessing coordinates.
 5. To save a file, take the screenshot with `save_to_disk` on and copy the returned path into the `before/` or `after/` folder under the name above.
-6. Close the tab with `claude-in-chrome:tabs_close_mcp` when done.
+6. Read the console with `claude-in-chrome:read_console_messages` on each route, filtered to errors and warnings.
+7. Close the tab with `claude-in-chrome:tabs_close_mcp` when done.
 
 ## Recipe 2: a Playwright MCP server
 
@@ -48,6 +49,7 @@ When a state needs something the page hides, such as a correct answer or a valid
 2. `playwright:browser_navigate` to the route and wait for it to settle.
 3. Reach each state with `playwright:browser_hover`, `playwright:browser_click`, `playwright:browser_type` and `playwright:browser_press_key` (`Tab` for focus).
 4. `playwright:browser_take_screenshot` with `fullPage` on and a `filename` in the `before/` or `after/` folder.
+5. `playwright:browser_console_messages` on each route for errors and warnings.
 
 ## Recipe 3: Playwright CLI
 
@@ -58,7 +60,7 @@ npx playwright screenshot --viewport-size=375,812 --full-page <url> <folder>/<ro
 npx playwright screenshot --viewport-size=1280,800 --full-page <url> <folder>/<route>-start-1280.png
 ```
 
-For hover, focus, filled and error states, write a short script outside the repo (in a temporary folder) that uses `page.hover`, `page.keyboard.press('Tab')`, `page.fill` and `page.screenshot({ fullPage: true })`, and run it with Node. Then read each saved file to look at it.
+For hover, focus, filled and error states, write a short script outside the repo (in a temporary folder) that uses `page.hover`, `page.keyboard.press('Tab')`, `page.fill` and `page.screenshot({ fullPage: true })`, logs `page.on('console')` errors and warnings, and run it with Node. Then read each saved file to look at it.
 
 ## When nothing works
 
