@@ -49,14 +49,14 @@ Sections in this order, nothing else:
 
 | Scope | Linked to | Visible in |
 | ----- | --------- | ---------- |
-| `personal` | `~/.claude/skills` | every repo except Spoke (off via `skillOverrides`; Cursor still shows it) |
+| `personal` | `~/.claude/skills` | every repo except Spoke (off via `skillOverrides`) |
 | `both` | `~/.claude/skills` | every repo, Spoke included |
 | `spoke` | `dist/spoke/` | Spoke only, through agentplan |
 | `off` | nowhere | nowhere |
 
 ## Harness files
 
-- `harness/shared/instructions.md` is `~/.claude/CLAUDE.md` and the Cursor User Rules. After editing it, paste it into Cursor again.
+- `harness/shared/instructions.md` is `~/.claude/CLAUDE.md`.
 - Claude Code writes `/config` changes through the `settings.json` symlink. Review those diffs and strip machine-specific values before committing.
 
 ## Commits

@@ -1,6 +1,6 @@
 # Agent Skills
 
-My agent harness in one repo: skills, global instructions and Claude Code settings, installed the same way on every machine with one command. Works in Claude Code and Cursor.
+My agent harness in one repo: skills, global instructions and Claude Code settings, installed the same way on every machine with one command.
 
 ## Quick Start
 
@@ -18,8 +18,7 @@ git clone git@github.com:willianjusten/agent-skills.git ~/Developer/agent-skills
 Then:
 
 1. Log in to Claude Code: `claude`.
-2. Paste [`harness/shared/instructions.md`](harness/shared/instructions.md) into Cursor > Settings > Rules > User Rules.
-3. For Spoke, see [Spoke](#spoke).
+2. For Spoke, see [Spoke](#spoke).
 
 ## The Flow
 
@@ -90,7 +89,7 @@ Matt's skills run as shipped. Everything this repo adds to his flow lives in two
 
 | Extension point | Read by | Holds |
 | --- | --- | --- |
-| [`harness/shared/instructions.md`](harness/shared/instructions.md) | every Claude Code session and subagent (as `~/.claude/CLAUDE.md`), Cursor User Rules | Precedence, safety, style, environment, pointers to Matt's tracker docs |
+| [`harness/shared/instructions.md`](harness/shared/instructions.md) | every Claude Code session and subagent (as `~/.claude/CLAUDE.md`) | Precedence, safety, style, environment, pointers to Matt's tracker docs |
 | [`harness/claude/settings.json`](harness/claude/settings.json) | Claude Code | Deny rules, auto mode push policy, notification sounds, statusline |
 
 The tracker docs are Matt's own (`issue-tracker-local.md`, `triage-labels.md`, `domain.md` in `setup-matt-pocock-skills`); the global instructions only add that work closes by setting `Status: done`. Vendor stays untouched: the `code-review` rename in `install.sh` is the only patch.
@@ -116,10 +115,9 @@ flowchart LR
     INS -->|spoke| DS["dist/spoke"]
     DS -->|global skill source| AP["Spoke agentplan"]
     GS --> CC["Claude Code"]
-    GS --> CU["Cursor"]
 ```
 
-Everything `install.sh` creates is a symlink into this repo, so editing a file here changes it on the machine at once. Cursor reads `~/.claude/skills` as a compatibility source, so it needs no extra install.
+Everything `install.sh` creates is a symlink into this repo, so editing a file here changes it on the machine at once.
 
 ### Scopes
 
@@ -152,7 +150,7 @@ agent-skills/
 │   └── vercel-labs/agent-browser/
 ├── scopes.json                     scope for each vendored skill, grouped by source
 ├── harness/
-│   ├── shared/instructions.md      ~/.claude/CLAUDE.md and Cursor User Rules
+│   ├── shared/instructions.md      ~/.claude/CLAUDE.md
 │   └── claude/                     settings.json, statusline-command.sh
 ├── install.sh                      the only command
 ├── AGENTS.md                       conventions for editing this repo (CLAUDE.md imports it)
@@ -215,12 +213,6 @@ make -C .spoke-workspace setup ROLE=product-web-engineer
 ~/Developer/agent-skills/install.sh
 ```
 
-## Cursor
-
-- User Rules are a copy of `harness/shared/instructions.md`. Paste it again after editing that file.
-- Skills come from `~/.claude/skills`. Keep `~/.agents/skills` and `~/.cursor/skills` empty, or skills show up twice.
-- Cursor ignores `skillOverrides`, so `personal` skills also appear in Spoke there.
-
 ## Manual Cases
 
 | Symptom | Fix |
@@ -231,4 +223,3 @@ make -C .spoke-workspace setup ROLE=product-web-engineer
 | `new upstream skill ... add it to scopes.json` | Decide a scope for it in `scopes.json`, then `./install.sh --update`. |
 | `skills CLI failed` | The output above it comes from `npx skills`: usually network, or a skill that no longer exists upstream. |
 | `settings.json` changed after using `/config` | Claude Code writes through the symlink. Review the diff, strip machine paths, commit. |
-| A skill appears twice in Cursor | Empty `~/.agents/skills` and `~/.cursor/skills`. |
