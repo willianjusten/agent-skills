@@ -134,14 +134,20 @@ def content_blocks(entry, block_type):
 def read_range(tool_input, tool_use_result, is_notebook):
     """The (first, last) lines a Read returned, from its result when recorded, else its input.
 
-    A notebook Read returns every cell, so it covers the whole file.
+    A notebook Read returns every cell, so it covers the whole file. A Read that reached
+    the end of the file covers through the end, so lines the session appends later stay
+    covered.
     """
     if is_notebook:
         return WHOLE_FILE
     returned_file = tool_use_result.get("file") if isinstance(tool_use_result, dict) else None
     if isinstance(returned_file, dict) and isinstance(returned_file.get("numLines"), int):
         first_line = max(int(returned_file.get("startLine") or 1), 1)
-        return first_line, first_line + returned_file["numLines"] - 1
+        last_line = first_line + returned_file["numLines"] - 1
+        total_lines = returned_file.get("totalLines")
+        if isinstance(total_lines, int) and last_line >= total_lines:
+            return first_line, float("inf")
+        return first_line, last_line
     first_line = max(int(tool_input.get("offset") or 1), 1)
     return first_line, first_line + int(tool_input.get("limit") or READ_DEFAULT_LIMIT) - 1
 

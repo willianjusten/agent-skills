@@ -97,6 +97,15 @@ expect "read before an external change denies" deny "$(payload Edit "$small_file
 } >"$FIXTURE_DIR/own-edit.jsonl"
 expect "the session's own edit keeps earlier reads" allow "$(payload Edit "$small_file" "$FIXTURE_DIR/own-edit.jsonl")"
 
+# The session's edit grew the file past the lines Read returned; a Read that reached
+# the end of the file covers what the session appended.
+grown_file=$(write_file grown.txt 42)
+{
+  read_call t1 "$grown_file" 1 40 40 $((BASE_EPOCH - 60))
+  tool_call t2 Edit "$(jq -cn --arg path "$grown_file" '{file_path: $path, old_string: "a", new_string: "b"}')" $((BASE_EPOCH - 2))
+} >"$FIXTURE_DIR/grown.jsonl"
+expect "a full read still covers lines the session's edit added" allow "$(payload Edit "$grown_file" "$FIXTURE_DIR/grown.jsonl")"
+
 tool_call t1 Write "$(jq -cn --arg path "$small_file" '{file_path: $path, content: "x"}')" $((BASE_EPOCH - 1)) >"$FIXTURE_DIR/own-write.jsonl"
 expect "a file the session wrote whole allows" allow "$(payload Edit "$small_file" "$FIXTURE_DIR/own-write.jsonl")"
 
