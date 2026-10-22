@@ -88,7 +88,6 @@ Matt's skills run untouched. Everything this repo layers on top lives in a few f
 | [`harness/shared/instructions.md`](harness/shared/instructions.md) | every session and subagent, as `~/.claude/CLAUDE.md` | Precedence, safety, style, environment, tracker defaults |
 | [`harness/shared/CODING_STANDARDS.md`](harness/shared/CODING_STANDARDS.md) | sessions, as `~/.claude/CODING_STANDARDS.md` | Cross-repo coding standards; a repo's own standards win |
 | [`harness/claude/settings.json`](harness/claude/settings.json) | Claude Code | Deny rules, auto mode, notification sounds, statusline |
-| [`skills/engineering/ui-polish/`](skills/engineering/ui-polish/) | you, after a UI change | Screenshots the touched screens and fixes styles and markup; added because no step in the flow opens the running app |
 
 The only patch to vendored code is renaming Matt's `code-review` to `matt-code-review`, because the original collides with Claude Code's built-in `/code-review`. New additions come only after a pilot, one ticket per `/retro` finding.
 
