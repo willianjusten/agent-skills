@@ -138,7 +138,7 @@ GLOSSARY.md           domain-modeling, grill-with-docs: canonical domain terms
 docs/adr/             domain-modeling, grill-with-docs: decision records
 ```
 
-Global defaults for these locations live in [`harness/claude/matt-skills/`](harness/claude/matt-skills), so no per-repo setup is needed.
+Global instructions point every repo at Matt's local-markdown defaults in `setup-matt-pocock-skills`, so no per-repo setup is needed.
 
 ## How It Works
 
@@ -154,7 +154,7 @@ flowchart LR
     VEN --> INS
     HAR --> INS
     INS -->|personal + both| GS["~/.claude/skills"]
-    INS -->|CLAUDE.md, settings.json,<br/>statusline, matt-skills| CH["~/.claude"]
+    INS -->|CLAUDE.md, settings.json,<br/>statusline| CH["~/.claude"]
     INS -->|personal: skillOverrides off| SL["spoke/.claude/settings.local.json"]
     INS -->|spoke| DS["dist/spoke"]
     DS -->|global skill source| AP["Spoke agentplan"]
@@ -196,7 +196,7 @@ agent-skills/
 ├── scopes.json                     scope for each vendored skill, grouped by source
 ├── harness/
 │   ├── shared/instructions.md      ~/.claude/CLAUDE.md and Cursor User Rules
-│   └── claude/                     settings.json, statusline-command.sh, matt-skills/
+│   └── claude/                     settings.json, statusline-command.sh
 ├── install.sh                      the only command
 ├── AGENTS.md                       conventions for editing this repo (CLAUDE.md imports it)
 └── dist/                           generated, gitignored
@@ -219,7 +219,7 @@ agent-skills/
 
 | Command | Effect |
 | ------- | ------ |
-| `./install.sh` | Links `~/.claude/CLAUDE.md`, `CODING_STANDARDS.md`, `settings.json`, `statusline-command.sh`, `matt-skills/` into `harness/`; links each `personal`/`both` skill into `~/.claude/skills/<name>`; removes links into this repo that are no longer wanted; applies the Spoke layer when `~/Developer/spoke` exists |
+| `./install.sh` | Links `~/.claude/CLAUDE.md`, `CODING_STANDARDS.md`, `settings.json`, `statusline-command.sh` into `harness/`; links each `personal`/`both` skill into `~/.claude/skills/<name>`; removes links into this repo that are no longer wanted; applies the Spoke layer when `~/Developer/spoke` exists |
 | `./install.sh --update` | First runs `npx skills update` per vendor source, adds enabled skills that are missing, removes ones set to `off`, lists new upstream skills as candidates |
 | `./install.sh --force` | Replaces a real file that sits where a link should go |
 | `./install.sh check` | Runs the `skill-creator-plus` validator on every own skill, plus scope and README checks |
