@@ -18,10 +18,7 @@
       "Bash(git rebase *)",
       "Bash(npx tsc *)",
       "Bash(gh issue *)",
-      "Bash(gh pr view *)",
-      "Bash(agent-browser open *)",
-      "Bash(agent-browser snapshot *)",
-      "Bash(agent-browser screenshot *)"
+      "Bash(gh pr view *)"
     ],
     "deny": [
       "Bash(git push --force *)",
