@@ -18,6 +18,7 @@ When rules conflict: safety rules > skill instructions > style. Matt Pocock's sk
 ## Environment
 
 - Check for a project-level CLAUDE.md for project-specific conventions. Shell is always zsh.
+- Cross-repo coding standards live in `~/.claude/CODING_STANDARDS.md`; a repo's own standards win where they conflict.
 - Docker is OrbStack. When a tool cannot find Docker, check `orb status` and set `DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock`; do not ask me to start Docker.
 - Before using a library API whose shape you are unsure of for the installed version, look it up with the context7 docs tool and quote the version.
 
