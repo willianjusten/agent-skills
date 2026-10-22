@@ -10,11 +10,11 @@ My agent harness in one repo: skills, global instructions and Claude Code settin
 
 ## In One Minute
 
-1. **You get interviewed.** `grill-with-docs` asks questions until nothing is left to decide. Terms go to `GLOSSARY.md`, decisions to `docs/adr/`.
+1. **You get interviewed.** `grill-with-docs` asks questions until nothing is left to decide. Terms go to `GLOSSARY.md`, decisions to `docs/adr/`. For a UI, `prototype` puts variants on the real route so you can pick a look, and `frontend-design` sets a new direction; ask it to save its plan under `.scratch/<feature>/` so `ui-polish` can check against it later.
 2. **The plan is written down.** `to-spec` turns the conversation into a spec, and `to-tickets` cuts it into thin end-to-end slices that each fit in one fresh context, with the tickets that block them.
 3. **Agents build it.** After `/clear`, `implement-spec` hands every ready ticket to an agent in its own git worktree. Each one works test-first and is merged into one integration branch.
 4. **The work is checked once.** `matt-code-review` reviews the whole branch against the repo's standards and the spec, and an agent fixes what it finds.
-5. **You accept it and improve the setup.** You review the branch, `pr` writes the PR body, and `retro` turns rough spots into better checks, standards and pointers.
+5. **You accept it and improve the setup.** If the UI changed, run `ui-polish` first: it screenshots the touched screens and fixes styles against that direction or the screens around them. You review the branch, `pr` writes the PR body, and `retro` turns rough spots into better checks, standards and pointers.
 
 Throughout, deny rules block `rm -rf` and reading `.env` files, and the global instructions forbid force-push, deleting remote branches and merging PRs.
 
@@ -62,7 +62,7 @@ For a bug: `/diagnosing-bugs` reproduces it and finds the cause, then the fix go
 | When | Skills |
 | ---- | ------ |
 | **Plan** | `grill-with-docs` (in a repo), `grill-me` (no repo), `prototype`, `research`, `to-spec`, `to-tickets`, `wayfinder` |
-| **Build** | `implement` (one ticket), `implement-spec` (whole spec, parallel), `tdd`, `ui-polish` (look at a UI change and fix it, before review), `matt-code-review` |
+| **Build** | `implement` (one ticket), `implement-spec` (whole spec, parallel), `tdd`, `ui-polish` (look at a UI change and fix it, before you review), `matt-code-review` |
 | **Ship and learn** | `pr`, `retro` |
 | **Fix and tidy** | `diagnosing-bugs`, `triage`, `improve-codebase-architecture`, `codebase-design`, `domain-modeling` |
 | **Any time** | `ask-matt` (which skill?), `handoff` (pass work to a new session), `wait-what` (re-explain that), `teach`, `to-questionnaire`, `wizard`, `frontend-design`, `writing-for-agents`, `skill-creator-plus` |
