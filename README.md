@@ -16,7 +16,7 @@ My agent harness in one repo: skills, global instructions and Claude Code settin
 4. **The work is checked once.** `matt-code-review` reviews the whole branch against the repo's standards and the spec, and an agent fixes what it finds.
 5. **You accept it and improve the setup.** You review the branch, `pr` writes the PR body, and `retro` turns rough spots into better checks, standards and pointers.
 
-Throughout, Claude Code's deny rules block force-push, pushing to `main`, merging PRs, `rm -rf` and reading `.env` files.
+Throughout, deny rules block `rm -rf` and reading `.env` files, and the global instructions forbid force-push, deleting remote branches and merging PRs.
 
 ## Quick Start
 
