@@ -26,6 +26,6 @@ When rules conflict: safety rules > skill instructions > style. Matt Pocock's sk
 
 Global defaults for Matt Pocock's skills in every repo; run `/setup-matt-pocock-skills` only to override them per project.
 
-- **Issue tracker**: local markdown under `.scratch/<feature>/` in the repo being worked on. See `~/.claude/matt-skills/issue-tracker.md`.
-- **Triage labels**: the five canonical roles, unchanged. See `~/.claude/matt-skills/triage-labels.md`.
-- **Domain docs**: single-context, `GLOSSARY.md` and `docs/adr/` at the repo root. See `~/.claude/matt-skills/domain.md`.
+- **Issue tracker**: local markdown under `.scratch/<feature>/` in the repo being worked on. See `~/.claude/skills/setup-matt-pocock-skills/issue-tracker-local.md`. Work closes by setting a ticket's Status to `done`, not through PRs.
+- **Triage labels**: the five canonical roles, unchanged. See `~/.claude/skills/setup-matt-pocock-skills/triage-labels.md`.
+- **Domain docs**: single-context, `GLOSSARY.md` and `docs/adr/` at the repo root. See `~/.claude/skills/setup-matt-pocock-skills/domain.md`.

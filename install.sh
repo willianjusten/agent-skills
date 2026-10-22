@@ -126,7 +126,6 @@ link_harness() {
   link_path "$ROOT/harness/shared/CODING_STANDARDS.md" "$CLAUDE_HOME/CODING_STANDARDS.md"
   link_path "$ROOT/harness/claude/settings.json" "$CLAUDE_HOME/settings.json"
   link_path "$ROOT/harness/claude/statusline-command.sh" "$CLAUDE_HOME/statusline-command.sh"
-  link_path "$ROOT/harness/claude/matt-skills" "$CLAUDE_HOME/matt-skills"
 }
 
 # Vendored sources are the top-level keys of scopes.json, e.g. "mattpocock/skills".
@@ -319,6 +318,8 @@ link_skills() {
     esac
   done <<<"$resolved"
   remove_stale_links "$GLOBAL_SKILLS" "$global_names"
+  echo "$global_names" | grep -qx setup-matt-pocock-skills ||
+    log_warning "setup-matt-pocock-skills is not linked; the tracker docs CLAUDE.md points at are missing"
 }
 
 spoke_source_entry() {
