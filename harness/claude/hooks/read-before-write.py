@@ -8,6 +8,8 @@ any error, missing transcript or unknown format allows the call.
 import json
 import os
 import sys
+import tempfile
+import time
 from datetime import datetime
 
 WRITE_TOOLS = ("Edit", "Write", "NotebookEdit")
@@ -20,6 +22,10 @@ WHOLE_FILE = (1, float("inf"))
 # Slack between a write's recorded result and the file's mtime, so the session's
 # own writes do not count as a change made outside it.
 SESSION_WRITE_TOLERANCE_SECONDS = 5
+
+# How long after this hook allows a write a change on disk still counts as that write.
+# The transcript lags, so with parallel calls an earlier write may not be in it yet.
+ALLOWED_WRITE_WINDOW_SECONDS = 120
 
 # The Read tool returns at most 2000 lines when the call has no offset/limit.
 READ_DEFAULT_LIMIT = 2000
@@ -68,6 +74,31 @@ def session_transcript(payload):
         return transcript_path
     session_dir = os.path.splitext(transcript_path)[0]
     return os.path.join(session_dir, "subagents", agent_file_name)
+
+
+def allowed_writes_path(payload):
+    """Where this hook records the writes it allowed, per session and agent."""
+    state_dir = payload.get("scratchpad_dir") or tempfile.gettempdir()
+    owner = "-".join(str(part) for part in (payload.get("session_id"), payload.get("agent_id")) if part)
+    return os.path.join(state_dir, f"read-before-write-{owner or 'unknown'}.json")
+
+
+def load_allowed_writes(state_path):
+    try:
+        with open(state_path, encoding="utf-8") as state_file:
+            allowed_writes = json.load(state_file)
+        return allowed_writes if isinstance(allowed_writes, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def record_allowed_write(state_path, allowed_writes, target_real_path):
+    allowed_writes[target_real_path] = time.time()
+    try:
+        with open(state_path, "w", encoding="utf-8") as state_file:
+            json.dump(allowed_writes, state_file)
+    except OSError:
+        pass
 
 
 def conversation_turns(transcript_path):
@@ -223,17 +254,25 @@ def main():
     if total_lines == 0 or needed is None:
         return
 
-    history = file_history(transcript_path, os.path.realpath(file_path), payload.get("tool_use_id"))
+    target_real_path = os.path.realpath(file_path)
+    history = file_history(transcript_path, target_real_path, payload.get("tool_use_id"))
     if history is None:
         return
     reads, last_session_write = history
+    state_path = allowed_writes_path(payload)
+    allowed_writes = load_allowed_writes(state_path)
+    last_allowed_write = allowed_writes.get(target_real_path)
     changed_at = os.path.getmtime(file_path)
     changed_by_session = (
         last_session_write is not None and changed_at <= last_session_write + SESSION_WRITE_TOLERANCE_SECONDS
+    ) or (
+        isinstance(last_allowed_write, (int, float))
+        and last_allowed_write - SESSION_WRITE_TOLERANCE_SECONDS <= changed_at <= last_allowed_write + ALLOWED_WRITE_WINDOW_SECONDS
     )
     fresh_ranges = [line_range for read_at, line_range in reads if changed_by_session or read_at >= changed_at]
     gap = first_gap(fresh_ranges, *needed)
     if not gap:
+        record_allowed_write(state_path, allowed_writes, target_real_path)
         return
     if len(fresh_ranges) < len(reads):
         deny(f"{file_path} changed on disk after it was read (stale read); Read it again before editing.")

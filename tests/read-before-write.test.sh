@@ -47,7 +47,7 @@ payload() {
   local tool_name="$1" file_path="$2" transcript_path="$3" extra="${4:-}"
   [ -n "$extra" ] || extra='{}'
   jq -cn --arg name "$tool_name" --arg path "$file_path" --arg transcript "$transcript_path" --arg cwd "$FIXTURE_DIR" --argjson extra "$extra" \
-    '{session_id: "fixture", transcript_path: $transcript, cwd: $cwd, hook_event_name: "PreToolUse",
+    '{session_id: "fixture", transcript_path: $transcript, cwd: $cwd, scratchpad_dir: $cwd, hook_event_name: "PreToolUse",
       tool_name: $name, tool_input: {file_path: $path, old_string: "line 1\n", new_string: "changed\n"}} + $extra'
 }
 
@@ -211,6 +211,16 @@ expect "a stale full read plus a fresh partial one says stale" deny "$(payload E
   tool_call t2 Edit "$(jq -cn --arg path "$small_file" '{file_path: $path, old_string: "a", new_string: "b"}')" $((BASE_EPOCH - 30)) | head -1
 } >"$FIXTURE_DIR/in-flight-edit.jsonl"
 expect "an in-flight session edit keeps earlier reads" allow "$(payload Edit "$small_file" "$FIXTURE_DIR/in-flight-edit.jsonl")"
+
+# Parallel calls where the transcript lags: the first Edit's tool_use is not written yet
+# when the second Edit is judged. The hook's own record of allowing the first one covers it.
+lagging_file=$(write_file lagging.txt 40)
+read_call t1 "$lagging_file" 1 40 40 $((BASE_EPOCH + 60)) >"$FIXTURE_DIR/lagging.jsonl"
+expect "first of two parallel edits allows" allow "$(payload Edit "$lagging_file" "$FIXTURE_DIR/lagging.jsonl")"
+touch "$lagging_file"
+expect "second parallel edit allows while the transcript lags" allow "$(payload Edit "$lagging_file" "$FIXTURE_DIR/lagging.jsonl")"
+expect "another session gets no credit for that record" deny \
+  "$(payload Edit "$lagging_file" "$FIXTURE_DIR/lagging.jsonl" '{"session_id": "other"}')" "lagging.txt" "stale"
 
 # The call being judged is in the transcript too; it must not vouch for itself.
 {
