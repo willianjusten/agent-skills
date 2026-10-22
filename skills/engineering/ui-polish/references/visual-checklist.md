@@ -1,6 +1,6 @@
 # Visual checklist
 
-The last source in SKILL.md Step 4. Measure in the screenshot where you can; "looks a bit tight" is a taste call, "8px here, 24px on every sibling card" is a finding. If the repo already runs axe or a similar accessibility check, run it on the touched routes too.
+The last source in SKILL.md Step 4; it leaves out what the coding standards' UI section already covers. Measure in the screenshot where you can; "looks a bit tight" is a taste call, "8px here, 24px on every sibling card" is a finding. If the repo already runs axe or a similar accessibility check, run it on the touched routes too.
 
 ## Contents
 - Severity
@@ -26,8 +26,6 @@ Fix in severity order. Nits go to the report when the two rounds run out.
 
 ## Spacing
 
-- Content never touches a container or viewport edge.
-- Gaps come from the repo's spacing scale; one-off values next to the scale are findings.
 - Related items sit closer to each other than to unrelated ones, so groups read as groups.
 - Vertical rhythm is even: the same kind of block gets the same space above and below it.
 - Controls in a row have equal gaps; buttons that stack on a phone have space between them.
@@ -43,7 +41,6 @@ Fix in severity order. Nits go to the report when the two rounds run out.
 - One element per screen is clearly the most important, usually the heading or the primary action.
 - Heading sizes step down in order; no level is skipped or reversed.
 - There is one primary button per group; secondary actions look secondary.
-- Type sizes and weights come from the repo's type scale.
 
 ## Contrast
 
@@ -54,10 +51,10 @@ Fix in severity order. Nits go to the report when the two rounds run out.
 
 ## States
 
-- Every interactive element shows hover, keyboard focus and disabled states, and each is visibly different from the rest state. The keyboard focus ring is visible and not hidden behind other elements.
+- Hover, focus and disabled states are each visibly different from the rest state, and the keyboard focus ring is not hidden behind other elements.
 - Disabled controls look inactive, not only refuse the click.
 - Selected, correct, wrong and active states differ by more than a slight tint.
-- Empty, loading and error states exist for every view that shows remote or computed data, and they look designed, not like a blank area.
+- Empty, loading and error states look designed, not like a blank area.
 - Changing state does not shift the layout under the pointer unless the change is the point; a loading placeholder takes the same space as the content it stands in for.
 
 ## Motion and copy
@@ -68,8 +65,7 @@ Fix in severity order. Nits go to the report when the two rounds run out.
 
 ## Responsive
 
-- No horizontal scroll at 375px; nothing is cut off or overlapping.
-- Widths are flexible; fixed pixel widths on content are findings.
+- Nothing is cut off or overlapping at either width.
 - Tap targets on a phone are at least 44 by 44px.
 - Text inputs use at least 16px text on a phone, so the browser does not zoom in on focus.
 - Long words, names and numbers wrap or truncate on purpose instead of breaking the layout.
@@ -79,6 +75,4 @@ Fix in severity order. Nits go to the report when the two rounds run out.
 
 Skip what a recorded design direction deliberately changes.
 
-- The changed screen uses the same components as its neighbours for the same job (buttons, cards, links, headings).
 - Page padding, heading position and back or navigation links sit where they do on neighbouring screens.
-- Colours, radii, shadows and icon styles come from what the neighbours already use.
