@@ -29,9 +29,9 @@ Follow AFK mode from your global instructions: no questions, atomic commits with
 
 1. Confirm your worktree is based on the integration branch; reset onto it if not.
 2. Claim the ticket: set `Status: in-progress` and save.
-3. Build it. For `Tests: tdd` or `Tests: e2e`, call the Skill tool with `tdd`. Seams in the spec's Testing Decisions are pre-agreed. For `Tests: verify-only`, build it and let `verify` prove it.
-4. Run `verify` (the ticket's `Verify:` line, or the project's `verify` script) until it passes.
-5. Merge the integration branch tip into your branch and run `verify` again.
+3. Build it. For `Tests: tdd` or `Tests: e2e`, call the Skill tool with `tdd`. Seams in the spec's Testing Decisions are pre-agreed. For `Tests: verify-only`, build it and let the checks prove it.
+4. Run the repo's own checks in your shell until they pass: typecheck, lint, test, build, whichever exist (the ticket's `Verify:` line, or the `verify` script when there is one). Use only commands the repo has (package scripts, `Makefile`, CI workflow, pre-commit config, `AGENTS.md`) and never install a tool. A missing or unrunnable check is a gap, never a pass.
+5. Merge the integration branch tip into your branch and run the checks again.
 6. Mark the ticket done the way the issue tracker says, and log the attempt in `progress.md`.
 7. If you hit something non-obvious that the next agent would hit too (a trap, a flaky test, a surprising API), add one line per lesson under the ticket's `## Done`: `Learning: <one line>`, with any function, file or command it names in backticks. Add nothing otherwise, and never edit `docs/GOTCHAS.md`, coding standards or patterns yourself.
 
@@ -48,6 +48,9 @@ Branch: <branch>  Commits: <sha list>
 ## Acceptance criteria
 - <criterion copied verbatim from the ticket>
   Evidence: <passing test name | command and its output | screenshot path>
+
+## Checks
+- <command> - pass | fail | gap: <why>
 ```
 
-List every criterion from the ticket, in order.
+List every criterion from the ticket, in order, and one line per check from step 4, gaps included.
