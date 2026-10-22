@@ -29,3 +29,4 @@ Global defaults for Matt Pocock's skills in every repo; run `/setup-matt-pocock-
 - **Issue tracker**: local markdown under `.scratch/<feature>/` in the repo being worked on. See `~/.claude/skills/setup-matt-pocock-skills/issue-tracker-local.md`. Work closes by setting a ticket's Status to `done`, not through PRs.
 - **Triage labels**: the five canonical roles, unchanged. See `~/.claude/skills/setup-matt-pocock-skills/triage-labels.md`.
 - **Domain docs**: single-context, `GLOSSARY.md` and `docs/adr/` at the repo root. See `~/.claude/skills/setup-matt-pocock-skills/domain.md`.
+- **Merger subagents**: when `implement-spec` spawns a merger subagent, run it on Haiku.
