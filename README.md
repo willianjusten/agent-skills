@@ -139,6 +139,19 @@ docs/adr/             domain-modeling, grill-with-docs: decision records
 
 Global instructions point every repo at Matt's local-markdown defaults in `setup-matt-pocock-skills`, so no per-repo setup is needed.
 
+## Our Layer
+
+Matt's skills run as shipped. Everything this repo adds to his flow lives in two files:
+
+| Extension point | Read by | Holds |
+| --- | --- | --- |
+| [`harness/shared/instructions.md`](harness/shared/instructions.md) | every Claude Code session and subagent (as `~/.claude/CLAUDE.md`), Cursor User Rules | Precedence, safety, style, environment, pointers to Matt's tracker docs |
+| [`harness/claude/settings.json`](harness/claude/settings.json) | Claude Code | Deny rules, auto mode push policy, notification sounds, statusline |
+
+The tracker docs are Matt's own (`issue-tracker-local.md`, `triage-labels.md`, `domain.md` in `setup-matt-pocock-skills`); the global instructions only add that work closes by setting `Status: done`. Vendor stays untouched: the `code-review` rename in `install.sh` is the only patch.
+
+Enhancements come only after the pilot, one ticket per `/retro` finding.
+
 ## How It Works
 
 ```mermaid
@@ -212,7 +225,7 @@ agent-skills/
 | Update vendored skills | `./install.sh --update`; review `git diff vendor/`; commit |
 | Enable a vendored skill | Set it to `personal` or `both` in `scopes.json`; `./install.sh --update` |
 | Add a vendor source | Add `"<owner>/<repo>": { "<skill>": "personal" }` to `scopes.json`; `./install.sh --update` |
-| Set up a project for agents | `/setup-matt-pocock-skills` in the repo; hand-write `.claude/afk.json` with `{ "push": "branch" }` to opt into branch pushes and draft PRs |
+| Override the global tracker setup for a repo | `/setup-matt-pocock-skills` in the repo |
 
 ## What install.sh Touches
 
