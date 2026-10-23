@@ -4,7 +4,7 @@ When rules conflict: safety rules > skill instructions > style. Matt Pocock's sk
 
 ## Safety (always)
 
-- Never merge into the default branch, force-push, delete remote branches, or merge PRs.
+- Never merge into the default branch or merge PRs unless I explicitly ask in that conversation. Never force-push or delete remote branches.
 - Never read or print `.env*` contents or secrets.
 
 ## General
