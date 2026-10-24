@@ -28,7 +28,15 @@
   },
   "model": "opus",
   "skillOverrides": {
-    "anthropic-skills:skill-creator": "off"
+    "anthropic-skills:skill-creator": "off",
+    "anthropic-skills:docs": "off",
+    "anthropic-skills:docx": "off",
+    "anthropic-skills:pdf": "off",
+    "anthropic-skills:pptx": "off",
+    "anthropic-skills:xlsx": "off",
+    "anthropic-skills:google-workspace": "off",
+    "anthropic-skills:import-memory": "off",
+    "anthropic-skills:morning": "off"
   },
   "hooks": {
     "Stop": [
@@ -131,5 +139,8 @@
   "attribution": {
     "commit": "",
     "pr": ""
+  },
+  "env": {
+    "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
   }
 }
