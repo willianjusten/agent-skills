@@ -1,4 +1,11 @@
 {
+  "env": {
+    "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
+  },
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
   "permissions": {
     "allow": [
       "Bash(grep *)",
@@ -79,7 +86,8 @@
     "command": "bash \"$HOME/.claude/statusline-command.sh\""
   },
   "enabledPlugins": {
-    "warp@claude-code-warp": true
+    "warp@claude-code-warp": true,
+    "vercel@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "claude-code-warp": {
@@ -96,6 +104,9 @@
     },
     "claude-opus-5": {
       "effortLevel": "medium"
+    },
+    "claude-opus-5-5": {
+      "autoCompactWindow": 500000
     }
   },
   "tui": "fullscreen",
@@ -129,12 +140,5 @@
       "**Org-specific CLIs**: None configured",
       "No routine-under-prefix qualifiers found"
     ]
-  },
-  "attribution": {
-    "commit": "",
-    "pr": ""
-  },
-  "env": {
-    "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
   }
 }
