@@ -21,6 +21,7 @@ When rules conflict: safety rules > skill instructions > style. Matt Pocock's sk
 - Cross-repo coding standards live in `~/.claude/CODING_STANDARDS.md`; a repo's own standards win where they conflict.
 - Docker is OrbStack. When a tool cannot find Docker, check `orb status` and set `DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock`; do not ask me to start Docker.
 - Before using a library API whose shape you are unsure of for the installed version, look it up with the context7 docs tool and quote the version.
+- I have two Macs (Mac Studio and MacBook), each with Chrome connected to Claude in Chrome, and they may run different dev servers at once. Before the first browser action in a session, call `list_connected_browsers` and `select_browser` the one whose name matches `scutil --get ComputerName`, so `localhost` is this machine's; I pre-authorize that choice. If none matches, ask me.
 
 ## Agent skills
 
