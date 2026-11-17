@@ -241,5 +241,15 @@
     "workflow-threads-manager": "off",
     "write-like-meng-on-x": "off",
     "x-bookmark-quote-posts": "off"
+  },
+  "greensock/gsap-skills": {
+    "gsap-core": "personal",
+    "gsap-frameworks": "personal",
+    "gsap-performance": "personal",
+    "gsap-plugins": "personal",
+    "gsap-react": "personal",
+    "gsap-scrolltrigger": "personal",
+    "gsap-timeline": "personal",
+    "gsap-utils": "personal"
   }
 }
