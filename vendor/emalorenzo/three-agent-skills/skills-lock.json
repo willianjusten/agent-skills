@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "skills": {
+    "three-best-practices": {
+      "source": "emalorenzo/three-agent-skills",
+      "commit": "f950f95ae3b13581546e6d6d8b2f88a08eb3e577",
+      "sourceType": "github",
+      "skillPath": "skills/three-best-practices/SKILL.md",
+      "computedHash": "01abee3b74806e3fbd01bf0df352af8cea353809b349dfcadc2b846205242874"
+    }
+  }
+}

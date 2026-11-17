@@ -251,5 +251,9 @@
     "gsap-scrolltrigger": "personal",
     "gsap-timeline": "personal",
     "gsap-utils": "personal"
+  },
+  "emalorenzo/three-agent-skills": {
+    "three-best-practices": "personal",
+    "r3f-best-practices": "off"
   }
 }
