@@ -69,6 +69,16 @@ else
   fail "install.sh runs in the fixture" "$install_output"
 fi
 
+missing_steps=""
+for step in "Checking prerequisites" "Linking harness files" "Restoring vendored skills" "Linking skills" "Linking agents" "Updating Spoke"; do
+  printf '%s\n' "$install_output" | grep -qx "==> $step" || missing_steps="$missing_steps $step;"
+done
+if [ -z "$missing_steps" ]; then
+  pass "install.sh announces each step as it starts"
+else
+  fail "install.sh announces each step as it starts" "missing:$missing_steps"
+fi
+
 linked_agent="$home/.claude/agents/sample-builder.md"
 if [ -L "$linked_agent" ] && [ "$(readlink "$linked_agent")" = "$fixture/agents/realtime/sample-builder.md" ]; then
   pass "a personal agent is linked into ~/.claude/agents"

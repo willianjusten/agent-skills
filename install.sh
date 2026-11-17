@@ -48,6 +48,10 @@ log_change() { changes+=("$1"); }
 log_warning() { warnings+=("$1"); }
 log_manual() { manual+=("$1"); }
 
+# Progress goes to stderr as it happens; the summary at the end stays on stdout.
+log_step() { echo "==> $1" >&2; }
+log_detail() { echo "    $1" >&2; }
+
 print_list() {
   local title="$1"
   shift
@@ -208,7 +212,10 @@ restore_vendor_source() {
   done
   if $needs_install; then
     if [ -n "$(locked_names "$lock")" ]; then
+      local started_at=$SECONDS
+      log_detail "fetching $source at $(locked_commits "$lock" | cut -c1-7) with the skills CLI..."
       run_skills_cli "$VENDOR_ROOT/$source" experimental_install --frozen-lockfile -a "$SKILLS_AGENT" -y
+      log_detail "fetched $source in $((SECONDS - started_at))s"
       log_change "installed $source at its locked commit"
     fi
     cp "$lock" "$installed_lock"
@@ -600,14 +607,27 @@ main() {
     shift
   done
 
+  log_step "Checking prerequisites"
   check_prerequisites
+  log_step "Linking harness files"
   link_harness
+  log_step "Restoring vendored skills"
   restore_vendored
-  $update && update_vendored
+  if $update; then
+    log_step "Updating vendored sources"
+    update_vendored
+  fi
+  log_step "Applying renames"
   apply_renames
+  log_step "Linking skills"
   link_skills
+  log_step "Linking agents"
   link_agents
+  if [ -d "$SPOKE_DIR" ]; then
+    log_step "Updating Spoke"
+  fi
   setup_spoke
+  echo >&2
 
   echo "Skills linked into $GLOBAL_SKILLS: $(printf '%s' "$global_names" | grep -c . || true)"
   echo "Agents linked into $GLOBAL_AGENTS: $(printf '%s' "$agent_names" | grep -c . || true)"
