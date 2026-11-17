@@ -13,11 +13,11 @@ Apps in the lab monorepo share one renderer bootstrap, loop and template set. Bu
 
 1. **Find the lab.** It is the checkout whose root `package.json` is named `lab`, with `packages/core`, `packages/verify` and `templates/`. Work from the current directory if it is one; otherwise ask the user where it is. Read its `README.md` and `AGENTS.md` before anything else; they win over this skill where they differ. Done when you can name the commands the README lists.
 2. **Pick a template.** Run `pnpm create-app` with no arguments to list templates. A game with simulation and input uses `game`; a visual piece or a technique example uses `experiment`; `basic` is the bare minimum. Done when the template choice matches the brief's kind of work.
-3. **Scaffold, never copy.** Run `pnpm create-app <template> <name> [games|pieces|examples]`. A hand-copied folder skips token replacement and the gallery manifest. Done when `apps/<category>/<name>` exists and is not yet edited.
+3. **Scaffold, never copy.** Run `pnpm create-app <template> <name> [games|pieces|examples]`. A technique or knowledge-base example uses `examples`. A hand-copied folder skips token replacement and the gallery manifest. Commit the `pnpm-lock.yaml` change `create-app` makes. Done when `apps/<category>/<name>` exists and is not yet edited.
 4. **Read the app's docs.** `TREATMENT.md` states creative intent and a "Not this" list; `ENGINE.md` holds the file map, rules and perf budget. Fill the stubs for a new app; keep `ENGINE.md` current when the file map or rules change.
 5. **Build in vertical slices.** Rules in "Renderer and loop" below. Write shaders and materials as TSL node materials, never GLSL, using the TSL docs linked below. Done when `pnpm typecheck` passes for the app.
 6. **Add checks.** A game gets `src/playtest.ts`, a scripted playtest that calls `capture(name)`; an experiment gets `captures.json` with the seek times to capture. Format: the lab `README.md`, section "Playtests, captures and the review packet". Done when `verify` has captures to compare.
-7. **Verify.** Run `pnpm verify <app>` from the lab root and fix every failing gate. A visual change fails the reference gate until a human has reviewed the captures and `pnpm verify <app> --accept` is run; do not accept on your own. Note open questions in the app's `DECISIONS.md` and read `taste.md` before building. The work is not done until it prints PASSED.
+7. **Verify.** Run `pnpm verify <app>` from the lab root and fix every failing gate. A visual change fails the reference gate until the captures are reviewed and `pnpm verify <app> --accept` is run; a subagent accept only when the task explicitly allows it and after viewing every capture, and record what was accepted in the report. Read `taste.md` before building (it may be empty). Create the app's `DECISIONS.md` when there are open questions; the template does not ship one. The work is not done until it prints PASSED.
 
 ## Renderer and loop
 
@@ -27,6 +27,7 @@ Apps in the lab monorepo share one renderer bootstrap, loop and template set. Bu
 - Experiments: a frame is a pure function of the seekable time. No clock reads, `Math.random` or frame deltas inside it.
 - Build a hard effect alone on the template's lab route first, then port it into the main app.
 - Honour `prefers-reduced-motion`.
+- A full-screen effect: core's `startApp` (`packages/core/src/app.ts`) sets up the default camera; size the plane from that camera and its distance, not from numbers copied here.
 
 ## Perf habits
 
