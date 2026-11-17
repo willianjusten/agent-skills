@@ -125,4 +125,26 @@ metadata:
   rm -f "$broken"
 done
 
+# Check is the gate for agent scopes; install skips a spoke agent with the same message.
+spoke_agent="$fixture/agents/realtime/spoke-agent.md"
+write_agent "$spoke_agent" "name: spoke-agent
+description: Use when testing spoke scope.
+model: opus
+metadata:
+  scope: spoke"
+scope_message="metadata.scope must be personal, both or off (found 'spoke')"
+check_output=$(HOME="$home" "$fixture/install.sh" check 2>&1)
+if [ $? -ne 0 ] && echo "$check_output" | grep -qF "$scope_message"; then
+  pass "check fails on an agent scoped spoke"
+else
+  fail "check fails on an agent scoped spoke" "$check_output"
+fi
+install_output=$(HOME="$home" SPOKE_DIR="$spoke" "$fixture/install.sh" 2>&1)
+if [ ! -e "$home/.claude/agents/spoke-agent.md" ] && echo "$install_output" | grep -qF "$scope_message, not linked: spoke-agent"; then
+  pass "install skips an agent scoped spoke with the message check gives"
+else
+  fail "install skips an agent scoped spoke with the message check gives" "$install_output"
+fi
+rm -f "$spoke_agent"
+
 [ "$failures" -eq 0 ] || exit 1

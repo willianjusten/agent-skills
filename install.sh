@@ -432,8 +432,17 @@ own_agent_files() {
   return 0
 }
 
-# Links subagents by the same scopes as skills. Spoke has no agent source, so a
-# spoke scope links nothing and Spoke settings never change for agents.
+# Spoke has no agent source, so agents take every skill scope except spoke.
+agent_scope_valid() {
+  case "$1" in personal | both | off) return 0 ;; *) return 1 ;; esac
+}
+
+agent_scope_error() {
+  echo "metadata.scope must be personal, both or off (found '${1:-nothing}')"
+}
+
+# Links subagents by the same scopes as skills. `check` rejects any other scope;
+# here such an agent is skipped with the same message, so Spoke never changes.
 link_agents() {
   local agent_file name scope duplicates
   duplicates="$(own_agent_files | xargs -n1 basename 2>/dev/null | sort | uniq -d)"
@@ -446,15 +455,13 @@ link_agents() {
   for agent_file in $(own_agent_files); do
     name="$(basename "$agent_file")"
     scope="$(frontmatter_scope "$agent_file")"
-    case "$scope" in
-      personal | both)
-        link_path "$agent_file" "$GLOBAL_AGENTS/$name"
-        agent_names="$agent_names$name"$'\n'
-        ;;
-      off) ;;
-      spoke) log_warning "agents cannot be scoped spoke, not linked: ${name%.md}" ;;
-      *) log_warning "agent has invalid scope '${scope:-missing}', not linked: ${name%.md}" ;;
-    esac
+    if ! agent_scope_valid "$scope"; then
+      log_warning "$(agent_scope_error "$scope"), not linked: ${name%.md}"
+      continue
+    fi
+    [ "$scope" = "off" ] && continue
+    link_path "$agent_file" "$GLOBAL_AGENTS/$name"
+    agent_names="$agent_names$name"$'\n'
   done
   remove_stale_links "$GLOBAL_AGENTS" "$agent_names"
 }
@@ -552,10 +559,7 @@ check_own_agents() {
     [ "$(frontmatter_field "$agent_file" name)" = "$(basename "$agent_file" .md)" ] ||
       { echo "ERROR name: frontmatter name must equal the file name"; failed=1; }
     scope="$(frontmatter_scope "$agent_file")"
-    case "$scope" in
-      personal | both | off) ;;
-      *) echo "ERROR scope: metadata.scope must be personal, both or off (found '${scope:-nothing}')"; failed=1 ;;
-    esac
+    agent_scope_valid "$scope" || { echo "ERROR scope: $(agent_scope_error "$scope")"; failed=1; }
   done
   return "$failed"
 }
