@@ -28,7 +28,7 @@ write_skill() {
 }
 
 # A repo copy with one fake vendored source already installed (lock matches its
-# stamp), so install.sh never calls the skills CLI.
+# last-installed copy), so install.sh never calls the skills CLI.
 make_fixture() {
   local root="$1"
   mkdir -p "$root/harness/shared" "$root/harness/claude" "$root/skills"
@@ -124,5 +124,37 @@ metadata:
   fi
   rm -f "$broken"
 done
+
+# Check is the gate for agent scopes; install skips a spoke agent with the same message.
+spoke_agent="$fixture/agents/realtime/spoke-agent.md"
+write_agent "$spoke_agent" "name: spoke-agent
+description: Use when testing spoke scope.
+model: opus
+metadata:
+  scope: spoke"
+scope_message="metadata.scope must be personal, both or off (found 'spoke')"
+check_output=$(HOME="$home" "$fixture/install.sh" check 2>&1)
+if [ $? -ne 0 ] && echo "$check_output" | grep -qF "$scope_message"; then
+  pass "check fails on an agent scoped spoke"
+else
+  fail "check fails on an agent scoped spoke" "$check_output"
+fi
+install_output=$(HOME="$home" SPOKE_DIR="$spoke" "$fixture/install.sh" 2>&1)
+if [ ! -e "$home/.claude/agents/spoke-agent.md" ] && echo "$install_output" | grep -qF "$scope_message, not linked: spoke-agent"; then
+  pass "install skips an agent scoped spoke with the message check gives"
+else
+  fail "install skips an agent scoped spoke with the message check gives" "$install_output"
+fi
+rm -f "$spoke_agent"
+
+# The same fixture covers vendor restore: a store directory the lock does not list is deleted, and said so.
+unlocked_dir="$fixture/vendor/example/skills/.agents/skills/unlocked-skill"
+write_skill "$fixture/vendor/example/skills/.agents/skills" unlocked-skill
+install_output=$(HOME="$home" SPOKE_DIR="$spoke" "$fixture/install.sh" 2>&1)
+if [ ! -e "$unlocked_dir" ] && echo "$install_output" | grep -qF "removed directory $unlocked_dir (example/skills skill not in its skills-lock.json)"; then
+  pass "install deletes a store directory not in the lock and says why"
+else
+  fail "install deletes a store directory not in the lock and says why" "$install_output"
+fi
 
 [ "$failures" -eq 0 ] || exit 1

@@ -257,7 +257,7 @@
     "r3f-best-practices": "off"
   },
   "scottstts/Threejs-Awesome-Graphics-Agent-Skills": {
-    "threejs-skill-router": "personal",
+    "threejs-skill-router": "off",
     "threejs-visual-validation": "personal",
     "threejs-procedural-materials": "personal",
     "threejs-bloom": "personal",

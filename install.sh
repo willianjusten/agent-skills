@@ -21,7 +21,7 @@ VALIDATOR_SOURCE="robonuggets/skill-creator-plus"
 VALIDATOR="$VENDOR_ROOT/$VALIDATOR_SOURCE/.agents/skills/skill-creator-plus/scripts/validate_skill.py"
 
 # Upstream ships `code-review`, which collides with Claude Code's built-in skill.
-# Format: "<upstream name>:<installed name>".
+# Format: "<upstream name>:<installed name>". tests/vendoring.test.sh reads this line.
 RENAMES="code-review:matt-code-review"
 
 force=false
@@ -145,12 +145,18 @@ vendor_lock() {
 }
 
 # Records the lock a source was last installed from, so an unchanged lock skips the network.
-vendor_stamp() {
+last_installed_lock() {
   echo "$VENDOR_ROOT/$1/.installed-lock.json"
 }
 
 locked_names() {
   jq -r '.skills | keys[]' "$1"
+}
+
+# Succeeds when a lock lists the given upstream skill name.
+is_locked() {
+  local lock="$1" upstream_name="$2"
+  locked_names "$lock" | grep -qx "$upstream_name"
 }
 
 # Upstream names of the skills scopes.json enables for one source.
@@ -187,16 +193,16 @@ run_skills_cli() {
 # Installs one source at the commits its lock records, then drops skills the lock
 # no longer lists.
 restore_vendor_source() {
-  local source="$1" lock store stamp upstream_name needs_install=false
+  local source="$1" lock store installed_lock upstream_name needs_install=false
   lock="$(vendor_lock "$source")"
   store="$(vendor_store "$source")"
-  stamp="$(vendor_stamp "$source")"
+  installed_lock="$(last_installed_lock "$source")"
   if [ ! -f "$lock" ]; then
     log_manual "no lock for $source yet, run ./install.sh --update $source"
     return 0
   fi
 
-  cmp -s "$lock" "$stamp" || needs_install=true
+  cmp -s "$lock" "$installed_lock" || needs_install=true
   for upstream_name in $(locked_names "$lock"); do
     [ -f "$store/$upstream_name/SKILL.md" ] || needs_install=true
   done
@@ -205,18 +211,18 @@ restore_vendor_source() {
       run_skills_cli "$VENDOR_ROOT/$source" experimental_install --frozen-lockfile -a "$SKILLS_AGENT" -y
       log_change "installed $source at its locked commit"
     fi
-    cp "$lock" "$stamp"
+    cp "$lock" "$installed_lock"
   fi
 
   if [ -d "$store" ]; then
     for upstream_name in $(ls "$store"); do
-      locked_names "$lock" | grep -qx "$upstream_name" && continue
+      is_locked "$lock" "$upstream_name" && continue
       rm -rf "${store:?}/$upstream_name"
-      log_change "removed $source skill no longer in its lock: $upstream_name"
+      log_change "removed directory $store/$upstream_name ($source skill not in its skills-lock.json)"
     done
   fi
   for upstream_name in $(enabled_upstream_names "$source"); do
-    locked_names "$lock" | grep -qx "$upstream_name" ||
+    is_locked "$lock" "$upstream_name" ||
       log_manual "enabled in scopes.json but not locked, run ./install.sh --update $source: $(installed_name_of "$upstream_name")"
   done
   return 0
@@ -235,47 +241,53 @@ locked_commits() {
   jq -r '[.skills[].commit] | unique | join(",")' "$1"
 }
 
-# Moves one source to its newest upstream commit: installs its enabled skills
-# fresh, replaces its store and lock, and prints the diff of the enabled skills.
-update_vendor_source() {
-  local source="$1" lock store workdir names old_commits new_commits upstream_name
-  lock="$(vendor_lock "$source")"
-  store="$(vendor_store "$source")"
-  workdir="$(mktemp -d)"
-  names="$(enabled_upstream_names "$source")"
-  old_commits="$(locked_commits "$lock")"
-  echo "Updating vendored skills from $source..."
-
-  mkdir -p "$workdir/install" "$workdir/old" "$workdir/new"
-  [ -d "$store" ] && cp -R "$store/." "$workdir/old/"
-  if [ -n "$names" ]; then
-    # shellcheck disable=SC2086
-    run_skills_cli "$workdir/install" add "$source" -s $names -a "$SKILLS_AGENT" -y
-  else
-    jq -n '{ version: 2, skills: {} }' >"$workdir/install/skills-lock.json"
-  fi
-
-  rm -rf "$store"
-  mkdir -p "$(dirname "$store")"
-  [ -d "$workdir/install/.agents/skills" ] && cp -R "$workdir/install/.agents/skills" "$store"
-  cmp -s "$workdir/install/skills-lock.json" "$lock" || log_change "updated lock for $source"
-  cp "$workdir/install/skills-lock.json" "$lock"
-  cp "$lock" "$(vendor_stamp "$source")"
-  apply_renames
-  [ -d "$store" ] && cp -R "$store/." "$workdir/new/"
-
-  new_commits="$(locked_commits "$lock")"
+# Prints the commit move of one source, a GitHub compare URL when both sides pin
+# a single commit, and the diff between the old/ and new/ copies in a directory.
+print_update_report() {
+  local source="$1" old_commits="$2" new_commits="$3" snapshot_dir="$4"
   echo "== $source: ${old_commits:-none} -> ${new_commits:-none}"
   if [ -n "$old_commits" ] && [ -n "$new_commits" ] && [ "$old_commits" != "$new_commits" ] &&
     [ "${old_commits#*,}" = "$old_commits" ] && [ "${new_commits#*,}" = "$new_commits" ]; then
     echo "   https://github.com/$source/compare/$old_commits...$new_commits"
   fi
-  if (cd "$workdir" && diff -ruN old new >"$workdir/changes.diff"); then
+  if (cd "$snapshot_dir" && diff -ruN old new >"$snapshot_dir/changes.diff"); then
     echo "   no changes in the enabled skills"
   else
-    cat "$workdir/changes.diff"
+    cat "$snapshot_dir/changes.diff"
   fi
-  rm -rf "$workdir"
+}
+
+# Moves one source to its newest upstream commit: installs its enabled skills
+# fresh, replaces its store and lock, and prints the diff of the enabled skills.
+update_vendor_source() {
+  local source="$1" lock store scratch_dir enabled_names old_commits upstream_name
+  lock="$(vendor_lock "$source")"
+  store="$(vendor_store "$source")"
+  scratch_dir="$(mktemp -d)"
+  enabled_names="$(enabled_upstream_names "$source")"
+  old_commits="$(locked_commits "$lock")"
+  echo "Updating vendored skills from $source..."
+
+  mkdir -p "$scratch_dir/install" "$scratch_dir/old" "$scratch_dir/new"
+  [ -d "$store" ] && cp -R "$store/." "$scratch_dir/old/"
+  if [ -n "$enabled_names" ]; then
+    # shellcheck disable=SC2086
+    run_skills_cli "$scratch_dir/install" add "$source" -s $enabled_names -a "$SKILLS_AGENT" -y
+  else
+    jq -n '{ version: 2, skills: {} }' >"$scratch_dir/install/skills-lock.json"
+  fi
+
+  rm -rf "$store"
+  mkdir -p "$(dirname "$store")"
+  [ -d "$scratch_dir/install/.agents/skills" ] && cp -R "$scratch_dir/install/.agents/skills" "$store"
+  cmp -s "$scratch_dir/install/skills-lock.json" "$lock" || log_change "updated lock for $source"
+  cp "$scratch_dir/install/skills-lock.json" "$lock"
+  cp "$lock" "$(last_installed_lock "$source")"
+  apply_renames
+  [ -d "$store" ] && cp -R "$store/." "$scratch_dir/new/"
+
+  print_update_report "$source" "$old_commits" "$(locked_commits "$lock")" "$scratch_dir"
+  rm -rf "$scratch_dir"
 
   local upstream_list
   upstream_list="$(npx -y "$SKILLS_CLI" add "$source" -l 2>&1 |
@@ -432,8 +444,17 @@ own_agent_files() {
   return 0
 }
 
-# Links subagents by the same scopes as skills. Spoke has no agent source, so a
-# spoke scope links nothing and Spoke settings never change for agents.
+# Spoke has no agent source, so agents take every skill scope except spoke.
+agent_scope_valid() {
+  case "$1" in personal | both | off) return 0 ;; *) return 1 ;; esac
+}
+
+agent_scope_error() {
+  echo "metadata.scope must be personal, both or off (found '${1:-nothing}')"
+}
+
+# Links subagents by the same scopes as skills. `check` rejects any other scope;
+# here such an agent is skipped with the same message, so Spoke never changes.
 link_agents() {
   local agent_file name scope duplicates
   duplicates="$(own_agent_files | xargs -n1 basename 2>/dev/null | sort | uniq -d)"
@@ -446,15 +467,13 @@ link_agents() {
   for agent_file in $(own_agent_files); do
     name="$(basename "$agent_file")"
     scope="$(frontmatter_scope "$agent_file")"
-    case "$scope" in
-      personal | both)
-        link_path "$agent_file" "$GLOBAL_AGENTS/$name"
-        agent_names="$agent_names$name"$'\n'
-        ;;
-      off) ;;
-      spoke) log_warning "agents cannot be scoped spoke, not linked: ${name%.md}" ;;
-      *) log_warning "agent has invalid scope '${scope:-missing}', not linked: ${name%.md}" ;;
-    esac
+    if ! agent_scope_valid "$scope"; then
+      log_warning "$(agent_scope_error "$scope"), not linked: ${name%.md}"
+      continue
+    fi
+    [ "$scope" = "off" ] && continue
+    link_path "$agent_file" "$GLOBAL_AGENTS/$name"
+    agent_names="$agent_names$name"$'\n'
   done
   remove_stale_links "$GLOBAL_AGENTS" "$agent_names"
 }
@@ -552,10 +571,7 @@ check_own_agents() {
     [ "$(frontmatter_field "$agent_file" name)" = "$(basename "$agent_file" .md)" ] ||
       { echo "ERROR name: frontmatter name must equal the file name"; failed=1; }
     scope="$(frontmatter_scope "$agent_file")"
-    case "$scope" in
-      personal | both | off) ;;
-      *) echo "ERROR scope: metadata.scope must be personal, both or off (found '${scope:-nothing}')"; failed=1 ;;
-    esac
+    agent_scope_valid "$scope" || { echo "ERROR scope: $(agent_scope_error "$scope")"; failed=1; }
   done
   return "$failed"
 }
