@@ -16,7 +16,8 @@ Apps in the lab monorepo share one renderer bootstrap, loop and template set. Bu
 3. **Scaffold, never copy.** Run `pnpm create-app <template> <name> [games|pieces|examples]`. A hand-copied folder skips token replacement and the gallery manifest. Done when `apps/<category>/<name>` exists and is not yet edited.
 4. **Read the app's docs.** `TREATMENT.md` states creative intent and a "Not this" list; `ENGINE.md` holds the file map, rules and perf budget. Fill the stubs for a new app; keep `ENGINE.md` current when the file map or rules change.
 5. **Build in vertical slices.** Rules in "Renderer and loop" below. Write shaders and materials as TSL node materials, never GLSL, using the TSL docs linked below. Done when `pnpm typecheck` passes for the app.
-6. **Verify.** Run `pnpm verify <app>` from the lab root and fix every failing gate. The work is not done until it prints PASSED.
+6. **Add checks.** A game gets `src/playtest.ts`, a scripted playtest that calls `capture(name)`; an experiment gets `captures.json` with the seek times to capture. Format: the lab `README.md`, section "Playtests, captures and the review packet". Done when `verify` has captures to compare.
+7. **Verify.** Run `pnpm verify <app>` from the lab root and fix every failing gate. A visual change fails the reference gate until a human has reviewed the captures and `pnpm verify <app> --accept` is run; do not accept on your own. Note open questions in the app's `DECISIONS.md` and read `taste.md` before building. The work is not done until it prints PASSED.
 
 ## Renderer and loop
 
@@ -35,12 +36,12 @@ Apps in the lab monorepo share one renderer bootstrap, loop and template set. Bu
 
 ## Upstream skills
 
-Reach for installed upstream skills by role instead of restating them here:
+If installed, reach for these upstream skills by role instead of restating them here. Each is optional; the fallback is in brackets.
 
-- General three.js performance and review rules: the `three-best-practices` skill.
-- Profiling a slow scene or game: the `optimize-threejs-games` skill.
-- Post-processing, bloom, exposure and grading: the `threejs-bloom` and `threejs-exposure-color-grading` skills.
-- Procedural materials: the `threejs-procedural-materials` skill.
-- Current three.js API and TSL: `https://threejs.org/docs/`, `https://threejs.org/llms.txt` and the TSL wiki page linked from the docs. Check the installed three version in the lab's lockfile first, since APIs move between releases.
+- General three.js performance and review rules: `three-best-practices` [fallback: the perf habits above and `https://threejs.org/docs/`].
+- Profiling a slow scene or game: `optimize-threejs-games` [fallback: browser performance panel and `window.__lab.frameStats`].
+- Post-processing, bloom, exposure and grading: `threejs-bloom` and `threejs-exposure-color-grading` [fallback: three.js post-processing examples].
+- Procedural materials: `threejs-procedural-materials` [fallback: the `three-tsl` skill and the TSL wiki].
+- Current three.js API and TSL: `https://threejs.org/llms.txt`, `https://threejs.org/docs/llms-full.txt` and `https://github.com/mrdoob/three.js/wiki/Three.js-Shading-Language`. Check the installed three version in the lab's lockfile first, since APIs move between releases.
 
 If an upstream skill assumes GLSL or bare `three`, translate it to TSL and `three/webgpu`.

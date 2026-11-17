@@ -13,6 +13,12 @@ fail() {
   failures=$((failures + 1))
 }
 
+scope_of() {
+  awk '/^metadata:/ { in_meta = 1; next } in_meta && /scope:/ { sub(/.*scope:[ \t]*/, ""); sub(/[ \t]*#.*/, ""); print; exit }' "$1"
+}
+
+has_machine_path() { grep -rEn '/Users/[a-z]|/home/[a-z]' "$@"; }
+
 for skill in three-build three-tsl three-verify asset-pipeline; do
   file="$REALTIME/$skill/SKILL.md"
   if [ ! -f "$file" ]; then
@@ -24,13 +30,13 @@ for skill in three-build three-tsl three-verify asset-pipeline; do
   name=$(awk -F': *' '$1 == "name" { print $2; exit }' "$file")
   [ "$name" = "$skill" ] && pass "$skill frontmatter name equals its folder" || fail "$skill frontmatter name equals its folder" "found '$name'"
 
-  scope=$(awk '/^metadata:/ { in_meta = 1; next } in_meta && /scope:/ { sub(/.*scope:[ \t]*/, ""); sub(/[ \t]*#.*/, ""); print; exit }' "$file")
+  scope=$(scope_of "$file")
   [ "$scope" = "personal" ] && pass "$skill is scoped personal" || fail "$skill is scoped personal" "found '$scope'"
 
   [ -f "$REALTIME/$skill/README.md" ] && pass "$skill has a README" || fail "$skill has a README"
 
-  if grep -rEn '/Users/[a-z]|/home/[a-z]' "$REALTIME/$skill" >/dev/null; then
-    fail "$skill has no machine paths" "$(grep -rEn '/Users/[a-z]|/home/[a-z]' "$REALTIME/$skill")"
+  if paths=$(has_machine_path "$REALTIME/$skill"); then
+    fail "$skill has no machine paths" "$paths"
   else
     pass "$skill has no machine paths"
   fi
@@ -42,9 +48,9 @@ if [ -f "$agent" ]; then
   agent_field() { awk -v key="$1" -F': *' '$1 == key { print $2; exit }' "$agent"; }
   [ "$(agent_field name)" = "asset-wrangler" ] && pass "asset-wrangler name equals its file name" || fail "asset-wrangler name equals its file name"
   [ "$(agent_field model)" = "haiku" ] && pass "asset-wrangler runs on haiku" || fail "asset-wrangler runs on haiku" "found '$(agent_field model)'"
-  agent_scope=$(awk '/^metadata:/ { in_meta = 1; next } in_meta && /scope:/ { sub(/.*scope:[ \t]*/, ""); sub(/[ \t]*#.*/, ""); print; exit }' "$agent")
+  agent_scope=$(scope_of "$agent")
   [ "$agent_scope" = "personal" ] && pass "asset-wrangler is scoped personal" || fail "asset-wrangler is scoped personal" "found '$agent_scope'"
-  if grep -En '/Users/[a-z]|/home/[a-z]' "$agent" >/dev/null; then fail "asset-wrangler has no machine paths"; else pass "asset-wrangler has no machine paths"; fi
+  if has_machine_path "$agent" >/dev/null; then fail "asset-wrangler has no machine paths"; else pass "asset-wrangler has no machine paths"; fi
 else
   fail "asset-wrangler exists under agents/realtime"
 fi
