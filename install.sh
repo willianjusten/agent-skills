@@ -153,6 +153,12 @@ locked_names() {
   jq -r '.skills | keys[]' "$1"
 }
 
+# Succeeds when a lock lists the given upstream skill name.
+is_locked() {
+  local lock="$1" upstream_name="$2"
+  locked_names "$lock" | grep -qx "$upstream_name"
+}
+
 # Upstream names of the skills scopes.json enables for one source.
 enabled_upstream_names() {
   local installed_name
@@ -210,13 +216,13 @@ restore_vendor_source() {
 
   if [ -d "$store" ]; then
     for upstream_name in $(ls "$store"); do
-      locked_names "$lock" | grep -qx "$upstream_name" && continue
+      is_locked "$lock" "$upstream_name" && continue
       rm -rf "${store:?}/$upstream_name"
       log_change "removed $source skill no longer in its lock: $upstream_name"
     done
   fi
   for upstream_name in $(enabled_upstream_names "$source"); do
-    locked_names "$lock" | grep -qx "$upstream_name" ||
+    is_locked "$lock" "$upstream_name" ||
       log_manual "enabled in scopes.json but not locked, run ./install.sh --update $source: $(installed_name_of "$upstream_name")"
   done
   return 0
