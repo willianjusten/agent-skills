@@ -1,0 +1,30 @@
+---
+name: three-tsl
+description: Writes shaders and materials with three.js TSL (Three Shading Language) node materials instead of GLSL. Use when authoring or editing a shader, material, post-processing effect or procedural visual in a three.js WebGPURenderer project, or when tempted to write GLSL, ShaderMaterial or onBeforeCompile.
+metadata:
+  scope: personal
+---
+
+# Three TSL
+
+Training data skews to GLSL. TSL is a node graph built in JavaScript that compiles to WGSL or GLSL, so one effect runs on WebGPU and on the WebGL 2 fallback.
+
+## Steps
+
+1. **Read the sources.** Fetch the official TSL docs (`https://threejs.org/docs/`, page "Three.js Shading Language") and `https://threejs.org/llms.txt`, plus the TSL examples linked from them. Return to them whenever you are unsure of a node name; do not guess from GLSL habit. Done when each node and function you plan to use appears in the docs or in an existing lab effect.
+2. **Read a working effect in the repo.** In the lab, an `experiment` template app has `src/effects/*.ts`, one TSL material per file. Copy its shape: imports from `three/webgpu` and `three/tsl`, a node material, uniforms updated from a `frame` function. Done when you can say which uniform carries time.
+3. **Write the effect as a graph.**
+   - Use `three/webgpu` node materials (`MeshBasicNodeMaterial`, `MeshStandardNodeMaterial`, ...) and assign nodes to `colorNode`, `positionNode`, `emissiveNode` and the other node slots.
+   - Express maths with node functions and operators (`.mul`, `.add`, `mix`, `smoothstep`, `uv()`, `uniform()`), not string shaders.
+   - Use `Fn` for reusable chunks and `uniform` for values the JS side changes.
+   - Never use `ShaderMaterial`, `RawShaderMaterial`, `onBeforeCompile` or GLSL strings.
+4. **Keep it deterministic.** Time comes from one time uniform, set by the app's frame function, so a seeked frame renders the same image. No `Math.random` or clock reads feeding uniforms.
+5. **Name the magic numbers** as constants and expose tunables through the template's tuning pane, so a human can retune without a rewrite.
+6. **Build it alone first** on the template's lab route, then port into the main app. Done when the effect renders with no console errors on WebGPU and with `navigator.gpu` hidden (`pnpm verify <app> --no-webgpu` runs the fallback).
+
+## Pitfalls
+
+- Node API names change between three.js releases; check the installed version before trusting a snippet from memory or a blog.
+- Compute and storage-buffer features need WebGPU and do not run on the WebGL 2 fallback; keep a fallback path or leave them out.
+- Type errors on node chains usually mean a missing conversion (`float()`, `vec3()`); fix the type, do not cast to `any`.
+- Many extra texture samples or loop iterations show up first on the mobile profile; check the numbers with `pnpm verify <app>`.
