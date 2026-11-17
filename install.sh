@@ -145,7 +145,7 @@ vendor_lock() {
 }
 
 # Records the lock a source was last installed from, so an unchanged lock skips the network.
-vendor_stamp() {
+last_installed_lock() {
   echo "$VENDOR_ROOT/$1/.installed-lock.json"
 }
 
@@ -193,16 +193,16 @@ run_skills_cli() {
 # Installs one source at the commits its lock records, then drops skills the lock
 # no longer lists.
 restore_vendor_source() {
-  local source="$1" lock store stamp upstream_name needs_install=false
+  local source="$1" lock store installed_lock upstream_name needs_install=false
   lock="$(vendor_lock "$source")"
   store="$(vendor_store "$source")"
-  stamp="$(vendor_stamp "$source")"
+  installed_lock="$(last_installed_lock "$source")"
   if [ ! -f "$lock" ]; then
     log_manual "no lock for $source yet, run ./install.sh --update $source"
     return 0
   fi
 
-  cmp -s "$lock" "$stamp" || needs_install=true
+  cmp -s "$lock" "$installed_lock" || needs_install=true
   for upstream_name in $(locked_names "$lock"); do
     [ -f "$store/$upstream_name/SKILL.md" ] || needs_install=true
   done
@@ -211,7 +211,7 @@ restore_vendor_source() {
       run_skills_cli "$VENDOR_ROOT/$source" experimental_install --frozen-lockfile -a "$SKILLS_AGENT" -y
       log_change "installed $source at its locked commit"
     fi
-    cp "$lock" "$stamp"
+    cp "$lock" "$installed_lock"
   fi
 
   if [ -d "$store" ]; then
@@ -241,47 +241,53 @@ locked_commits() {
   jq -r '[.skills[].commit] | unique | join(",")' "$1"
 }
 
-# Moves one source to its newest upstream commit: installs its enabled skills
-# fresh, replaces its store and lock, and prints the diff of the enabled skills.
-update_vendor_source() {
-  local source="$1" lock store workdir names old_commits new_commits upstream_name
-  lock="$(vendor_lock "$source")"
-  store="$(vendor_store "$source")"
-  workdir="$(mktemp -d)"
-  names="$(enabled_upstream_names "$source")"
-  old_commits="$(locked_commits "$lock")"
-  echo "Updating vendored skills from $source..."
-
-  mkdir -p "$workdir/install" "$workdir/old" "$workdir/new"
-  [ -d "$store" ] && cp -R "$store/." "$workdir/old/"
-  if [ -n "$names" ]; then
-    # shellcheck disable=SC2086
-    run_skills_cli "$workdir/install" add "$source" -s $names -a "$SKILLS_AGENT" -y
-  else
-    jq -n '{ version: 2, skills: {} }' >"$workdir/install/skills-lock.json"
-  fi
-
-  rm -rf "$store"
-  mkdir -p "$(dirname "$store")"
-  [ -d "$workdir/install/.agents/skills" ] && cp -R "$workdir/install/.agents/skills" "$store"
-  cmp -s "$workdir/install/skills-lock.json" "$lock" || log_change "updated lock for $source"
-  cp "$workdir/install/skills-lock.json" "$lock"
-  cp "$lock" "$(vendor_stamp "$source")"
-  apply_renames
-  [ -d "$store" ] && cp -R "$store/." "$workdir/new/"
-
-  new_commits="$(locked_commits "$lock")"
+# Prints the commit move of one source, a GitHub compare URL when both sides pin
+# a single commit, and the diff between the old/ and new/ copies in a directory.
+print_update_report() {
+  local source="$1" old_commits="$2" new_commits="$3" snapshot_dir="$4"
   echo "== $source: ${old_commits:-none} -> ${new_commits:-none}"
   if [ -n "$old_commits" ] && [ -n "$new_commits" ] && [ "$old_commits" != "$new_commits" ] &&
     [ "${old_commits#*,}" = "$old_commits" ] && [ "${new_commits#*,}" = "$new_commits" ]; then
     echo "   https://github.com/$source/compare/$old_commits...$new_commits"
   fi
-  if (cd "$workdir" && diff -ruN old new >"$workdir/changes.diff"); then
+  if (cd "$snapshot_dir" && diff -ruN old new >"$snapshot_dir/changes.diff"); then
     echo "   no changes in the enabled skills"
   else
-    cat "$workdir/changes.diff"
+    cat "$snapshot_dir/changes.diff"
   fi
-  rm -rf "$workdir"
+}
+
+# Moves one source to its newest upstream commit: installs its enabled skills
+# fresh, replaces its store and lock, and prints the diff of the enabled skills.
+update_vendor_source() {
+  local source="$1" lock store scratch_dir enabled_names old_commits upstream_name
+  lock="$(vendor_lock "$source")"
+  store="$(vendor_store "$source")"
+  scratch_dir="$(mktemp -d)"
+  enabled_names="$(enabled_upstream_names "$source")"
+  old_commits="$(locked_commits "$lock")"
+  echo "Updating vendored skills from $source..."
+
+  mkdir -p "$scratch_dir/install" "$scratch_dir/old" "$scratch_dir/new"
+  [ -d "$store" ] && cp -R "$store/." "$scratch_dir/old/"
+  if [ -n "$enabled_names" ]; then
+    # shellcheck disable=SC2086
+    run_skills_cli "$scratch_dir/install" add "$source" -s $enabled_names -a "$SKILLS_AGENT" -y
+  else
+    jq -n '{ version: 2, skills: {} }' >"$scratch_dir/install/skills-lock.json"
+  fi
+
+  rm -rf "$store"
+  mkdir -p "$(dirname "$store")"
+  [ -d "$scratch_dir/install/.agents/skills" ] && cp -R "$scratch_dir/install/.agents/skills" "$store"
+  cmp -s "$scratch_dir/install/skills-lock.json" "$lock" || log_change "updated lock for $source"
+  cp "$scratch_dir/install/skills-lock.json" "$lock"
+  cp "$lock" "$(last_installed_lock "$source")"
+  apply_renames
+  [ -d "$store" ] && cp -R "$store/." "$scratch_dir/new/"
+
+  print_update_report "$source" "$old_commits" "$(locked_commits "$lock")" "$scratch_dir"
+  rm -rf "$scratch_dir"
 
   local upstream_list
   upstream_list="$(npx -y "$SKILLS_CLI" add "$source" -l 2>&1 |

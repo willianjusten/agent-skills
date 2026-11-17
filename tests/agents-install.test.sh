@@ -28,7 +28,7 @@ write_skill() {
 }
 
 # A repo copy with one fake vendored source already installed (lock matches its
-# stamp), so install.sh never calls the skills CLI.
+# last-installed copy), so install.sh never calls the skills CLI.
 make_fixture() {
   local root="$1"
   mkdir -p "$root/harness/shared" "$root/harness/claude" "$root/skills"
