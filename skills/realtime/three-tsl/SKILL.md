@@ -17,6 +17,7 @@ Training data skews to GLSL. TSL is a node graph built in JavaScript that compil
    - Use `three/webgpu` node materials (`MeshBasicNodeMaterial`, `MeshStandardNodeMaterial`, ...) and assign nodes to `colorNode`, `positionNode`, `emissiveNode` and the other node slots.
    - Express maths with node functions and operators (`.mul`, `.add`, `mix`, `smoothstep`, `uv()`, `uniform()`), not string shaders.
    - Use `Fn` for reusable chunks and `uniform` for values the JS side changes. Type `Fn` and `Loop` params with `Node<'float'>` or `Node<'vec2'>` from `three/webgpu`, as `lava.ts` does, instead of casting.
+   - For an effect that fills the screen, build the colour with core's `createFullscreenEffect` (`packages/core/src/fullscreen-effect.ts`) and read its `centered` coordinates so shapes stay round at any aspect; do not draw on a sized plane. The `edge-bands` gate in `verify` fails an experiment with empty bands at the edges.
    - Never use `ShaderMaterial`, `RawShaderMaterial`, `onBeforeCompile` or GLSL strings.
 4. **Keep it deterministic.** Time comes from one time uniform, set by the app's frame function, so a seeked frame renders the same image. No `Math.random` or clock reads feeding uniforms.
 5. **Name the magic numbers** as constants and expose tunables through the template's tuning pane, so a human can retune without a rewrite.

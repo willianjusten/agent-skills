@@ -27,7 +27,7 @@ Apps in the lab monorepo share one renderer bootstrap, loop and template set. Bu
 - Experiments: a frame is a pure function of the seekable time. No clock reads, `Math.random` or frame deltas inside it.
 - Build a hard effect alone on the template's lab route first, then port it into the main app.
 - Honour `prefers-reduced-motion`.
-- A full-screen effect: core's `startApp` (`packages/core/src/app.ts`) sets up the default camera; size the plane from that camera and its distance, not from numbers copied here.
+- A full-screen effect: use core's `createFullscreenEffect` (`packages/core/src/fullscreen-effect.ts`), which covers the canvas at any camera and aspect, not a sized plane in the perspective scene. The `edge-bands` gate fails an experiment with empty bands at the edges.
 
 ## Perf habits
 
