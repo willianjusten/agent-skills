@@ -41,6 +41,8 @@
   },
   "anthropics/skills": {
     "frontend-design": "personal",
+    "algorithmic-art": "personal",
+    "webapp-testing": "personal",
     "academy-guide": "off",
     "claude-api": "off",
     "discernment-nudge": "off",
@@ -48,7 +50,6 @@
     "pdf": "off",
     "pptx": "off",
     "xlsx": "off",
-    "algorithmic-art": "off",
     "brand-guidelines": "off",
     "canvas-design": "off",
     "doc-coauthoring": "off",
@@ -58,7 +59,6 @@
     "slack-gif-creator": "off",
     "theme-factory": "off",
     "web-artifacts-builder": "off",
-    "webapp-testing": "off",
     "template-skill": "off"
   },
   "robonuggets/skill-creator-plus": {
