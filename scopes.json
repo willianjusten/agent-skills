@@ -66,5 +66,8 @@
   },
   "vercel-labs/agent-browser": {
     "agent-browser": "off"
+  },
+  "bizarro/skills": {
+    "creative-development": "personal"
   }
 }

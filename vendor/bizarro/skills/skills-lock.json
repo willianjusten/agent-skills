@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "skills": {
+    "creative-development": {
+      "source": "bizarro/skills",
+      "commit": "35000cfb842f411f2921fec8b132fda66b3d4b73",
+      "sourceType": "github",
+      "skillPath": "skills/creative-development/SKILL.md",
+      "computedHash": "0c6d6cea9c22801d617ea86fb35568348de47cdc0dd25cca452bc9a8de7429cc"
+    }
+  }
+}
