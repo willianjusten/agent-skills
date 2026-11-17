@@ -23,4 +23,4 @@ Why is this piece not publishing window.__lab?
 
 ## Requirements
 
-- A checkout of the lab monorepo with pnpm and Node 24.
+- A checkout of the lab monorepo with pnpm and the Node version the lab's `package.json` requires.

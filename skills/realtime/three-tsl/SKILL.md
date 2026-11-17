@@ -11,7 +11,7 @@ Training data skews to GLSL. TSL is a node graph built in JavaScript that compil
 
 ## Steps
 
-1. **Read the sources.** Fetch the official TSL docs (`https://threejs.org/docs/`, page "Three.js Shading Language") and `https://threejs.org/llms.txt`, plus the TSL examples linked from them. Return to them whenever you are unsure of a node name; do not guess from GLSL habit. Done when each node and function you plan to use appears in the docs or in an existing lab effect.
+1. **Read the sources.** Fetch the TSL wiki page (`https://github.com/mrdoob/three.js/wiki/Three.js-Shading-Language`), `https://threejs.org/llms.txt` and `https://threejs.org/docs/llms-full.txt`, plus the TSL examples linked from them. Return to them whenever you are unsure of a node name; do not guess from GLSL habit. Done when each node and function you plan to use appears in the docs or in an existing lab effect.
 2. **Read a working effect in the repo.** In the lab, an `experiment` template app has `src/effects/*.ts`, one TSL material per file. Copy its shape: imports from `three/webgpu` and `three/tsl`, a node material, uniforms updated from a `frame` function. Done when you can say which uniform carries time.
 3. **Write the effect as a graph.**
    - Use `three/webgpu` node materials (`MeshBasicNodeMaterial`, `MeshStandardNodeMaterial`, ...) and assign nodes to `colorNode`, `positionNode`, `emissiveNode` and the other node slots.
@@ -21,6 +21,9 @@ Training data skews to GLSL. TSL is a node graph built in JavaScript that compil
 4. **Keep it deterministic.** Time comes from one time uniform, set by the app's frame function, so a seeked frame renders the same image. No `Math.random` or clock reads feeding uniforms.
 5. **Name the magic numbers** as constants and expose tunables through the template's tuning pane, so a human can retune without a rewrite.
 6. **Build it alone first** on the template's lab route, then port into the main app. Done when the effect renders with no console errors on WebGPU and with `navigator.gpu` hidden (`pnpm verify <app> --no-webgpu` runs the fallback).
+7. **Prove it with captures.** For an experiment, list the seek times that show the effect in `captures.json`, so `verify` compares them with `references/<name>.png`. Changing a shader changes the pixels, which fails the reference gate until a human reviews the captures and `pnpm verify <app> --accept` is run; never accept on your own. Details: the lab `README.md`, section "Playtests, captures and the review packet". Open questions go in the app's `DECISIONS.md`; read `taste.md` first.
+
+If installed, the `threejs-procedural-materials` and `threejs-visual-validation` skills cover advanced materials and fixed-view validation; without them, the steps above are enough.
 
 ## Pitfalls
 
