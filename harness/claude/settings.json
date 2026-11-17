@@ -43,7 +43,8 @@
     "anthropic-skills:xlsx": "off",
     "anthropic-skills:google-workspace": "off",
     "anthropic-skills:import-memory": "off",
-    "anthropic-skills:morning": "off"
+    "anthropic-skills:morning": "off",
+    "wait-what": "off"
   },
   "hooks": {
     "Stop": [
@@ -97,6 +98,7 @@
       }
     }
   },
+  "feedbackDrafts": "notify",
   "effortLevel": "medium",
   "modelSettings": {
     "claude-fable-5-1": {
@@ -109,7 +111,9 @@
       "autoCompactWindow": 500000
     }
   },
-  "tui": "fullscreen",
+  "tui": "default",
+  "preferredNotifChannel": "auto",
+  "remoteControlAtStartup": true,
   "agentPushNotifEnabled": true,
   "skipAutoPermissionPrompt": true,
   "autoMode": {
