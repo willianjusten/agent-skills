@@ -7,6 +7,7 @@ Conventions for working in this repository. This file is for agents editing the 
 | Path | Owner | Edit it? |
 | ---- | ----- | -------- |
 | `skills/<category>/<name>/` | this repo | yes: own skills |
+| `agents/<category>/<name>.md` | this repo | yes: role-scoped subagents. Frontmatter needs `name` (equal to the file name), `description`, `model` and `metadata.scope` (`personal`, `both` or `off`); `install.sh` links them into `~/.claude/agents/` |
 | `vendor/<owner>/<repo>/skills-lock.json` | `./install.sh --update` | no: rewritten on update; review the printed upstream diff, then commit it. Pins the source to an upstream commit |
 | `vendor/<owner>/<repo>/.agents/` | `install.sh` (fetched from the lock) | no: gitignored and refetched. The only local patch is the `code-review` rename in `apply_renames`; policy goes in `harness/` files the skills already read |
 | `scopes.json` | this repo | yes: one line per vendored skill |
