@@ -255,5 +255,31 @@
   "emalorenzo/three-agent-skills": {
     "three-best-practices": "personal",
     "r3f-best-practices": "off"
+  },
+  "scottstts/Threejs-Awesome-Graphics-Agent-Skills": {
+    "threejs-skill-router": "personal",
+    "threejs-visual-validation": "personal",
+    "threejs-procedural-materials": "personal",
+    "threejs-bloom": "personal",
+    "threejs-exposure-color-grading": "personal",
+    "threejs-atmosphere-aerial-perspective": "off",
+    "threejs-camera-direction": "off",
+    "threejs-image-pipeline": "off",
+    "threejs-parallax-occlusion-mapping": "off",
+    "threejs-precipitation-surfaces": "off",
+    "threejs-procedural-animation": "off",
+    "threejs-procedural-architecture": "off",
+    "threejs-procedural-fields": "off",
+    "threejs-procedural-geometry": "off",
+    "threejs-procedural-planets": "off",
+    "threejs-procedural-vegetation": "off",
+    "threejs-procedural-vfx": "off",
+    "threejs-raymarched-space-effects": "off",
+    "threejs-screen-space-ambient-occlusion": "off",
+    "threejs-shadow-systems": "off",
+    "threejs-spectral-ocean": "off",
+    "threejs-temporal-surfaces": "off",
+    "threejs-volumetric-clouds": "off",
+    "threejs-water-optics": "off"
   }
 }
