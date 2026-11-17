@@ -22,13 +22,6 @@
       "skillPath": "skills/threejs-procedural-materials/SKILL.md",
       "computedHash": "3179cd451892dcdafee22880b91f0e3855d4a56fc7953e868fd69bc3d51a747e"
     },
-    "threejs-skill-router": {
-      "source": "scottstts/Threejs-Awesome-Graphics-Agent-Skills",
-      "commit": "53eb5a24097425d82532ec33697ad472750132a4",
-      "sourceType": "github",
-      "skillPath": "skills/threejs-skill-router/SKILL.md",
-      "computedHash": "f93611cfc6ee7318e3f532d2d21e1817af1601caec9cb69e27499e5708b8c096"
-    },
     "threejs-visual-validation": {
       "source": "scottstts/Threejs-Awesome-Graphics-Agent-Skills",
       "commit": "53eb5a24097425d82532ec33697ad472750132a4",
