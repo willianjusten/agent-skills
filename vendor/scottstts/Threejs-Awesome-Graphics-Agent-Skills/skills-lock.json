@@ -1,0 +1,40 @@
+{
+  "version": 2,
+  "skills": {
+    "threejs-bloom": {
+      "source": "scottstts/Threejs-Awesome-Graphics-Agent-Skills",
+      "commit": "53eb5a24097425d82532ec33697ad472750132a4",
+      "sourceType": "github",
+      "skillPath": "skills/threejs-bloom/SKILL.md",
+      "computedHash": "ae30f6d6dd25f1da1e0e8cfda8f722780e969f5ccddfa9097bbf973311adf4c7"
+    },
+    "threejs-exposure-color-grading": {
+      "source": "scottstts/Threejs-Awesome-Graphics-Agent-Skills",
+      "commit": "53eb5a24097425d82532ec33697ad472750132a4",
+      "sourceType": "github",
+      "skillPath": "skills/threejs-exposure-color-grading/SKILL.md",
+      "computedHash": "59353ccc8d9723ef64ab6e82cf82b02d8dab84ea0683880104fb44c392fc12bf"
+    },
+    "threejs-procedural-materials": {
+      "source": "scottstts/Threejs-Awesome-Graphics-Agent-Skills",
+      "commit": "53eb5a24097425d82532ec33697ad472750132a4",
+      "sourceType": "github",
+      "skillPath": "skills/threejs-procedural-materials/SKILL.md",
+      "computedHash": "3179cd451892dcdafee22880b91f0e3855d4a56fc7953e868fd69bc3d51a747e"
+    },
+    "threejs-skill-router": {
+      "source": "scottstts/Threejs-Awesome-Graphics-Agent-Skills",
+      "commit": "53eb5a24097425d82532ec33697ad472750132a4",
+      "sourceType": "github",
+      "skillPath": "skills/threejs-skill-router/SKILL.md",
+      "computedHash": "f93611cfc6ee7318e3f532d2d21e1817af1601caec9cb69e27499e5708b8c096"
+    },
+    "threejs-visual-validation": {
+      "source": "scottstts/Threejs-Awesome-Graphics-Agent-Skills",
+      "commit": "53eb5a24097425d82532ec33697ad472750132a4",
+      "sourceType": "github",
+      "skillPath": "skills/threejs-visual-validation/SKILL.md",
+      "computedHash": "57e767e492528476e505d103da05a8ce9fdbc7412bc5086687a865c2549441ee"
+    }
+  }
+}
