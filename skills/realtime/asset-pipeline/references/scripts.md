@@ -15,4 +15,4 @@ Headless Blender cleanup (`blender -b -P script.py`) is a manual step for models
 
 ## Manifest entry
 
-`assets.manifest.json` in the app folder holds `{ "assets": [...] }`. Each entry: `id`, `path` (relative to the app), `kind` (texture, image, model, hdri, audio), `level`, `polish`, `source` (library, local-model, app, api, manual), `tool`, `toolVersion`, `prompt` (generated only), `derivedFrom`, `license`, `commercialUse` (yes, no, attribution-required), `attribution`, `createdAt`, `cost` (zero for free), `approval` (not-required, pending, approved). The scripts write it; read it, do not hand-edit it.
+`assets.manifest.json` in the app folder holds `{ "assets": [...] }`; the fields are listed in the lab `README.md`, section "Assets", and typed in `packages/tools/src/manifest.ts`. The scripts write it; read it, do not hand-edit it.
