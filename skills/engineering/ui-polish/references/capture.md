@@ -1,6 +1,6 @@
 # Capture recipes
 
-Use the first recipe whose tools this session has. Try each recipe once before moving to the next; if none works, go to "When nothing works".
+When the repo's CLAUDE.md or AGENTS.md names its own command for screenshots or browser checks (a Playwright suite, a `screenshots` script), use it first, at the widths it names, and fall back to the recipes below only for states it cannot reach. Otherwise use the first recipe whose tools this session has. Try each recipe once before moving to the next; if none works, go to "When nothing works".
 
 ## Contents
 - Widths and file names
