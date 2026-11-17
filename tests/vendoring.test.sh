@@ -56,4 +56,14 @@ for source in $(jq -r 'keys[]' "$SCOPES"); do
   fi
 done
 
+# Realtime sources are personal tools; none of their skills may reach Spoke.
+for source in bizarro/skills MengTo/Skills greensock/gsap-skills emalorenzo/three-agent-skills scottstts/Threejs-Awesome-Graphics-Agent-Skills; do
+  shared=$(jq -r --arg source "$source" '.[$source] // {"(source missing)": "missing"} | to_entries[] | select(.value != "personal" and .value != "off") | "\(.key): \(.value)"' "$SCOPES")
+  if [ -z "$shared" ]; then
+    pass "$source enables personal skills only"
+  else
+    fail "$source enables personal skills only" "$shared"
+  fi
+done
+
 [ "$failures" -eq 0 ] || exit 1
