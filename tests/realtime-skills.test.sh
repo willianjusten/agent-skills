@@ -13,7 +13,7 @@ fail() {
   failures=$((failures + 1))
 }
 
-for skill in three-build three-tsl three-verify; do
+for skill in three-build three-tsl three-verify asset-pipeline; do
   file="$REALTIME/$skill/SKILL.md"
   if [ ! -f "$file" ]; then
     fail "$skill exists under skills/realtime"
@@ -35,5 +35,18 @@ for skill in three-build three-tsl three-verify; do
     pass "$skill has no machine paths"
   fi
 done
+
+agent="$REPO_ROOT/agents/realtime/asset-wrangler.md"
+if [ -f "$agent" ]; then
+  pass "asset-wrangler exists under agents/realtime"
+  agent_field() { awk -v key="$1" -F': *' '$1 == key { print $2; exit }' "$agent"; }
+  [ "$(agent_field name)" = "asset-wrangler" ] && pass "asset-wrangler name equals its file name" || fail "asset-wrangler name equals its file name"
+  [ "$(agent_field model)" = "haiku" ] && pass "asset-wrangler runs on haiku" || fail "asset-wrangler runs on haiku" "found '$(agent_field model)'"
+  agent_scope=$(awk '/^metadata:/ { in_meta = 1; next } in_meta && /scope:/ { sub(/.*scope:[ \t]*/, ""); sub(/[ \t]*#.*/, ""); print; exit }' "$agent")
+  [ "$agent_scope" = "personal" ] && pass "asset-wrangler is scoped personal" || fail "asset-wrangler is scoped personal" "found '$agent_scope'"
+  if grep -En '/Users/[a-z]|/home/[a-z]' "$agent" >/dev/null; then fail "asset-wrangler has no machine paths"; else pass "asset-wrangler has no machine paths"; fi
+else
+  fail "asset-wrangler exists under agents/realtime"
+fi
 
 [ "$failures" -eq 0 ] || exit 1
