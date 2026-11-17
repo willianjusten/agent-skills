@@ -1,4 +1,6 @@
 .scratch/
 .DS_Store
 dist/
-vendor/*/*/.claude/
+# Vendored skills are installed from their locks by install.sh; only the locks are tracked.
+vendor/*/*/*
+!vendor/*/*/skills-lock.json

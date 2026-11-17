@@ -97,7 +97,7 @@ The only patch to vendored code is renaming Matt's `code-review` to `matt-code-r
   <img src="docs/images/install.svg" alt="install.sh reads own skills, vendored skills with scopes.json, and harness files, then links them into ~/.claude/skills, ~/.claude, dist/spoke for agentplan, and switches personal skills off in Spoke." width="100%">
 </p>
 
-Everything `install.sh` creates is a symlink into this repo, so editing a file here changes it on the machine at once. A second run prints `No changes.`
+Vendored skills are install-only: git keeps `scopes.json` and one `skills-lock.json` per source, pinned to an upstream commit, and `install.sh` fetches the enabled skills at that commit into `vendor/` (gitignored). Everything else it creates is a symlink into this repo, so editing a file here changes it on the machine at once. A second run prints `No changes.`
 
 ### Scopes
 
@@ -125,9 +125,9 @@ metadata:
 | Improve a skill | Ask "audit my <name> skill", approve the fixes, `./install.sh check` |
 | Change a scope | Edit the frontmatter or `scopes.json`, then `./install.sh` |
 | Remove an own skill | Delete its folder, then `./install.sh` |
-| Update vendored skills | `./install.sh --update`, review `git diff vendor/`, commit |
-| Enable a vendored skill | Set it to `personal` or `both` in `scopes.json`, then `./install.sh --update` |
-| Add a vendor source | Add `"<owner>/<repo>": { "<skill>": "personal" }` to `scopes.json`, then `./install.sh --update` |
+| Update vendored skills | `./install.sh --update` (or `--update <owner>/<repo>` for one source), review the printed upstream diff, commit the changed locks |
+| Enable a vendored skill | Set it to `personal` or `both` in `scopes.json`, then `./install.sh --update <owner>/<repo>` |
+| Add a vendor source | Add `"<owner>/<repo>": { "<skill>": "personal" }` to `scopes.json`, then `./install.sh --update <owner>/<repo>` and commit the new lock |
 | Override tracker setup for one repo | `/setup-matt-pocock-skills` in that repo |
 
 ## Repository Layout
@@ -138,7 +138,7 @@ agent-skills/
 │   ├── engineering/
 │   ├── productivity/
 │   └── product/
-├── vendor/                         managed by `npx skills`, never edited by hand
+├── vendor/                         one skills-lock.json per source in git; skills fetched by install.sh
 │   ├── anthropics/skills/
 │   ├── mattpocock/skills/
 │   ├── robonuggets/skill-creator-plus/
@@ -160,14 +160,14 @@ agent-skills/
 
 | Command | Effect |
 | ------- | ------ |
-| `./install.sh` | Links `~/.claude/CLAUDE.md`, `CODING_STANDARDS.md`, `settings.json` and `statusline-command.sh` into `harness/`; links each `personal`/`both` skill into `~/.claude/skills/<name>`; removes links into this repo that are no longer wanted; applies the Spoke layer when `~/Developer/spoke` exists |
-| `./install.sh --update` | First runs `npx skills update` per vendor source, adds enabled skills that are missing, removes ones set to `off`, lists new upstream skills as candidates |
+| `./install.sh` | Installs each vendor source at its locked commit with `npx skills` (skipped when the lock is unchanged since the last run) and applies the `matt-code-review` rename; links `~/.claude/CLAUDE.md`, `CODING_STANDARDS.md`, `settings.json` and `statusline-command.sh` into `harness/`; links each `personal`/`both` skill into `~/.claude/skills/<name>`; removes links into this repo that are no longer wanted; applies the Spoke layer when `~/Developer/spoke` exists |
+| `./install.sh --update [<owner>/<repo>]` | Moves every source, or the one named, to its newest upstream commit with only the skills `scopes.json` enables, rewrites its lock, prints the diff of those skills and lists new upstream skills as candidates |
 | `./install.sh --force` | Replaces a real file that sits where a link should go |
 | `./install.sh check` | Runs the `skill-creator-plus` validator on every own skill, plus scope and README checks |
 
 Nothing else in `~/.claude` is touched: `skills/synced/` (claude.ai skills), `projects/`, plugins and history stay as they are.
 
-Requirements: `git` and `jq`; `--update` also needs node >= 22.20; `check` needs `python3`.
+Requirements: `git` and `jq`; node >= 22.20 whenever vendored skills are fetched (a fresh clone, a changed lock, `--update`); `check` needs `python3`.
 
 Library docs come from the Context7 MCP server, installed once at user scope. It works without a key; `install.sh` warns when it is missing but does not install it:
 
@@ -212,8 +212,9 @@ make -C .spoke-workspace setup ROLE=product-web-engineer
 | `Rename patch no longer matches` | Upstream changed the text. Update the pattern in `apply_renames` in `install.sh`. |
 | `Unpatched code-review references` | Upstream added a new reference. Add a `patch_file` line for it. |
 | `real file in the way` | Something replaced a symlink. Diff it against `harness/`, keep what you want, then `./install.sh --force`. |
-| `new upstream skill ... add it to scopes.json` | Decide a scope for it in `scopes.json`, then `./install.sh --update`. |
-| `skills CLI failed` | The output above it comes from `npx skills`: usually network, or a skill that no longer exists upstream. |
+| `new upstream skill ... add it to scopes.json` | Decide a scope for it in `scopes.json`, then `./install.sh --update <owner>/<repo>`. |
+| `enabled in scopes.json but not locked` | Run `./install.sh --update <owner>/<repo>` to add it to the lock, review, commit. |
+| `skills CLI failed` | The output above it comes from `npx skills`: usually network, a skill that no longer exists upstream, or a lock whose content no longer matches upstream (`--update` that source). |
 | `settings.json` changed after using `/config` | Claude Code writes through the symlink. Review the diff, strip machine paths, commit. |
 
 </details>

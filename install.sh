@@ -11,8 +11,12 @@ OWN_SKILLS="$ROOT/skills"
 VENDOR_ROOT="$ROOT/vendor"
 SCOPES_FILE="$ROOT/scopes.json"
 DIST_SPOKE="$ROOT/dist/spoke"
-SKILLS_CLI="skills@1.7.2"
-VALIDATOR="$VENDOR_ROOT/robonuggets/skill-creator-plus/.agents/skills/skill-creator-plus/scripts/validate_skill.py"
+SKILLS_CLI="skills@1.9.0"
+# Codex reads the universal .agents/skills store, so naming it as the only agent
+# makes the skills CLI install there and nowhere else.
+SKILLS_AGENT="codex"
+VALIDATOR_SOURCE="robonuggets/skill-creator-plus"
+VALIDATOR="$VENDOR_ROOT/$VALIDATOR_SOURCE/.agents/skills/skill-creator-plus/scripts/validate_skill.py"
 
 # Upstream ships `code-review`, which collides with Claude Code's built-in skill.
 # Format: "<upstream name>:<installed name>".
@@ -20,6 +24,8 @@ RENAMES="code-review:matt-code-review"
 
 force=false
 update=false
+update_sources=""
+node_checked=false
 changes=()
 warnings=()
 manual=()
@@ -27,10 +33,11 @@ manual=()
 usage() {
   cat <<EOF
 Usage:
-  ./install.sh [--update] [--force]   link skills and harness config
-  ./install.sh check                  validate own skills (skill-creator-plus validator + scope)
+  ./install.sh [--update [<owner>/<repo>]] [--force]   install and link skills and harness config
+  ./install.sh check                                 validate own skills (skill-creator-plus validator + scope)
 
-  --update   refresh vendored skills from upstream before linking
+  --update   move every vendored source (or only the one named) to its newest
+             upstream commit, rewrite its lock and print what changed
   --force    replace real files that sit where a link should go
 EOF
 }
@@ -102,16 +109,6 @@ check_prerequisites() {
     echo "Missing required tools:$missing" >&2
     exit 1
   fi
-  if $update; then
-    if ! command -v node >/dev/null; then
-      echo "--update needs node >= 22.20" >&2
-      exit 1
-    fi
-    if ! node -e 'const [major, minor] = process.versions.node.split(".").map(Number); process.exit(major > 22 || (major === 22 && minor >= 20) ? 0 : 1)'; then
-      echo "--update needs node >= 22.20 (found $(node -v))" >&2
-      exit 1
-    fi
-  fi
   command -v agentplan >/dev/null || log_warning "agentplan not found; Spoke cannot regenerate its skills"
   has_context7_mcp || log_warning "context7 MCP server not found; agents cannot look up library docs (see README, What install.sh Touches)"
 }
@@ -141,47 +138,145 @@ vendored_scope() {
   jq -r --arg source "$1" --arg name "$2" '.[$source][$name] // "unlisted"' "$SCOPES_FILE"
 }
 
-# Runs the skills CLI inside one vendor directory, showing its output only on failure.
+vendor_lock() {
+  echo "$VENDOR_ROOT/$1/skills-lock.json"
+}
+
+# Records the lock a source was last installed from, so an unchanged lock skips the network.
+vendor_stamp() {
+  echo "$VENDOR_ROOT/$1/.installed-lock.json"
+}
+
+locked_names() {
+  jq -r '.skills | keys[]' "$1"
+}
+
+# Upstream names of the skills scopes.json enables for one source.
+enabled_upstream_names() {
+  local installed_name
+  for installed_name in $(jq -r --arg source "$1" '.[$source] | to_entries[] | select(.value != "off") | .key' "$SCOPES_FILE"); do
+    upstream_name_of "$installed_name"
+  done
+}
+
+require_node() {
+  $node_checked && return 0
+  if ! command -v node >/dev/null ||
+    ! node -e 'const [major, minor] = process.versions.node.split(".").map(Number); process.exit(major > 22 || (major === 22 && minor >= 20) ? 0 : 1)'; then
+    echo "Installing vendored skills needs node >= 22.20 (found $(node -v 2>/dev/null || echo none))" >&2
+    exit 1
+  fi
+  node_checked=true
+}
+
+# Runs the skills CLI inside a directory, showing its output only on failure.
 run_skills_cli() {
-  local source="$1" output
+  local directory="$1" output
   shift
-  mkdir -p "$VENDOR_ROOT/$source"
-  if ! output="$(cd "$VENDOR_ROOT/$source" && npx -y "$SKILLS_CLI" "$@" 2>&1)"; then
+  require_node
+  mkdir -p "$directory"
+  if ! output="$(cd "$directory" && npx -y "$SKILLS_CLI" "$@" 2>&1)"; then
     echo "$output" >&2
-    echo "skills CLI failed in vendor/$source: $*" >&2
+    echo "skills CLI failed in $directory: $*" >&2
     exit 1
   fi
 }
 
-update_vendor_source() {
-  local source="$1" store installed_name upstream_name scope to_add="" to_remove=""
+# Installs one source at the commits its lock records, then drops skills the lock
+# no longer lists.
+restore_vendor_source() {
+  local source="$1" lock store stamp upstream_name needs_install=false
+  lock="$(vendor_lock "$source")"
   store="$(vendor_store "$source")"
-  echo "Updating vendored skills from $source..."
-  [ -f "$VENDOR_ROOT/$source/skills-lock.json" ] && run_skills_cli "$source" update -y
+  stamp="$(vendor_stamp "$source")"
+  if [ ! -f "$lock" ]; then
+    log_manual "no lock for $source yet, run ./install.sh --update $source"
+    return 0
+  fi
 
-  for installed_name in $(jq -r --arg source "$source" '.[$source] | to_entries[] | select(.value != "off") | .key' "$SCOPES_FILE"); do
-    upstream_name="$(upstream_name_of "$installed_name")"
-    [ -d "$store/$upstream_name" ] || to_add="$to_add $upstream_name"
+  cmp -s "$lock" "$stamp" || needs_install=true
+  for upstream_name in $(locked_names "$lock"); do
+    [ -f "$store/$upstream_name/SKILL.md" ] || needs_install=true
   done
+  if $needs_install; then
+    if [ -n "$(locked_names "$lock")" ]; then
+      run_skills_cli "$VENDOR_ROOT/$source" experimental_install --frozen-lockfile -a "$SKILLS_AGENT" -y
+      log_change "installed $source at its locked commit"
+    fi
+    cp "$lock" "$stamp"
+  fi
+
   if [ -d "$store" ]; then
     for upstream_name in $(ls "$store"); do
-      scope="$(vendored_scope "$source" "$(installed_name_of "$upstream_name")")"
-      case "$scope" in off | unlisted) to_remove="$to_remove $upstream_name" ;; esac
+      locked_names "$lock" | grep -qx "$upstream_name" && continue
+      rm -rf "${store:?}/$upstream_name"
+      log_change "removed $source skill no longer in its lock: $upstream_name"
     done
   fi
-  if [ -n "$to_add" ]; then
+  for upstream_name in $(enabled_upstream_names "$source"); do
+    locked_names "$lock" | grep -qx "$upstream_name" ||
+      log_manual "enabled in scopes.json but not locked, run ./install.sh --update $source: $(installed_name_of "$upstream_name")"
+  done
+  return 0
+}
+
+restore_vendored() {
+  local source
+  for source in $(vendor_sources); do
+    restore_vendor_source "$source"
+  done
+}
+
+# Prints the upstream commits a lock pins, comma-separated.
+locked_commits() {
+  [ -f "$1" ] || return 0
+  jq -r '[.skills[].commit] | unique | join(",")' "$1"
+}
+
+# Moves one source to its newest upstream commit: installs its enabled skills
+# fresh, replaces its store and lock, and prints the diff of the enabled skills.
+update_vendor_source() {
+  local source="$1" lock store workdir names old_commits new_commits upstream_name
+  lock="$(vendor_lock "$source")"
+  store="$(vendor_store "$source")"
+  workdir="$(mktemp -d)"
+  names="$(enabled_upstream_names "$source")"
+  old_commits="$(locked_commits "$lock")"
+  echo "Updating vendored skills from $source..."
+
+  mkdir -p "$workdir/install" "$workdir/old" "$workdir/new"
+  [ -d "$store" ] && cp -R "$store/." "$workdir/old/"
+  if [ -n "$names" ]; then
     # shellcheck disable=SC2086
-    run_skills_cli "$source" add "$source" -s $to_add -y
-    log_change "added from $source:$to_add"
-  fi
-  if [ -n "$to_remove" ]; then
-    # shellcheck disable=SC2086
-    run_skills_cli "$source" remove $to_remove -y
-    log_change "removed from $source:$to_remove"
+    run_skills_cli "$workdir/install" add "$source" -s $names -a "$SKILLS_AGENT" -y
+  else
+    jq -n '{ version: 2, skills: {} }' >"$workdir/install/skills-lock.json"
   fi
 
+  rm -rf "$store"
+  mkdir -p "$(dirname "$store")"
+  [ -d "$workdir/install/.agents/skills" ] && cp -R "$workdir/install/.agents/skills" "$store"
+  cmp -s "$workdir/install/skills-lock.json" "$lock" || log_change "updated lock for $source"
+  cp "$workdir/install/skills-lock.json" "$lock"
+  cp "$lock" "$(vendor_stamp "$source")"
+  apply_renames
+  [ -d "$store" ] && cp -R "$store/." "$workdir/new/"
+
+  new_commits="$(locked_commits "$lock")"
+  echo "== $source: ${old_commits:-none} -> ${new_commits:-none}"
+  if [ -n "$old_commits" ] && [ -n "$new_commits" ] && [ "$old_commits" != "$new_commits" ] &&
+    [ "${old_commits#*,}" = "$old_commits" ] && [ "${new_commits#*,}" = "$new_commits" ]; then
+    echo "   https://github.com/$source/compare/$old_commits...$new_commits"
+  fi
+  if (cd "$workdir" && diff -ruN old new >"$workdir/changes.diff"); then
+    echo "   no changes in the enabled skills"
+  else
+    cat "$workdir/changes.diff"
+  fi
+  rm -rf "$workdir"
+
   local upstream_list
-  upstream_list="$(cd "$VENDOR_ROOT/$source" && npx -y "$SKILLS_CLI" add "$source" -l 2>&1 |
+  upstream_list="$(npx -y "$SKILLS_CLI" add "$source" -l 2>&1 |
     perl -pe 's/\e\[[0-9;]*m//g' | perl -ne 'print "$1\n" if /^\S+\s{4}([a-z0-9][a-z0-9-]*)\s*$/')"
   for upstream_name in $upstream_list; do
     [ "$(vendored_scope "$source" "$(installed_name_of "$upstream_name")")" = "unlisted" ] &&
@@ -192,7 +287,11 @@ update_vendor_source() {
 
 update_vendored() {
   local source
-  for source in $(vendor_sources); do
+  for source in ${update_sources:-$(vendor_sources)}; do
+    if ! vendor_sources | grep -qx "$source"; then
+      echo "Not a vendored source in scopes.json: $source" >&2
+      exit 1
+    fi
     update_vendor_source "$source"
   done
 }
@@ -370,7 +469,8 @@ setup_spoke() {
 # Validates own skills: skill-creator-plus validator, a valid scope, and a README.
 check_own_skills() {
   command -v python3 >/dev/null || { echo "check needs python3" >&2; exit 1; }
-  [ -f "$VALIDATOR" ] || { echo "Validator missing: run ./install.sh --update" >&2; exit 1; }
+  [ -f "$VALIDATOR" ] || restore_vendor_source "$VALIDATOR_SOURCE"
+  [ -f "$VALIDATOR" ] || { echo "Validator missing: run ./install.sh" >&2; exit 1; }
   local skill_dir scope failed=0 checked=0
   for skill_dir in $(own_skill_dirs); do
     checked=$((checked + 1))
@@ -394,18 +494,24 @@ main() {
       exit $?
       ;;
   esac
-  local argument
-  for argument in "$@"; do
-    case "$argument" in
-      --update) update=true ;;
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      --update)
+        update=true
+        case "${2:-}" in
+          */*) update_sources="$update_sources $2"; shift ;;
+        esac
+        ;;
       --force) force=true ;;
       -h | --help) usage; exit 0 ;;
       *) usage >&2; exit 1 ;;
     esac
+    shift
   done
 
   check_prerequisites
   link_harness
+  restore_vendored
   $update && update_vendored
   apply_renames
   link_skills
