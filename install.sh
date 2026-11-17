@@ -21,7 +21,7 @@ VALIDATOR_SOURCE="robonuggets/skill-creator-plus"
 VALIDATOR="$VENDOR_ROOT/$VALIDATOR_SOURCE/.agents/skills/skill-creator-plus/scripts/validate_skill.py"
 
 # Upstream ships `code-review`, which collides with Claude Code's built-in skill.
-# Format: "<upstream name>:<installed name>".
+# Format: "<upstream name>:<installed name>". tests/vendoring.test.sh reads this line.
 RENAMES="code-review:matt-code-review"
 
 force=false

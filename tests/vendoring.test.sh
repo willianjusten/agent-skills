@@ -14,9 +14,22 @@ fail() {
   failures=$((failures + 1))
 }
 
-# Upstream mattpocock/skills ships `code-review`; install.sh installs it as `matt-code-review`.
+# install.sh owns the renames ("<upstream name>:<installed name>" pairs); read them from there.
+RENAMES=$(sed -n 's/^RENAMES="\(.*\)"$/\1/p' "$REPO_ROOT/install.sh")
+if [ -z "$RENAMES" ]; then
+  echo "FAIL could not read RENAMES from install.sh"
+  exit 1
+fi
+
 installed_name() {
-  if [ "$1" = "code-review" ]; then echo "matt-code-review"; else echo "$1"; fi
+  local pair
+  for pair in $RENAMES; do
+    if [ "${pair%%:*}" = "$1" ]; then
+      echo "${pair#*:}"
+      return
+    fi
+  done
+  echo "$1"
 }
 
 expected_files=$(jq -r 'keys[] | "vendor/\(.)/skills-lock.json"' "$SCOPES" | sort)
