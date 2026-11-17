@@ -19,7 +19,7 @@ Conventions for working in this repository. This file is for agents editing the 
 ## Creating or changing a skill
 
 1. Use the `skill-creator-plus` skill: NEW mode for a new skill, AUDIT then REFINE for an existing one. It writes test prompts first and follows Anthropic's authoring rules.
-2. Put the folder at `skills/<category>/<name>/`. Categories: `engineering`, `productivity`, `product`. The folder name equals the frontmatter `name`.
+2. Put the folder at `skills/<category>/<name>/`. Categories: `engineering`, `productivity`, `product`, `realtime`. The folder name equals the frontmatter `name`.
 3. Add the scope under `metadata` (the only place extra fields are portable across harnesses):
 
    ```yaml
@@ -36,7 +36,7 @@ Conventions for working in this repository. This file is for agents editing the 
 - `SKILL.md` is a table of contents: what to do, in order. Detail goes in `references/` and is loaded only by the step that needs it, one level deep.
 - Model-invoked skills get a trigger-rich `description` ("Use when ..."). Skills only run by name set `disable-model-invocation: true` and get a short, human-facing description.
 - Use only open-standard frontmatter: `name`, `description`, `disable-model-invocation`, `paths`, `license`, `metadata`. Anything else is ignored by some harness.
-- Leaf skills never name or depend on a sibling skill; each one must work alone.
+- Leaf skills never name or depend on a sibling skill in this repo; each one must work alone. Naming an upstream (vendored or third-party) skill is allowed when phrased "if installed" with a one-line fallback.
 - No secrets, no machine paths (`/Users/<name>`), no dates or version pins in skill text.
 
 ## Skill README shape
