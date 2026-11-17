@@ -218,7 +218,7 @@ restore_vendor_source() {
     for upstream_name in $(ls "$store"); do
       is_locked "$lock" "$upstream_name" && continue
       rm -rf "${store:?}/$upstream_name"
-      log_change "removed $source skill no longer in its lock: $upstream_name"
+      log_change "removed directory $store/$upstream_name ($source skill not in its skills-lock.json)"
     done
   fi
   for upstream_name in $(enabled_upstream_names "$source"); do

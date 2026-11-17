@@ -147,4 +147,14 @@ else
 fi
 rm -f "$spoke_agent"
 
+# The same fixture covers vendor restore: a store directory the lock does not list is deleted, and said so.
+unlocked_dir="$fixture/vendor/example/skills/.agents/skills/unlocked-skill"
+write_skill "$fixture/vendor/example/skills/.agents/skills" unlocked-skill
+install_output=$(HOME="$home" SPOKE_DIR="$spoke" "$fixture/install.sh" 2>&1)
+if [ ! -e "$unlocked_dir" ] && echo "$install_output" | grep -qF "removed directory $unlocked_dir (example/skills skill not in its skills-lock.json)"; then
+  pass "install deletes a store directory not in the lock and says why"
+else
+  fail "install deletes a store directory not in the lock and says why" "$install_output"
+fi
+
 [ "$failures" -eq 0 ] || exit 1
