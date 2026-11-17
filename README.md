@@ -110,7 +110,7 @@ Each skill has a scope that decides where it shows up:
 | `spoke` | Spoke only |
 | `off` | nowhere (kept on record, not installed) |
 
-Own skills declare it in frontmatter. Vendored skills get one line in [`scopes.json`](scopes.json); a vendored skill missing from it is not installed.
+Own skills declare it in frontmatter. Vendored skills get one line in [`scopes.json`](scopes.json); a vendored skill missing from it is not installed. Subagents in `agents/<category>/<name>.md` use the same `metadata.scope` and are linked into `~/.claude/agents/`; only `personal`, `both` and `off` apply, since Spoke has no agent source.
 
 ```yaml
 metadata:
@@ -138,6 +138,7 @@ agent-skills/
 │   ├── engineering/
 │   ├── productivity/
 │   └── product/
+├── agents/                         role-scoped subagents, agents/<category>/<name>.md, linked into ~/.claude/agents
 ├── vendor/                         one skills-lock.json per source in git; skills fetched by install.sh
 │   ├── anthropics/skills/
 │   ├── mattpocock/skills/
@@ -160,10 +161,10 @@ agent-skills/
 
 | Command | Effect |
 | ------- | ------ |
-| `./install.sh` | Installs each vendor source at its locked commit with `npx skills` (skipped when the lock is unchanged since the last run) and applies the `matt-code-review` rename; links `~/.claude/CLAUDE.md`, `CODING_STANDARDS.md`, `settings.json` and `statusline-command.sh` into `harness/`; links each `personal`/`both` skill into `~/.claude/skills/<name>`; removes links into this repo that are no longer wanted; applies the Spoke layer when `~/Developer/spoke` exists |
+| `./install.sh` | Installs each vendor source at its locked commit with `npx skills` (skipped when the lock is unchanged since the last run) and applies the `matt-code-review` rename; links `~/.claude/CLAUDE.md`, `CODING_STANDARDS.md`, `settings.json` and `statusline-command.sh` into `harness/`; links each `personal`/`both` skill into `~/.claude/skills/<name>` and each `personal`/`both` agent into `~/.claude/agents/<name>.md`; removes links into this repo that are no longer wanted; applies the Spoke layer when `~/Developer/spoke` exists |
 | `./install.sh --update [<owner>/<repo>]` | Moves every source, or the one named, to its newest upstream commit with only the skills `scopes.json` enables, rewrites its lock, prints the diff of those skills and lists new upstream skills as candidates |
 | `./install.sh --force` | Replaces a real file that sits where a link should go |
-| `./install.sh check` | Runs the `skill-creator-plus` validator on every own skill, plus scope and README checks |
+| `./install.sh check` | Runs the `skill-creator-plus` validator on every own skill, plus scope and README checks; checks each agent for `name` (equal to its file name), `description`, `model` and a scope |
 
 Nothing else in `~/.claude` is touched: `skills/synced/` (claude.ai skills), `projects/`, plugins and history stay as they are.
 
