@@ -23,4 +23,5 @@ Every asset enters an app through a script that writes its manifest entry. Nothi
 
 - Output stays engine-neutral: glTF, PNG and OGG, with the manifest as plain JSON.
 - Keep total assets under the 15 MB gate; pick the lowest texture resolution that looks right, and compress models.
+- Local generation needs `mflux` and `rembg[cli]` installed with `uv tool install`, plus a Hugging Face login with the FLUX model terms accepted (the repos are gated, and the first run downloads tens of GB). On a `GatedRepoError`, 401 or 403, send the user to the lab `README.md`, section "Assets", Prerequisites; do not copy the steps.
 - Tell the user plainly which tool actually ran. A missing tool (mflux, rembg, gltf-transform) is reported, not replaced by a different generator.
