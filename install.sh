@@ -6,8 +6,10 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLAUDE_HOME="$HOME/.claude"
 GLOBAL_SKILLS="$CLAUDE_HOME/skills"
+GLOBAL_AGENTS="$CLAUDE_HOME/agents"
 SPOKE_DIR="${SPOKE_DIR:-$HOME/Developer/spoke}"
 OWN_SKILLS="$ROOT/skills"
+OWN_AGENTS="$ROOT/agents"
 VENDOR_ROOT="$ROOT/vendor"
 SCOPES_FILE="$ROOT/scopes.json"
 DIST_SPOKE="$ROOT/dist/spoke"
@@ -421,6 +423,42 @@ link_skills() {
     log_warning "setup-matt-pocock-skills is not linked; the tracker docs CLAUDE.md points at are missing"
 }
 
+# Own subagents live one category deep: agents/<category>/<name>.md.
+own_agent_files() {
+  local agent_file
+  for agent_file in "$OWN_AGENTS"/*/*.md; do
+    [ -f "$agent_file" ] && echo "$agent_file"
+  done
+  return 0
+}
+
+# Links subagents by the same scopes as skills. Spoke has no agent source, so a
+# spoke scope links nothing and Spoke settings never change for agents.
+link_agents() {
+  local agent_file name scope duplicates
+  duplicates="$(own_agent_files | xargs -n1 basename 2>/dev/null | sort | uniq -d)"
+  if [ -n "$duplicates" ]; then
+    echo "Agent names defined twice: $duplicates" >&2
+    exit 1
+  fi
+
+  agent_names=""
+  for agent_file in $(own_agent_files); do
+    name="$(basename "$agent_file")"
+    scope="$(frontmatter_scope "$agent_file")"
+    case "$scope" in
+      personal | both)
+        link_path "$agent_file" "$GLOBAL_AGENTS/$name"
+        agent_names="$agent_names$name"$'\n'
+        ;;
+      off) ;;
+      spoke) log_warning "agents cannot be scoped spoke, not linked: ${name%.md}" ;;
+      *) log_warning "agent has invalid scope '${scope:-missing}', not linked: ${name%.md}" ;;
+    esac
+  done
+  remove_stale_links "$GLOBAL_AGENTS" "$agent_names"
+}
+
 spoke_source_entry() {
   if [ "$(dirname "$ROOT")" = "$(dirname "$SPOKE_DIR")" ]; then
     echo "../$(basename "$ROOT")/dist/spoke"
@@ -487,11 +525,48 @@ check_own_skills() {
   return "$failed"
 }
 
+# Reads a top-level field from a frontmatter block, without surrounding quotes.
+frontmatter_field() {
+  awk -v field="$2" '
+    NR == 1 && $0 != "---" { exit }
+    NR > 1 && $0 == "---" { exit }
+    index($0, field ":") == 1 {
+      sub("^" field ":[ \t]*", "")
+      gsub(/^["'\'']|["'\'']$/, "")
+      print
+      exit
+    }
+  ' "$1"
+}
+
+# Validates own subagents: name, description and model, a name matching the
+# file name, and a valid scope.
+check_own_agents() {
+  local agent_file field scope failed=0
+  for agent_file in $(own_agent_files); do
+    echo "== ${agent_file#"$ROOT"/}"
+    for field in name description model; do
+      [ -n "$(frontmatter_field "$agent_file" "$field")" ] ||
+        { echo "ERROR $field: agent frontmatter needs $field"; failed=1; }
+    done
+    [ "$(frontmatter_field "$agent_file" name)" = "$(basename "$agent_file" .md)" ] ||
+      { echo "ERROR name: frontmatter name must equal the file name"; failed=1; }
+    scope="$(frontmatter_scope "$agent_file")"
+    case "$scope" in
+      personal | both | off) ;;
+      *) echo "ERROR scope: metadata.scope must be personal, both or off (found '${scope:-nothing}')"; failed=1 ;;
+    esac
+  done
+  return "$failed"
+}
+
 main() {
   case "${1:-}" in
     check)
-      check_own_skills
-      exit $?
+      local status=0
+      check_own_skills || status=1
+      check_own_agents || status=1
+      exit "$status"
       ;;
   esac
   while [ "$#" -gt 0 ]; do
@@ -515,9 +590,11 @@ main() {
   $update && update_vendored
   apply_renames
   link_skills
+  link_agents
   setup_spoke
 
   echo "Skills linked into $GLOBAL_SKILLS: $(printf '%s' "$global_names" | grep -c . || true)"
+  echo "Agents linked into $GLOBAL_AGENTS: $(printf '%s' "$agent_names" | grep -c . || true)"
   [ -d "$SPOKE_DIR" ] && echo "Spoke-only skills in $DIST_SPOKE: $(printf '%s' "$spoke_names" | grep -c . || true)"
   if [ "${#changes[@]}" -eq 0 ]; then
     echo "No changes."
