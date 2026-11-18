@@ -63,7 +63,7 @@ For a bug: `/diagnosing-bugs` reproduces it and finds the cause, then the fix go
 | ---- | ------ |
 | **Plan** | `grill-with-docs` (in a repo), `grill-me` (no repo), `prototype`, `research`, `to-spec`, `to-tickets`, `wayfinder` |
 | **Build** | `implement` (one ticket), `implement-spec` (whole spec, parallel), `tdd`, `ui-polish` (look at a UI change and fix it, before you review), `matt-code-review` |
-| **Realtime 3D** (lab repo) | `three-build` (apps on WebGPURenderer), `three-tsl` (shaders as TSL), `three-verify` (run and fix the gates), `asset-pipeline` (sourced, generated and licensed assets; with the `asset-wrangler` agent), `realtime-judge` (blind before/after scoring; with the `visual-judge` and `feel-judge` agents) |
+| **Realtime 3D** (lab repo) | `three-build` (apps on WebGPURenderer), `three-tsl` (shaders as TSL), `three-verify` (run and fix the gates), `asset-pipeline` (sourced, generated and licensed assets; with the `asset-wrangler` agent), `realtime-judge` (blind before/after scoring; with the `visual-judge` and `feel-judge` agents), `target-loop` (repainted, user-approved target frames that rounds chase) |
 | **Brief** (before building) | `game-brief` (GDD, treatment, art bible), `creative-brief` (treatment with a "Not this" list), `art-bible` (palette, references, asset levels, sign-off) |
 | **Game feel** (lab repo) | `game-feel` (juice checklist, audio event map, ZzFX sounds) |
 | **Ship and learn** | `pr`, `retro` |
