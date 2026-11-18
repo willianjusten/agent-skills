@@ -63,7 +63,7 @@ For a bug: `/diagnosing-bugs` reproduces it and finds the cause, then the fix go
 | ---- | ------ |
 | **Plan** | `grill-with-docs` (in a repo), `grill-me` (no repo), `prototype`, `research`, `to-spec`, `to-tickets`, `wayfinder` |
 | **Build** | `implement` (one ticket), `implement-spec` (whole spec, parallel), `tdd`, `ui-polish` (look at a UI change and fix it, before you review), `matt-code-review` |
-| **Realtime 3D** (lab repo) | `three-build` (apps on WebGPURenderer), `three-tsl` (shaders as TSL), `three-verify` (run and fix the gates), `asset-pipeline` (sourced, generated and licensed assets; with the `asset-wrangler` agent), `realtime-judge` (blind before/after scoring; with the `visual-judge` and `feel-judge` agents), `target-loop` (repainted, user-approved target frames that rounds chase) |
+| **Realtime 3D** (lab repo) | `three-build` (apps on WebGPURenderer), `three-tsl` (shaders as TSL), `three-verify` (run and fix the gates), `asset-pipeline` (sourced, generated and licensed assets; with the `asset-wrangler` agent), `realtime-judge` (blind before/after scoring; with the `visual-judge` and `feel-judge` agents), `target-loop` (repainted, user-approved target frames that rounds chase); agents `polish-director` (Fable, runs a round) and `polish-worker` (Opus, one area per worker, bound by the write-scope hook) |
 | **Brief** (before building) | `game-brief` (GDD, treatment, art bible), `creative-brief` (treatment with a "Not this" list), `art-bible` (palette, references, asset levels, sign-off) |
 | **Game feel** (lab repo) | `game-feel` (juice checklist, audio event map, ZzFX sounds) |
 | **Ship and learn** | `pr`, `retro` |
@@ -91,6 +91,7 @@ Matt's skills run untouched. Everything this repo layers on top lives in a few f
 | [`harness/shared/instructions.md`](harness/shared/instructions.md) | every session and subagent, as `~/.claude/CLAUDE.md` | Precedence, safety, style, environment, tracker defaults |
 | [`harness/shared/CODING_STANDARDS.md`](harness/shared/CODING_STANDARDS.md) | sessions, as `~/.claude/CODING_STANDARDS.md` | Cross-repo coding standards; a repo's own standards win |
 | [`harness/claude/settings.json`](harness/claude/settings.json) | Claude Code | Deny rules, auto mode, notification sounds, statusline |
+| [`harness/claude/hooks/write-scope.sh`](harness/claude/hooks/write-scope.sh) | the `polish-worker` agent, as `~/.claude/hooks/write-scope.sh` | Blocks a worker's write outside the folders in `.polish-scope.json`; shared files stay with the director |
 
 The only patch to vendored code is renaming Matt's `code-review` to `matt-code-review`, because the original collides with Claude Code's built-in `/code-review`. New additions come only after a pilot, one ticket per `/retro` finding.
 
@@ -153,7 +154,7 @@ agent-skills/
 ├── scopes.json                     scope for each vendored skill, grouped by source
 ├── harness/
 │   ├── shared/                     instructions.md (~/.claude/CLAUDE.md), CODING_STANDARDS.md
-│   └── claude/                     settings.json, statusline-command.sh
+│   └── claude/                     settings.json, statusline-command.sh, hooks/write-scope.sh
 ├── docs/images/                    diagrams for this README
 ├── install.sh                      the only command
 ├── AGENTS.md                       conventions for editing this repo (CLAUDE.md imports it)
@@ -167,7 +168,7 @@ agent-skills/
 
 | Command | Effect |
 | ------- | ------ |
-| `./install.sh` | Installs each vendor source at its locked commit with `npx skills` (skipped when the lock is unchanged since the last run) and applies the `matt-code-review` rename; links `~/.claude/CLAUDE.md`, `CODING_STANDARDS.md`, `settings.json` and `statusline-command.sh` into `harness/`; links each `personal`/`both` skill into `~/.claude/skills/<name>` and each `personal`/`both` agent into `~/.claude/agents/<name>.md`; removes links into this repo that are no longer wanted; applies the Spoke layer when `~/Developer/spoke` exists |
+| `./install.sh` | Installs each vendor source at its locked commit with `npx skills` (skipped when the lock is unchanged since the last run) and applies the `matt-code-review` rename; links `~/.claude/CLAUDE.md`, `CODING_STANDARDS.md`, `settings.json` and `statusline-command.sh` and `hooks/write-scope.sh` into `harness/`; links each `personal`/`both` skill into `~/.claude/skills/<name>` and each `personal`/`both` agent into `~/.claude/agents/<name>.md`; removes links into this repo that are no longer wanted; applies the Spoke layer when `~/Developer/spoke` exists |
 | `./install.sh --update [<owner>/<repo>]` | Moves every source, or the one named, to its newest upstream commit with only the skills `scopes.json` enables, rewrites its lock, prints the diff of those skills and lists new upstream skills as candidates |
 | `./install.sh --force` | Replaces a real file that sits where a link should go |
 | `./install.sh check` | Runs the `skill-creator-plus` validator on every own skill, plus scope and README checks; checks each agent for `name` (equal to its file name), `description`, `model` and a scope |
