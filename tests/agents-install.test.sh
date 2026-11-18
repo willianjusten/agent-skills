@@ -79,6 +79,13 @@ else
   fail "install.sh announces each step as it starts" "missing:$missing_steps"
 fi
 
+hook_link="$home/.claude/hooks/write-scope.sh"
+if [ -L "$hook_link" ] && [ "$(readlink "$hook_link")" = "$fixture/harness/claude/hooks/write-scope.sh" ]; then
+  pass "the write-scope hook is linked into ~/.claude/hooks"
+else
+  fail "the write-scope hook is linked into ~/.claude/hooks" "$(ls -la "$home/.claude/hooks" 2>&1)"
+fi
+
 linked_agent="$home/.claude/agents/sample-builder.md"
 if [ -L "$linked_agent" ] && [ "$(readlink "$linked_agent")" = "$fixture/agents/realtime/sample-builder.md" ]; then
   pass "a personal agent is linked into ~/.claude/agents"
