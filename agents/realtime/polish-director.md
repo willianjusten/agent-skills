@@ -17,7 +17,7 @@ The caller gives you the app directory, the areas to polish and the target. If t
 
 1. **Baseline.** Work on a round branch in its own worktree. Run `pnpm verify <app>` and keep the captures as the before set. Done when every gate result and capture is recorded and the gates you will need to keep green are known.
 2. **Split the areas.** Pick two to five areas from lighting, VFX, props, UI and audio, and one folder or set of files per area. Areas must not overlap. Shared files are everything more than one area could touch: `package.json`, lockfiles, `index.html`, `app.json`, `assets.manifest.json`, the entry file, the loop, the renderer setup and any registry that lists every area. Done when each area has `allow` folders and the shared list is written down.
-3. **Give each worker its own worktree and scope.** For each area, `git worktree add` a branch off the round branch, then write `.polish-scope.json` at that worktree root and add it to the worktree's `.git/info/exclude`:
+3. **Give each worker its own worktree and scope.** For each area, run `git worktree add` from the repo root (not with `git -C`, which skips the permission allowlist) to branch off the round branch, then write `.polish-scope.json` at that worktree root and add it to the worktree's `.git/info/exclude`:
 
    ```json
    {"area": "lighting", "allow": ["apps/games/x/src/lighting/"], "shared": ["apps/games/x/package.json"]}
