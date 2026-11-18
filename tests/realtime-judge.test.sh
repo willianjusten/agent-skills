@@ -99,4 +99,48 @@ else
   pass "scores outside 1-10 are refused"
 fi
 
+# motion: a third lens, judged on folders of sheets rather than single images
+mkdir -p "$work/motion-before" "$work/motion-after"
+printf 'STRIP-ONE' > "$work/motion-before/strip.png"; printf 'CROPS-ONE' > "$work/motion-before/crops.png"
+printf 'STRIP-TWO' > "$work/motion-after/strip.png"; printf 'CROPS-TWO' > "$work/motion-after/crops.png"
+run prepare --before "$work/motion-before" --after "$work/motion-after" --judge-dir "$work/judge-motion" --mapping "$work/mapping-motion.json" --seed 4 > /dev/null
+listing=$(cd "$work/judge-motion" && find . -type f | sort | tr '\n' ' ')
+[ "$listing" = "./x/crops.png ./x/strip.png ./y/crops.png ./y/strip.png " ] && pass "folder prepare gives x/ and y/ with the same file names" || fail "folder prepare gives x/ and y/ with the same file names" "found: $listing"
+case "$(x_side "$work/mapping-motion.json"):$(cat "$work/judge-motion/x/strip.png")" in
+  before:STRIP-ONE | after:STRIP-TWO) pass "folder mapping records which folder is X" ;;
+  *) fail "folder mapping records which folder is X" ;;
+esac
+
+motion_decision() {
+  run decide --mapping "$1" "${@:2}" |
+    python3 -c "import json,sys; d=json.load(sys.stdin); print(d['decision'], d['before_counted'], d['after_counted'])"
+}
+
+result=$(motion_decision "$work/before-is-x.json" --motion X=4,Y=7)
+[ "$result" = "keep 4 7" ] && pass "motion alone decides a motion moment" || fail "motion alone decides a motion moment" "$result"
+
+result=$(motion_decision "$work/before-is-x.json" --motion X=7,Y=5)
+[ "$result" = "reject 7 5" ] && pass "worse motion is rejected" || fail "worse motion is rejected" "$result"
+
+result=$(motion_decision "$work/before-is-x.json" --visual X=6,Y=8 --feel X=6,Y=8 --motion X=6,Y=5)
+[ "$result" = "reject 6 5" ] && pass "with three lenses the motion score counts like the other two" || fail "with three lenses the motion score counts like the other two" "$result"
+
+if run decide --mapping "$work/before-is-x.json" --visual X=6,Y=8 --motion X=6,Y=8 > /dev/null 2>&1; then
+  fail "visual without feel is refused"
+else
+  pass "visual without feel is refused"
+fi
+
+if run decide --mapping "$work/before-is-x.json" > /dev/null 2>&1; then
+  fail "decide without any lens is refused"
+else
+  pass "decide without any lens is refused"
+fi
+
+if run decide --mapping "$work/before-is-x.json" --motion X=4,Y=7 --markdown | grep -q 'Motion judge'; then
+  pass "markdown lists the motion judge"
+else
+  fail "markdown lists the motion judge"
+fi
+
 [ "$failures" -eq 0 ] || { echo "$failures failure(s)" >&2; exit 1; }

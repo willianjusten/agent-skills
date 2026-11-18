@@ -39,3 +39,4 @@ Put the judge scores in the review packet
 
 - Does a reject block a merge? No, judges advise; `verify` gates are the hard checks.
 - Why the lower score? One judge spotting a flaw should be enough to doubt the change.
+- Can it judge motion? Yes: `decide --motion` takes a motion judge's X and Y scores, and `prepare` shuffles two folders of motion sheets.
