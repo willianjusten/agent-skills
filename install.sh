@@ -584,6 +584,14 @@ check_own_agents() {
   return "$failed"
 }
 
+# Points git at .githooks/ so the pre-commit check runs here and in every worktree.
+install_git_hook() {
+  [ "$(git -C "$ROOT" rev-parse --show-toplevel 2>/dev/null)" = "$(cd "$ROOT" && pwd -P)" ] || return 0
+  [ "$(git -C "$ROOT" config --get core.hooksPath)" = ".githooks" ] && return 0
+  git -C "$ROOT" config core.hooksPath .githooks
+  log_change "set core.hooksPath to .githooks"
+}
+
 main() {
   case "${1:-}" in
     check)
@@ -610,6 +618,8 @@ main() {
 
   log_step "Checking prerequisites"
   check_prerequisites
+  log_step "Installing the git hook"
+  install_git_hook
   log_step "Linking harness files"
   link_harness
   log_step "Restoring vendored skills"
