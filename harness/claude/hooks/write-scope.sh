@@ -1,7 +1,7 @@
 #!/bin/bash
 # PreToolUse hook for the polish workers (see agents/realtime/polish-worker.md).
 # A worker may write only inside the folders its area declares in
-# .polish-scope.json, found by walking up from the session's cwd; shared files
+# .polish-scope.json, found by walking up from the file being written; shared files
 # listed there stay reserved for the polish director. Blocks with exit 2 and a
 # message on stderr; fails closed when no scope file is found. Needs jq.
 #
@@ -39,23 +39,23 @@ normalize_path() {
   }'
 }
 
-scope_root=$session_cwd
-while [ ! -f "$scope_root/.polish-scope.json" ]; do
-  [ "$scope_root" = "/" ] && block "no .polish-scope.json above $session_cwd, so this worker has no declared folder; ask the polish director"
-  scope_root=$(dirname "$scope_root")
-done
-scope_file="$scope_root/.polish-scope.json"
-area=$(jq -r '.area // "unnamed"' "$scope_file")
-
-[ -n "$target_path" ] || block "the $area worker made a write call without a path"
+[ -n "$target_path" ] || block "a write call came without a path"
 case "$target_path" in
   /*) ;;
   *) target_path="$session_cwd/$target_path" ;;
 esac
 target_path=$(normalize_path "$target_path")
+[ "$(basename "$target_path")" = ".polish-scope.json" ] && block "scope files are owned by the polish director"
+
+scope_root=$(dirname "$target_path")
+while [ ! -f "$scope_root/.polish-scope.json" ]; do
+  [ "$scope_root" = "/" ] && block "$target_path is under no .polish-scope.json, so no polish area owns it; ask the polish director"
+  scope_root=$(dirname "$scope_root")
+done
+scope_file="$scope_root/.polish-scope.json"
+area=$(jq -r '.area // "unnamed"' "$scope_file")
 
 root_normalized=$(normalize_path "$scope_root")
-[ "$target_path" = "$root_normalized/.polish-scope.json" ] && block "the scope file is owned by the polish director"
 
 while IFS= read -r shared_path; do
   [ -n "$shared_path" ] || continue
