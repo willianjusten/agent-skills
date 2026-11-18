@@ -8,7 +8,7 @@ Each of `x/` and `y/` holds three sheets of the same piece over the same time wi
 
 - `strip.png`: evenly spaced moments of the window, shrunk, read left to right, then top to bottom. Use it for rhythm and how the whole frame moves.
 - `crops.png`: the same moments as a 1:1 crop of one region at full resolution, in the same order. Use it for fine detail: specks, grain, edges, how they are placed and how that placement changes over time.
-- `burst.png`: 1:1 crops of consecutive frames (a fraction of a second), left to right. Use it for flicker: what changes from one frame to the next.
+- `burst.png`: 1:1 crops of consecutive frames (a fraction of a second), read left to right, then top to bottom. Use it for flicker: what changes from one frame to the next.
 
 Compare every crop with its neighbours; motion is what changes between them.
 
