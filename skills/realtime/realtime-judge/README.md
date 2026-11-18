@@ -12,6 +12,7 @@ flowchart LR
   D --> E{After wins or ties?}
   E -- yes --> F[Keep]
   E -- no --> G[Reject]
+  F --> I[Next brief: gap lists minus items taste.md rules out]
   D --> H[Scores and mapping into the packet]
 ```
 
@@ -27,6 +28,7 @@ Put the judge scores in the review packet
 
 - A judge directory per moment with `x.png` and `y.png` only.
 - A mapping file per moment (kept out of the judges' reach) and a markdown block for the packet with both scores, the counted score and the decision.
+- The next round's brief, with every dropped gap item and the taste line that ruled it out.
 
 ## Requirements
 
