@@ -1,6 +1,6 @@
 #!/bin/bash
 # PreToolUse hook for the polish workers (see agents/realtime/polish-worker.md).
-# A worker may write only inside the folders its area declares in
+# A worker may write only inside the folders and files its area declares in
 # .polish-scope.json, found by walking up from the file being written; shared files
 # listed there stay reserved for the polish director. Blocks with exit 2 and a
 # message on stderr. Fails closed: no jq, unparsable input, an empty tool name or
@@ -8,7 +8,7 @@
 # whole worktree all block. Paths are resolved physically (symlinks followed, also
 # for files that do not exist yet) before they are compared.
 #
-# .polish-scope.json: {"area": "...", "allow": ["dir/"], "shared": ["file"]},
+# .polish-scope.json: {"area": "...", "allow": ["dir/", "file"], "shared": ["file"]},
 # every path relative to the folder holding the file. The shared list and the scope
 # file name are compared case-insensitively, because the default macOS filesystem
 # is; the allow list stays case-sensitive, which can only block more.
@@ -89,24 +89,25 @@ while IFS= read -r shared_path; do
 done <<<"$shared_paths"
 
 allowed_entries=$(jq -r '.allow[]?' "$scope_file") || block "cannot read the allow list in $scope_file"
-allowed_folders=""
+allowed_list=""
 is_allowed=false
-while IFS= read -r allowed_folder; do
-  if [ -z "$allowed_folder" ]; then
+while IFS= read -r allowed_entry; do
+  if [ -z "$allowed_entry" ]; then
     [ -z "$allowed_entries" ] && break
     block "an empty allow entry in $scope_file would cover the whole worktree"
   fi
-  folder_path=$(resolve_path "$root_resolved/$allowed_folder") || exit 2
-  case "$folder_path/" in
-    "$root_resolved/") block "the allow entry \"$allowed_folder\" in $scope_file would cover the whole worktree" ;;
+  entry_path=$(resolve_path "$root_resolved/$allowed_entry") || exit 2
+  case "$entry_path/" in
+    "$root_resolved/") block "the allow entry \"$allowed_entry\" in $scope_file would cover the whole worktree" ;;
     "$root_resolved"/*) ;;
-    *) block "the allow entry \"$allowed_folder\" in $scope_file points outside the worktree" ;;
+    *) block "the allow entry \"$allowed_entry\" in $scope_file points outside the worktree" ;;
   esac
+  # An entry is a folder (covers everything below it) or a single file (covers itself).
   case "$target_path" in
-    "$folder_path"/*) is_allowed=true ;;
+    "$entry_path" | "$entry_path"/*) is_allowed=true ;;
   esac
-  allowed_folders="$allowed_folders $allowed_folder"
+  allowed_list="$allowed_list $allowed_entry"
 done <<<"$allowed_entries"
 
 [ "$is_allowed" = true ] && exit 0
-block "the $area worker may write only inside:$allowed_folders (not $target_path)"
+block "the $area worker may write only these folders and files:$allowed_list (not $target_path); paths are relative to $root_resolved"

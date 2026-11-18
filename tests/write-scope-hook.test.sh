@@ -113,6 +113,14 @@ done
 widen_worktree "src/"
 expect_allowed "a normal allow entry still works in the same layout" Write "$work/wide/src/file.ts" "$work/wide"
 
+# A single file may be an allow entry: it covers that file and nothing else.
+rm -rf "$work/single" && mkdir -p "$work/single/src/rings"
+jq -n '{area: "rings", allow: ["src/rings/rings.ts"], shared: []}' >"$work/single/.polish-scope.json"
+expect_allowed "a file allow entry covers that file" Edit "$work/single/src/rings/rings.ts" "$work/single"
+expect_allowed "a file allow entry matches a relative path to it" Edit "src/rings/rings.ts" "$work/single"
+expect_blocked "a file allow entry does not cover its sibling" Edit "$work/single/src/rings/ring-shader.ts" "$work/single"
+expect_blocked "a file allow entry does not cover a name that extends it" Edit "$work/single/src/rings/rings.ts.bak" "$work/single"
+
 block_message=$(jq -n --arg path "$worktree/app/src/vfx/sparks.ts" --arg cwd "$worktree" \
   '{tool_name: "Write", cwd: $cwd, tool_input: {file_path: $path}}' | bash "$HOOK" 2>&1)
 if echo "$block_message" | grep -q "lighting" && echo "$block_message" | grep -q "app/src/lighting/"; then
