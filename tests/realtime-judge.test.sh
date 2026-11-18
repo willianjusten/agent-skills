@@ -45,13 +45,19 @@ cmp -s "$work/mapping.json" "$work/m2.json" && pass "same seed repeats the assig
 
 orders=""
 for seed in 1 2 3 4 5 6 7 8 9 10 11 12; do
-  prepare "$work/js" "$work/ms.json" --seed "$seed" > /dev/null
+  prepare "$work/js-$seed" "$work/ms.json" --seed "$seed" > /dev/null
   orders="$orders $(x_side "$work/ms.json")"
 done
 case "$orders" in
   *before*after* | *after*before*) pass "both orders occur across seeds" ;;
   *) fail "both orders occur across seeds" "$orders" ;;
 esac
+
+if prepare "$work/judge" "$work/again.json" > /dev/null 2>&1; then
+  fail "a judge dir that already holds images is refused"
+else
+  pass "a judge dir that already holds images is refused"
+fi
 
 prepare "$work/jn" "$work/mn.json" > /dev/null && pass "prepare works without a seed" || fail "prepare works without a seed"
 

@@ -36,6 +36,8 @@ def prepare(arguments):
     sides = list(SIDES)
     rng.shuffle(sides)
     judge_dir = Path(arguments.judge_dir)
+    if judge_dir.exists() and any(judge_dir.iterdir()):
+        raise SystemExit(f"{judge_dir} is not empty; use a fresh judge directory so no earlier sheet reaches the judge")
     for label, side in zip(LABELS, sides):
         shutil.copytree(sources[side], judge_dir / label.lower(), dirs_exist_ok=True)
     mapping_path = Path(arguments.mapping)

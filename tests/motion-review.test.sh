@@ -79,6 +79,12 @@ case "$orders" in
   *) fail "both orders occur across seeds" "$orders" ;;
 esac
 
+if run prepare --before "$work/before" --after "$work/after" --judge-dir "$work/judge" --mapping "$work/again.json" > /dev/null 2>&1; then
+  fail "a judge dir that already holds sheets is refused"
+else
+  pass "a judge dir that already holds sheets is refused"
+fi
+
 mkdir -p "$work/odd"
 printf 'x' > "$work/odd/strip.png"
 if run prepare --before "$work/before" --after "$work/odd" --judge-dir "$work/jo" --mapping "$work/mo.json" > /dev/null 2>&1; then

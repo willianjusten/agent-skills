@@ -39,6 +39,8 @@ def prepare(arguments):
     if sources[BEFORE].is_dir() and sorted(p.name for p in sources[BEFORE].iterdir()) != sorted(p.name for p in sources[AFTER].iterdir()):
         raise SystemExit("The two folders must hold the same file names, or the names give the order away")
     judge_dir = Path(arguments.judge_dir)
+    if judge_dir.exists() and any(judge_dir.iterdir()):
+        raise SystemExit(f"{judge_dir} is not empty; use a fresh judge directory so no earlier sheet reaches the judge")
     judge_dir.mkdir(parents=True, exist_ok=True)
     for label, side in zip((label.lower() for label in LABELS), sides):
         if sources[side].is_dir():
@@ -126,7 +128,7 @@ def markdown(result):
         gap_rows = "".join(
             f"| {lens.capitalize()} judge, target gap | {result['gap_scores'][lens]['before']} | {result['gap_scores'][lens]['after']} |\n"
             for lens in STILL_LENSES
-        ) + f"| Counted target gap (lower of the two) | {result['gap_before_counted']} | {result['gap_after_counted']} |\n"
+        ) + f"| Counted target gap (lowest judge) | {result['gap_before_counted']} | {result['gap_after_counted']} |\n"
     return (
         "### Blind judging\n\n"
         f"Shown to judges as X = {result['mapping']['X']}, Y = {result['mapping']['Y']} "
