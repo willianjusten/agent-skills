@@ -21,6 +21,7 @@
       "Bash(git commit *)",
       "Bash(git switch *)",
       "Bash(git worktree *)",
+      "Bash(git -C /Users/willianjusten/Developer/github/* worktree add *)",
       "Bash(git merge *)",
       "Bash(git rebase *)",
       "Bash(npx tsc *)",
