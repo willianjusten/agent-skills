@@ -29,8 +29,8 @@ Blind A/B judging for polish rounds only, not for every change. Judges advise; t
      --visual X=6,Y=8 --feel X=6,Y=7 --markdown
    ```
 
-   The lower of the two judges' scores counts for each capture, and the change is kept only if the after score equals or beats the before score. With several moments, keep the change only if every moment is kept. Done when you have a decision per moment.
-5. **Record it in the packet.** Paste the markdown block from `decide`, with the judges' notes, into the app's review packet notes (for the lab, the round's entry beside `.verify/<app>/review-packet.html`). The mapping and seed live only there. Done when the packet shows both scores, the counted score and the decision.
+   The lower of the two judges' scores counts for each capture, and the change is kept only if the after score equals or beats the before score. With several moments, the change is kept only if it wins or ties at every moment; a loss at any one moment rejects it. Done when you have a decision per moment.
+5. **Record it in the packet.** Paste the markdown block from `decide`, with the judges' notes, into the app's review packet notes (e.g. in the lab, the round's entry beside `.verify/<app>/review-packet.html`). The mapping and seed live only there. Done when the packet shows both scores, the counted score and the decision.
 6. **Act on the decision.** Keep: carry on. Reject: revert the change or fix the lowest-scoring criterion and judge again with a new shuffle. Report a rejected change to the user; do not argue with a judge by re-running until it passes.
 
 ## Rules
