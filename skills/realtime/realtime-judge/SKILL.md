@@ -21,7 +21,7 @@ Blind A/B judging for polish rounds only, not for every change. Judges advise; t
    ```
 
    The judge directory holds only `x.png` and `y.png`. The mapping file stays out of it, and you never print it or put it in a judge prompt. Done when each moment has a judge directory and a mapping file.
-3. **Run two fresh judges per moment** as parallel subagents, `visual-judge` and `feel-judge` (Opus, no shared context, read-only). Give each only the judge directory, the lens rubric from [references/rubric.md](references/rubric.md) and the benchmark the user named. Never give them the diff, the intent of the change, prior scores or the words before and after. Each returns a score from 1 to 10 for X and for Y with a one-line note per image. Done when both return both scores.
+3. **Run two fresh judges per moment** as parallel subagents, `visual-judge` and `feel-judge` (Opus, no shared context, read-only). Give each only the judge directory, the lens rubric from [references/rubric.md](references/rubric.md) and, when there is one, the absolute path of the benchmark image the user named (for a round chasing a target, the path `target path` prints). Never give them the diff, the intent of the change, prior scores or the words before and after. Each returns a score from 1 to 10 for X and for Y with a one-line note per image. Done when both return both scores.
 4. **Decide.** Per moment:
 
    ```bash
