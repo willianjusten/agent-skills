@@ -34,5 +34,5 @@ Run a polish round against the approved target
 
 ## FAQ
 
-- Can the agent approve a target? No; approval needs the user at a terminal typing yes.
+- Can the agent approve a target? No; approval needs the user at a terminal typing yes, and hand-editing the manifest is out of bounds.
 - Is the target shipped? No, it lives under `targets/`, outside `public/`.
