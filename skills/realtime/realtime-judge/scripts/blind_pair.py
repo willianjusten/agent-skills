@@ -17,21 +17,25 @@ import sys
 from pathlib import Path
 
 LENSES = ("visual", "feel")
+BEFORE, AFTER = "before", "after"
+SIDES = (BEFORE, AFTER)
+FIRST_LABEL, SECOND_LABEL = "X", "Y"
+LABELS = (FIRST_LABEL, SECOND_LABEL)
 MIN_SCORE, MAX_SCORE = 1, 10
 
 
 def prepare(arguments):
     rng = random.Random(arguments.seed) if arguments.seed is not None else random.SystemRandom()
-    sides = ["before", "after"]
+    sides = list(SIDES)
     rng.shuffle(sides)
-    sources = {"before": Path(arguments.before), "after": Path(arguments.after)}
+    sources = {BEFORE: Path(arguments.before), AFTER: Path(arguments.after)}
     judge_dir = Path(arguments.judge_dir)
     judge_dir.mkdir(parents=True, exist_ok=True)
-    for label, side in zip(("x", "y"), sides):
+    for label, side in zip((label.lower() for label in LABELS), sides):
         shutil.copyfile(sources[side], judge_dir / f"{label}.png")
     mapping_path = Path(arguments.mapping)
     mapping_path.parent.mkdir(parents=True, exist_ok=True)
-    mapping = {"X": sides[0], "Y": sides[1], "seed": arguments.seed}
+    mapping = {FIRST_LABEL: sides[0], SECOND_LABEL: sides[1], "seed": arguments.seed}
     mapping_path.write_text(json.dumps(mapping, indent=2) + "\n")
     print(f"Prepared {judge_dir}/x.png and {judge_dir}/y.png. Mapping saved for the packet only.")
 
@@ -41,7 +45,7 @@ def parse_scores(text):
     for pair in text.split(","):
         label, _, value = pair.partition("=")
         label = label.strip().upper()
-        if label not in ("X", "Y"):
+        if label not in LABELS:
             raise SystemExit(f"Unknown label '{label}' in '{text}'; use X=n,Y=n")
         try:
             score = float(value)
@@ -50,26 +54,33 @@ def parse_scores(text):
         if not MIN_SCORE <= score <= MAX_SCORE:
             raise SystemExit(f"Score {score:g} is outside {MIN_SCORE}-{MAX_SCORE}")
         scores[label] = score
-    if set(scores) != {"X", "Y"}:
+    if set(scores) != set(LABELS):
         raise SystemExit(f"Need both X and Y scores, got '{text}'")
     return scores
 
 
-def number(value):
+def format_score(value):
     return int(value) if float(value).is_integer() else value
 
 
 def decide(arguments):
     mapping = json.loads(Path(arguments.mapping).read_text())
     judge_scores = {"visual": parse_scores(arguments.visual), "feel": parse_scores(arguments.feel)}
-    by_side = {lens: {mapping[label]: scores[label] for label in ("X", "Y")} for lens, scores in judge_scores.items()}
-    counted = {side: min(by_side[lens][side] for lens in LENSES) for side in ("before", "after")}
+    by_side = {}
+    for lens, scores in judge_scores.items():
+        by_side[lens] = {mapping[label]: scores[label] for label in LABELS}
+    counted = {}
+    for side in SIDES:
+        counted[side] = min(by_side[lens][side] for lens in LENSES)
+    shown_scores = {}
+    for lens in LENSES:
+        shown_scores[lens] = {side: format_score(by_side[lens][side]) for side in SIDES}
     result = {
-        "mapping": {"X": mapping["X"], "Y": mapping["Y"], "seed": mapping.get("seed")},
-        "scores": {lens: {side: number(by_side[lens][side]) for side in ("before", "after")} for lens in LENSES},
-        "before_counted": number(counted["before"]),
-        "after_counted": number(counted["after"]),
-        "decision": "keep" if counted["after"] >= counted["before"] else "reject",
+        "mapping": {FIRST_LABEL: mapping[FIRST_LABEL], SECOND_LABEL: mapping[SECOND_LABEL], "seed": mapping.get("seed")},
+        "scores": shown_scores,
+        "before_counted": format_score(counted[BEFORE]),
+        "after_counted": format_score(counted[AFTER]),
+        "decision": "keep" if counted[AFTER] >= counted[BEFORE] else "reject",
     }
     if arguments.markdown:
         print(markdown(result))
