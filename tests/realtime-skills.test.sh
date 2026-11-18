@@ -19,7 +19,7 @@ scope_of() {
 
 has_machine_path() { grep -rEn '/Users/[a-z]|/home/[a-z]' "$@"; }
 
-for skill in three-build three-tsl three-verify asset-pipeline realtime-judge; do
+for skill in three-build three-tsl three-verify asset-pipeline realtime-judge target-loop; do
   file="$REALTIME/$skill/SKILL.md"
   if [ ! -f "$file" ]; then
     fail "$skill exists under skills/realtime"
