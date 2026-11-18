@@ -64,6 +64,7 @@ For a bug: `/diagnosing-bugs` reproduces it and finds the cause, then the fix go
 | **Plan** | `grill-with-docs` (in a repo), `grill-me` (no repo), `prototype`, `research`, `to-spec`, `to-tickets`, `wayfinder` |
 | **Build** | `implement` (one ticket), `implement-spec` (whole spec, parallel), `tdd`, `ui-polish` (look at a UI change and fix it, before you review), `matt-code-review` |
 | **Realtime 3D** (lab repo) | `three-build` (apps on WebGPURenderer), `three-tsl` (shaders as TSL), `three-verify` (run and fix the gates), `asset-pipeline` (sourced, generated and licensed assets; with the `asset-wrangler` agent) |
+| **Game feel** (lab repo) | `game-feel` (juice checklist, audio event map, ZzFX sounds) |
 | **Ship and learn** | `pr`, `retro` |
 | **Fix and tidy** | `diagnosing-bugs`, `triage`, `improve-codebase-architecture`, `codebase-design`, `domain-modeling` |
 | **Any time** | `ask-matt` (which skill?), `handoff` (pass work to a new session), `wait-what` (re-explain that), `teach`, `to-questionnaire`, `wizard`, `frontend-design`, `writing-for-agents`, `skill-creator-plus` |
