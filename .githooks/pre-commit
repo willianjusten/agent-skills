@@ -5,5 +5,13 @@
 cd "$(git rev-parse --show-toplevel)" || exit 1
 # Git exports these to hooks; the tests run git in their own temp repos.
 unset GIT_DIR GIT_INDEX_FILE GIT_WORK_TREE GIT_PREFIX
-tests/run.sh >/dev/null 2>&1 || { echo "pre-commit: tests/run.sh failed; run it to see why" >&2; exit 1; }
-./install.sh check >/dev/null 2>&1 || { echo "pre-commit: ./install.sh check failed; run it to see why" >&2; exit 1; }
+
+run_check() {
+  check_output=$("$@" 2>&1) && return 0
+  printf '%s\n' "$check_output" | tail -20 >&2
+  echo "pre-commit: $* failed, commit refused" >&2
+  exit 1
+}
+
+run_check tests/run.sh
+run_check ./install.sh check
