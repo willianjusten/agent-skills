@@ -103,6 +103,8 @@ The only patch to vendored code is renaming Matt's `code-review` to `matt-code-r
 
 Vendored skills are install-only: git keeps `scopes.json` and one `skills-lock.json` per source, pinned to an upstream commit, and `install.sh` fetches the enabled skills at that commit into `vendor/` (gitignored). Everything else it creates is a symlink into this repo, so editing a file here changes it on the machine at once. A second run prints `No changes.`
 
+`install.sh` also sets `core.hooksPath` to `.githooks/`, whose `pre-commit` runs `tests/run.sh` and `./install.sh check` (about 6 s) and refuses the commit if either fails, in the main checkout and every worktree.
+
 ### Scopes
 
 Each skill has a scope that decides where it shows up:

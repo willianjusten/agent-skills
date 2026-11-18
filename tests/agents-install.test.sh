@@ -79,6 +79,17 @@ else
   fail "install.sh announces each step as it starts" "missing:$missing_steps"
 fi
 
+git_fixture="$work/git-repo"
+make_fixture "$git_fixture"
+git -C "$git_fixture" init -q
+mkdir -p "$work/git-home"
+HOME="$work/git-home" SPOKE_DIR="$work/no-spoke" "$git_fixture/install.sh" >/dev/null 2>&1
+if [ "$(git -C "$git_fixture" config --get core.hooksPath)" = ".githooks" ]; then
+  pass "install.sh points core.hooksPath at .githooks in a git checkout"
+else
+  fail "install.sh points core.hooksPath at .githooks in a git checkout" "$(git -C "$git_fixture" config --get core.hooksPath)"
+fi
+
 hook_link="$home/.claude/hooks/write-scope.sh"
 if [ -L "$hook_link" ] && [ "$(readlink "$hook_link")" = "$fixture/harness/claude/hooks/write-scope.sh" ]; then
   pass "the write-scope hook is linked into ~/.claude/hooks"

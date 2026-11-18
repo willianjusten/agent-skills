@@ -1,0 +1,17 @@
+#!/bin/sh
+# Fast guardrail before every commit, in the main checkout and in worktrees:
+# the repo tests and the skill and agent check. Installed by ./install.sh, which
+# sets core.hooksPath.
+cd "$(git rev-parse --show-toplevel)" || exit 1
+# Git exports these to hooks; the tests run git in their own temp repos.
+unset GIT_DIR GIT_INDEX_FILE GIT_WORK_TREE GIT_PREFIX
+
+run_check() {
+  check_output=$("$@" 2>&1) && return 0
+  printf '%s\n' "$check_output" | tail -20 >&2
+  echo "pre-commit: $* failed, commit refused" >&2
+  exit 1
+}
+
+run_check tests/run.sh
+run_check ./install.sh check
