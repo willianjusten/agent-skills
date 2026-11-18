@@ -1,15 +1,12 @@
 # Repaint prompt
 
-Paste this with the screenshot attached. The lab writes the same text to `targets/<id>.prompt.txt`.
+The lab owns the prompt text (`REPAINT_PROMPT` in `packages/tools/src/target-frame.ts`) and writes it to `targets/<id>.prompt.txt` on `target prepare`. Hand the user that file; do not retype or reword it here, so there is one source of truth.
 
-```text
-Repaint the attached screenshot as a finished, best-in-class frame of the same game or piece.
-Keep EXACTLY the same camera, framing, layout and pose. Do not add, remove, move or resize anything.
-Only improve the rendering: lighting, materials, texture detail, colour, atmosphere and depth.
-Keep it reachable in real time on WebGPU: no photographic detail that a shader could not plausibly produce.
-Output one image at the same aspect ratio as the screenshot.
-```
+What the prompt asks of the image model, line by line:
 
-Why each line: the first two stop the model redesigning the scene, so a round can compare like with like; the third scopes the work to rendering; the fourth keeps the target reachable, since an unreachable target wastes rounds; the last keeps the framing diffable.
+- Same camera, framing, layout and pose, nothing added, removed, moved or resized: stops the model redesigning the scene, so a round can compare like with like.
+- Improve only the rendering (lighting, materials, texture detail, colour, atmosphere, depth): scopes the work.
+- Stay reachable in real time on WebGPU: an unreachable target wastes rounds.
+- One image at the screenshot's aspect ratio: keeps the framing diffable.
 
-Reject a result when the layout moved, objects appeared or vanished, the aspect ratio changed, or it looks like another piece's style. Adapt the prompt to name the art bible's palette and "Not this" list when the app has them.
+Reject a result when the layout moved, objects appeared or vanished, the aspect ratio changed, or it looks like another piece's style. When the app has an art bible, the user may add its palette and "Not this" list to the prompt before running it.

@@ -10,7 +10,7 @@ hooks:
     - matcher: "Write|Edit|MultiEdit|NotebookEdit"
       hooks:
         - type: command
-          command: bash "$HOME/.claude/hooks/write-scope.sh"
+          command: 'bash "$HOME/.claude/hooks/write-scope.sh" || exit 2'
 ---
 
 You polish one area of one lab app, in the worktree and the area the polish director names. You change look and feel only: never camera, layout, controls or gameplay rules, and never anything the brief forbids.

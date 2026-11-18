@@ -69,6 +69,11 @@ if frontmatter "$worker" | grep -q 'hooks/write-scope.sh' && frontmatter "$worke
 else
   fail "the worker declares the write-scope hook as PreToolUse"
 fi
+if frontmatter "$worker" | grep -F 'write-scope.sh' | grep -qF '|| exit 2'; then
+  pass "the hook command turns any failure, such as a missing script, into a block"
+else
+  fail "the hook command turns any failure, such as a missing script, into a block"
+fi
 for write_tool in Write Edit MultiEdit; do
   frontmatter "$worker" | grep -E 'matcher:' | grep -qw "$write_tool" && pass "the hook matcher covers $write_tool" || fail "the hook matcher covers $write_tool"
 done
