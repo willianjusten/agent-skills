@@ -90,7 +90,22 @@ out=$(budget 2026-11-19T05:30:00Z); status=$?
 
 echo "- 2026-11-19T05:40:00Z | resume | from budget" >>"$run"
 out=$(budget 2026-11-19T06:00:00Z); status=$?
-[ "$status" -eq 0 ] && pass "the hour clock restarts at a resume" || fail "the hour clock restarts at a resume" "status $status: $out"
+[ "$status" -eq 0 ] && pass "a sitting that ended without a stop counts only to its last entry" || fail "a sitting that ended without a stop counts only to its last entry" "status $status: $out"
+
+# hours are active run time summed across sittings, not the time since the last resume
+cat >"$run" <<'LOG'
+- 2026-11-19T01:00:00Z | start | pitch=PITCH.md
+- 2026-11-19T03:00:00Z | stop | target-frames | pick one | packet.md
+- 2026-11-19T09:00:00Z | answer | the second one
+- 2026-11-19T10:00:00Z | resume | from target-frames
+LOG
+out=$(budget 2026-11-19T11:30:00Z); status=$?
+[ "$status" -eq 0 ] && pass "the wait for an answer does not use up hours" || fail "the wait for an answer does not use up hours" "status $status: $out"
+out=$(budget 2026-11-19T12:30:00Z); status=$?
+[ "$status" -eq 3 ] && [ "$out" = "stop: hours spent (4.5 of 4)" ] && pass "hours add up across sittings" || fail "hours add up across sittings" "status $status: $out"
+echo "- 2026-11-19T12:00:00Z | budget | hours=6" >>"$run"
+out=$(budget 2026-11-19T12:30:00Z); status=$?
+[ "$status" -eq 0 ] && pass "a budget entry raises the hours limit" || fail "a budget entry raises the hours limit" "status $status: $out"
 
 printf '%s\n' '- 2026-11-19T01:00:00Z | start | pitch=PITCH.md' >"$run"
 out=$(budget 2026-11-19T02:00:00Z); status=$?

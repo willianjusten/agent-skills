@@ -14,7 +14,7 @@ Starts one autonomous run and returns at once. The `conductor` agent does the wo
 ## Steps
 
 1. **Resolve the target.** The argument is a pitch file (`PITCH.md`) or an app folder. If it is a folder with a `RUN.md`, run `python3 -I <skill dir>/scripts/run_state.py next <app>/RUN.md`: `done` means say so and stop; `waiting: <stop>` means the user has not answered, so show the stop line and ask them to append `- <UTC timestamp> | answer | <text>` to `RUN.md`, then stop. Otherwise it is a start or a resume. A pitch without an approval line (`Approved by`) is not ready: say so and stop. Done when the target is one of start, resume.
-2. **Collect overrides.** Read any extra stop points or budgets in the request (`rounds=N`, `hours=H`, "also stop after ...") and pass them through. Defaults: 6 polish rounds, 4 hours. Done when the overrides are listed.
+2. **Collect overrides.** Read any extra stop points or budgets in the request (`rounds=N`, `hours=H`, "also stop after ...") and pass them through. Defaults: 6 polish rounds, 4 hours of active run time (summed across sittings; waiting for an answer is not counted). Done when the overrides are listed.
 3. **Start it in the background.** Run from the lab repo, with the Bash tool's background option:
 
    ```bash

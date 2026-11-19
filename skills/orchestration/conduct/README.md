@@ -43,4 +43,4 @@ flowchart LR
 ## FAQ
 
 - Default stops? Target frames, polish plateau, split taste call, a gate failing twice, a spent budget.
-- Default budget? 6 polish rounds and 4 hours, overridable in the request or the brief.
+- Default budget? 6 polish rounds and 4 hours of active run time per run, summed across stops and resumes, overridable in the request or the brief.

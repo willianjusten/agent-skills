@@ -18,7 +18,7 @@ The caller gives a pitch file (new run) or an app folder that has a `RUN.md` (re
 
 `RUN.md` lives in the app folder, is committed, and is append-only: never edit or delete a line. One entry per line, `- <UTC timestamp> | <kind> | <text>` (`date -u +%Y-%m-%dT%H:%M:%SZ`). Kinds: `start` (text carries `pitch=<path>` and optional `rounds=N hours=H`), `step`, `assumption`, `judge`, `revert`, `round` (text starts with the round number), `stop` (`<stop name> | <one-line reason> | <packet path>`), `answer` (written by the user), `resume`, `budget` (a limit the user raised), `note` (ignored when resuming) and `done`.
 
-The script `python3 -I <conduct skill dir>/scripts/run_state.py` reads it: `next RUN.md` prints `start`, `done`, `waiting: <stop>`, `resume: <stop> | <answer>` or `continue: <last entry>`; `budget RUN.md` prints `ok` or `stop: ...` and exits 3. Run both at the start, and run `budget` before every polish round and every time a phase ends. Log every step, every assumption you make instead of asking, every judge result with its score, and every revert.
+The script `python3 -I <conduct skill dir>/scripts/run_state.py` reads it: `next RUN.md` prints `start`, `done`, `waiting: <stop>`, `resume: <stop> | <answer>` or `continue: <last entry>`; `budget RUN.md` prints `ok` or `stop: ...` and exits 3; hours are active run time summed across sittings (each runs from `start` or `resume` to the next `stop` or `done`), so time spent waiting for an answer is free. Run both at the start, and run `budget` before every polish round and every time a phase ends. Log every step, every assumption you make instead of asking, every judge result with its score, and every revert.
 
 ## Steps
 
@@ -33,7 +33,7 @@ The script `python3 -I <conduct skill dir>/scripts/run_state.py` reads it: `next
 
 ## Stop points
 
-Always: target frames chosen (step 4); polish plateau (judges flat two rounds running, or every component at target); a judge split on a taste call (visual and feel judges disagree on the decision, or two judges contradict across rounds); a gate failing after two fix attempts; a budget spent (6 rounds, 4 hours, unless the brief or a `budget` entry says otherwise); plus any the brief adds.
+Always: target frames chosen (step 4); polish plateau (judges flat two rounds running, or every component at target); a judge split on a taste call (visual and feel judges disagree on the decision, or two judges contradict across rounds); a gate failing after two fix attempts; a budget spent (6 rounds, 4 hours of active run time per run, unless the brief or a `budget` entry says otherwise); plus any the brief adds.
 
 At a stop: append `stop | <name> | <one-line reason> | <review packet path>`, commit, then send a push notification with the `PushNotification` tool with that line. If the tool is unavailable or fails, append `note | notification fallback: <the same line>` and print the line as your last output. Then end the run; do not wait.
 
