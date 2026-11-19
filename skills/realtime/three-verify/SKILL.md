@@ -25,6 +25,14 @@ metadata:
 6. **Re-run until every gate passes.** The work is done when `pnpm verify <app>` prints PASSED and exits 0.
 7. **Also run the WebGL 2 path** with `pnpm verify <app> --no-webgpu` when you wrote shaders; it hides `navigator.gpu` and drops the backend requirement.
 
+## Flags
+
+All optional; none is a gate.
+
+- `--layer-cost`: prices each layer of an app that declares layers and adds the table to the review packet. Off by default and the slow part of `verify` (about a minute for ripple-toy); pass it when the packet needs layer prices. Not with `--motion` or `--url`.
+- `--uncapped`: also runs the desktop profile once with Chromium's frame cap off and reports average fps, p95 and headroom at 60 fps in the packet and `results.json`. The gate fps stays capped. Read p95 as a floor for a GPU-bound app. Not with `--motion` or `--url`.
+- `--preset <name>`: captures with `<app>/presets/<name>.json` loaded, to judge a tuned look; references are not compared. Not with `--accept` or `--motion`.
+
 ## Game captures
 
 A game can describe a scripted playthrough in the `game` block of its `captures.json`: a seed plus actions held from second to second. `pnpm verify <game> --motion` replays it deterministically through `__game.advance` and writes the frame strip, crops, burst and MP4, so the same script gives the same frames every run. It needs the dev build that `verify` makes itself, so it cannot run against `--url`. Details are in the lab `README.md`, "Motion capture".
@@ -33,5 +41,5 @@ A game can describe a scripted playthrough in the `game` block of its `captures.
 
 - The gates run on the production build, where `window.__game` is absent. A game's `src/playtest.ts` runs against a separate development build that `verify` makes itself; no manual dev build is needed for it.
 - Playtest scripts, captures, references and the review packet are specified in the lab `README.md` (section "Playtests, captures and the review packet") and `packages/verify/AGENTS.md`; read them rather than relying on this summary.
-- A change to `packages/` or `templates/` is done when `pnpm test`, `pnpm typecheck` and `pnpm test:e2e` pass, not just `verify`.
+- Done is tiered in the lab: `pnpm check` (typecheck and unit tests, about 9 s) for every change; `pnpm verify <app>` for an app you touched; for `packages/` or `templates/`, also `pnpm test:e2e:fast` then `pnpm test:e2e:slow` (about 8 minutes together) and `verify` of each affected app.
 - Fps numbers are hardware dependent. If only a gate on a different GPU fails, say so rather than loosening it.
