@@ -14,7 +14,7 @@ Measures whether a fresh judge can tell a render from its reference. Use it when
    ```
 
    The judge directory holds `trial-01` to `trial-12`, each with only `x.png` and `y.png`; which trial holds which crop and which side is real are random. The key file stays out of it and out of every judge prompt.
-3. **Run one fresh judge** (a read-only subagent, no shared context). Give it the judge directory and this task, word for word: "Each trial folder holds two crops, X and Y. Exactly one is a real reference; the other is a render. Look at both at full size and pick the real one in every trial. Reply with one line, `01=X,02=Y,...`, one pick for each of the 12 trials, and one short note per trial on what gave it away. Do not skip a trial; guess when unsure." Give it no rubric scores, no prior results and no hint of the render's flaws. Done when all 12 picks are back.
+3. **Run one fresh judge** (a general-purpose subagent on the strongest model, as in step 3 of the main skill; told to only read the images; no shared context). Give it the judge directory and this task, word for word: "Each trial folder holds two crops, X and Y. Exactly one is a real reference; the other is a render. Look at both at full size and pick the real one in every trial. Reply with one line, `01=X,02=Y,...`, one pick for each of the 12 trials, and one short note per trial on what gave it away. Do not skip a trial; guess when unsure." Give it no rubric scores, no prior results and no hint of the render's flaws. Done when all 12 picks are back.
 4. **Score.**
 
    ```bash
@@ -28,5 +28,6 @@ Measures whether a fresh judge can tell a render from its reference. Use it when
 ## Rules
 
 - The 7-of-12 bar is fixed. Tighten it only with the user's approval, never on your own and never to make a run pass.
-- Same crop regions and scale for both sides; a size or compression difference makes the answer trivial and measures nothing.
+- Same crop regions and scale for both sides; a size, encoder or compression difference (check file sizes are comparable) makes the answer trivial and measures nothing.
 - Scores here are judgements, not tests; the result is advisory and never gates a merge alone.
+- One judge on 12 trials is noisy: 7 of 12 is on the edge and a clear fail is not far above chance. At the bar or one under it, still report any tell the judge named as clear (banding, blur, smeared detail) as the next fix. When the notes say every pair looked identical and the picks were guesses, say so.
