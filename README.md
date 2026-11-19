@@ -146,7 +146,8 @@ agent-skills/
 │   ├── product/
 │   ├── realtime/
 │   ├── game/
-│   └── creative/
+│   ├── creative/
+│   └── orchestration/
 ├── agents/                         role-scoped subagents, agents/<category>/<name>.md, linked into ~/.claude/agents
 ├── vendor/                         one skills-lock.json per source in git; skills fetched by install.sh
 │   ├── anthropics/skills/
