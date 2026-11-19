@@ -19,7 +19,7 @@ Starts one autonomous run and returns at once. The `conductor` agent does the wo
 
    Done when the target is one of start, resume.
 2. **Collect overrides.** Read any extra stop points or budgets in the request (`rounds=N`, `hours=H`, "also stop after ...") and pass them through as given. Defaults are 6 polish rounds and 4 hours of active run time (summed across sittings; waiting for an answer is not counted); the conductor applies them and `RUN.md` keeps earlier overrides, so pass only what the request names. Done when the overrides are listed, or none.
-3. **Start it in the background.** Run from the lab repo (the git root of the target, `git -C <target dir> rev-parse --show-toplevel`), with the Bash tool's background option:
+3. **Start it in the background.** Run from the lab repo (the git root of the target, `git -C <target dir> rev-parse --show-toplevel`; if the target is in no git repo, say a run needs the lab repo and stop), with the Bash tool's background option:
 
    ```bash
    claude --agent conductor -p "<start|resume>: <absolute target path>. <overrides>"
