@@ -18,6 +18,7 @@ from datetime import datetime, timezone
 
 DEFAULT_ROUNDS = 6
 DEFAULT_HOURS = 4.0
+# Distinct from 1 (a usage error) so the conductor can tell a spent budget from a failed call.
 BUDGET_SPENT_EXIT = 3
 ENTRY = re.compile(r"^- (\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ) \| ([a-z-]+) \| ?(.*)$")
 
@@ -107,7 +108,10 @@ def main():
     if args.command == "next":
         print(next_action(entries))
         return 0
-    now = parse_time(args.now) if args.now else datetime.now(timezone.utc)
+    try:
+        now = parse_time(args.now) if args.now else datetime.now(timezone.utc)
+    except ValueError:
+        raise SystemExit(f"--now '{args.now}' is not a UTC time; use 2026-01-31T12:00:00Z")
     verdict = check_budget(entries, now)
     print(verdict)
     return 0 if verdict == "ok" else BUDGET_SPENT_EXIT

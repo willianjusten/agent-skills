@@ -21,7 +21,7 @@ Starts one autonomous run and returns at once. The `conductor` agent does the wo
    claude --agent conductor -p "<start or resume>: <path>. <overrides>"
    ```
 
-   The conductor must run as the main-thread agent, because it and `polish-director` spawn subagents; it cannot be started with the Agent tool. Done when the process is running.
+   The conductor must run as the main-thread agent, because it and `polish-director` spawn subagents; it cannot be started with the Agent tool. Done when the process is running. If it exits within seconds, read its output, fix the cause and return to step 1; do not report a run that never started.
 4. **Tell the user.** One line: the run's app folder, `RUN.md` path, the budgets, and that a push notification arrives at each stop. Do not wait for it.
 
 ## Rules

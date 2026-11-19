@@ -114,6 +114,11 @@ for round in 1 2 3 4 5 6; do echo "- 2026-11-19T01:3${round}:00Z | round | $roun
 out=$(budget 2026-11-19T02:00:00Z); status=$?
 [ "$status" -eq 3 ] && echo "$out" | grep -q "6 of 6" && pass "the default round budget is 6" || fail "the default round budget is 6" "$out"
 
+# a bad clock value is named, not a traceback
+printf '%s\n' '- 2026-11-19T01:00:00Z | start | pitch=PITCH.md' >"$run"
+out=$(budget not-a-time 2>&1); status=$?
+{ [ "$status" -ne 0 ] && ! echo "$out" | grep -q Traceback && echo "$out" | grep -q "not-a-time"; } && pass "a bad --now is named, not a traceback" || fail "a bad --now is named, not a traceback" "$out"
+
 # agent and skill
 [ -f "$AGENT" ] && pass "the conductor agent exists under agents/orchestration" || fail "the conductor agent exists under agents/orchestration"
 [ "$(field "$AGENT" name)" = "conductor" ] && pass "the agent name equals its file name" || fail "the agent name equals its file name"
