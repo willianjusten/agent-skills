@@ -63,6 +63,13 @@ Sections in this order, nothing else:
 - `harness/shared/instructions.md` is `~/.claude/CLAUDE.md`.
 - Claude Code writes `/config` changes through the `settings.json` symlink. Review those diffs and strip machine-specific values before committing.
 
+## Tests
+
+- `./install.sh check` validates every skill, agent and scope (about 2 s). Run it before `./install.sh`.
+- `tests/run.sh` runs every `tests/*.test.sh` in parallel and exits non-zero if any fails (about 3 s).
+- Run one file with `bash tests/<name>.test.sh`, for example `bash tests/conduct.test.sh`.
+- A test uses its own `mktemp` directory and a temp `HOME` for installer runs, which is what keeps the parallel run safe; keep new tests that way.
+
 ## Commits
 
 Atomic, one logical step each: vendor update, scope change, new skill, harness change, installer change. Never commit or push without the user's approval.
