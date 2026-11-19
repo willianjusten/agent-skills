@@ -64,7 +64,9 @@ def parse_pairs(text, read_pair, expected_keys, wrong_count_message):
 
 
 def prepare(arguments):
-    rng = random.Random(arguments.seed) if arguments.seed is not None else random.SystemRandom()
+    if arguments.seed is None:
+        arguments.seed = random.SystemRandom().randrange(2**32)  # recorded in the mapping so the packet shows it
+    rng = random.Random(arguments.seed)
     sides = list(SIDES)
     rng.shuffle(sides)
     sources = {BEFORE: Path(arguments.before), AFTER: Path(arguments.after)}
@@ -92,7 +94,9 @@ def trial_name(number):
 
 
 def discriminate_prepare(arguments):
-    rng = random.Random(arguments.seed) if arguments.seed is not None else random.SystemRandom()
+    if arguments.seed is None:
+        arguments.seed = random.SystemRandom().randrange(2**32)  # recorded in the mapping so the packet shows it
+    rng = random.Random(arguments.seed)
     reference_dir, render_dir = Path(arguments.reference_dir), Path(arguments.render_dir)
     references = sorted(p.name for p in reference_dir.glob("*.png"))
     renders = sorted(p.name for p in render_dir.glob("*.png"))
