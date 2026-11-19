@@ -1,6 +1,6 @@
 # Pitch template
 
-Save as `PITCH.md`. One page, engine-neutral.
+Save as `PITCH.md`. One page, engine-neutral. Write `n/a` in sections the mode does not use. "Approved by" stays empty until the user approves.
 
 ```markdown
 # <Working title>
@@ -32,11 +32,11 @@ Save as `PITCH.md`. One page, engine-neutral.
 ## Not this
 <five or more concrete items>
 
-## Rejected concepts
+## Rejected concepts and directions
 <one line each>
 
 ## Open questions
-<anything unresolved>
+<at most three>
 
 **Approved by:** <name, date, empty until approved>
 ```
