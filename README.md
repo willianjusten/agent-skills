@@ -18,6 +18,16 @@ My agent harness in one repo: skills, global instructions and Claude Code settin
 
 Throughout, deny rules block `rm -rf` and reading `.env` files, and the global instructions forbid force-push, deleting remote branches and merging PRs.
 
+## Guides
+
+| Read | For |
+| ---- | --- |
+| [How the creative flow works](docs/how-it-works.md) | idea to judged build: `ideation`, `/conduct`, polish rounds, stop points, `RUN.md` |
+| [Install and scopes](docs/install-and-scopes.md) | `install.sh`, what it links, where each scope shows up |
+| [Writing a skill](docs/writing-a-skill.md) | the checklist for a new or changed skill or agent |
+| [Testing](docs/testing.md) | `./install.sh check`, `tests/run.sh`, one test file |
+| [AGENTS.md](AGENTS.md), [GLOSSARY.md](GLOSSARY.md), [ADR 0001](docs/adr/0001-leaf-and-orchestrator-skills.md) | repo conventions, terms, leaf versus orchestrator |
+
 ## Quick Start
 
 ```bash
@@ -63,7 +73,7 @@ For a bug: `/diagnosing-bugs` reproduces it and finds the cause, then the fix go
 | ---- | ------ |
 | **Plan** | `grill-with-docs` (in a repo), `grill-me` (no repo), `prototype`, `research`, `to-spec`, `to-tickets`, `wayfinder` |
 | **Build** | `implement` (one ticket), `implement-spec` (whole spec, parallel), `tdd`, `ui-polish` (look at a UI change and fix it, before you review), `matt-code-review` |
-| **Realtime 3D** (lab repo) | `three-build` (apps on WebGPURenderer), `three-tsl` (shaders as TSL), `three-verify` (run and fix the gates), `asset-pipeline` (sourced, generated and licensed assets; with the `asset-wrangler` agent), `realtime-judge` (blind before/after scoring; with the `visual-judge` and `feel-judge` agents), `motion-review` (blind motion scoring from frame strips, 1:1 crops and a burst; with the `motion-judge` agent), `target-loop` (repainted, user-approved target frames that rounds chase); agents `polish-director` (Fable, runs a round; run it directly, or nested under the `conductor`, whose depth is main, conductor, director, worker or judge) and `polish-worker` (Opus, one area per worker, bound by the write-scope hook) |
+| **Realtime 3D** (lab repo) | `three-build` (apps on WebGPURenderer), `three-tsl` (shaders as TSL), `three-verify` (run and fix the gates; flags `--layer-cost`, `--uncapped`, `--preset`), `asset-pipeline` (sourced, generated and licensed assets; with the `asset-wrangler` agent), `realtime-judge` (blind before/after scoring; with the `visual-judge` and `feel-judge` agents), `motion-review` (blind motion scoring from frame strips, 1:1 crops and a burst; with the `motion-judge` agent), `target-loop` (repainted, user-approved target frames that rounds chase); agents `polish-director` (Fable, runs a round and passes `--layer-cost` to `verify` for the packet; run it directly, or nested under the `conductor`, whose depth is main, conductor, director, worker or judge) and `polish-worker` (Opus, one area per worker, bound by the write-scope hook) |
 | **Brief** (before building) | `ideation` (interview to a one-page pitch), `game-brief` (GDD, treatment, art bible), `creative-brief` (treatment with a "Not this" list), `art-bible` (palette, references, asset levels, sign-off) |
 | **Autonomous build** (lab repo) | `conduct` (starts the `conductor` agent on an approved pitch: brief, art bible, target frames, polish rounds, judging, delivery, logged to `RUN.md`) |
 | **Game feel** (lab repo) | `game-feel` (juice checklist, audio event map, ZzFX sounds) |
@@ -159,7 +169,8 @@ agent-skills/
 ├── harness/
 │   ├── shared/                     instructions.md (~/.claude/CLAUDE.md), CODING_STANDARDS.md
 │   └── claude/                     settings.json, statusline-command.sh, hooks/write-scope.sh
-├── docs/images/                    diagrams for this README
+├── docs/                           guides, adr/ and images/ (diagrams for this README)
+├── tests/                          *.test.sh files, run by tests/run.sh
 ├── install.sh                      the only command
 ├── AGENTS.md                       conventions for editing this repo (CLAUDE.md imports it)
 └── dist/                           generated, gitignored
