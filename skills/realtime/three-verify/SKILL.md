@@ -25,6 +25,10 @@ metadata:
 6. **Re-run until every gate passes.** The work is done when `pnpm verify <app>` prints PASSED and exits 0.
 7. **Also run the WebGL 2 path** with `pnpm verify <app> --no-webgpu` when you wrote shaders; it hides `navigator.gpu` and drops the backend requirement.
 
+## Game captures
+
+A game can describe a scripted playthrough in the `game` block of its `captures.json`: a seed plus actions held from second to second. `pnpm verify <game> --motion` replays it deterministically through `__game.advance` and writes the frame strip, crops, burst and MP4, so the same script gives the same frames every run. It needs the dev build that `verify` makes itself, so it cannot run against `--url`. Details are in the lab `README.md`, "Motion capture".
+
 ## Limits
 
 - The gates run on the production build, where `window.__game` is absent. A game's `src/playtest.ts` runs against a separate development build that `verify` makes itself; no manual dev build is needed for it.
