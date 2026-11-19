@@ -90,7 +90,22 @@ out=$(budget 2026-11-19T05:30:00Z); status=$?
 
 echo "- 2026-11-19T05:40:00Z | resume | from budget" >>"$run"
 out=$(budget 2026-11-19T06:00:00Z); status=$?
-[ "$status" -eq 0 ] && pass "the hour clock restarts at a resume" || fail "the hour clock restarts at a resume" "status $status: $out"
+[ "$status" -eq 0 ] && pass "a sitting that ended without a stop counts only to its last entry" || fail "a sitting that ended without a stop counts only to its last entry" "status $status: $out"
+
+# hours are active run time summed across sittings, not the time since the last resume
+cat >"$run" <<'LOG'
+- 2026-11-19T01:00:00Z | start | pitch=PITCH.md
+- 2026-11-19T03:00:00Z | stop | target-frames | pick one | packet.md
+- 2026-11-19T09:00:00Z | answer | the second one
+- 2026-11-19T10:00:00Z | resume | from target-frames
+LOG
+out=$(budget 2026-11-19T11:30:00Z); status=$?
+[ "$status" -eq 0 ] && pass "the wait for an answer does not use up hours" || fail "the wait for an answer does not use up hours" "status $status: $out"
+out=$(budget 2026-11-19T12:30:00Z); status=$?
+[ "$status" -eq 3 ] && [ "$out" = "stop: hours spent (4.5 of 4)" ] && pass "hours add up across sittings" || fail "hours add up across sittings" "status $status: $out"
+echo "- 2026-11-19T12:00:00Z | budget | hours=6" >>"$run"
+out=$(budget 2026-11-19T12:30:00Z); status=$?
+[ "$status" -eq 0 ] && pass "a budget entry raises the hours limit" || fail "a budget entry raises the hours limit" "status $status: $out"
 
 printf '%s\n' '- 2026-11-19T01:00:00Z | start | pitch=PITCH.md' >"$run"
 out=$(budget 2026-11-19T02:00:00Z); status=$?
@@ -98,6 +113,11 @@ out=$(budget 2026-11-19T02:00:00Z); status=$?
 for round in 1 2 3 4 5 6; do echo "- 2026-11-19T01:3${round}:00Z | round | $round | x" >>"$run"; done
 out=$(budget 2026-11-19T02:00:00Z); status=$?
 [ "$status" -eq 3 ] && echo "$out" | grep -q "6 of 6" && pass "the default round budget is 6" || fail "the default round budget is 6" "$out"
+
+# a bad clock value is named, not a traceback
+printf '%s\n' '- 2026-11-19T01:00:00Z | start | pitch=PITCH.md' >"$run"
+out=$(budget not-a-time 2>&1); status=$?
+{ [ "$status" -ne 0 ] && ! echo "$out" | grep -q Traceback && echo "$out" | grep -q "not-a-time"; } && pass "a bad --now is named, not a traceback" || fail "a bad --now is named, not a traceback" "$out"
 
 # agent and skill
 [ -f "$AGENT" ] && pass "the conductor agent exists under agents/orchestration" || fail "the conductor agent exists under agents/orchestration"

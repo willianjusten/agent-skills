@@ -41,7 +41,7 @@ Blind A/B judging for polish rounds only, not for every change. Judges advise; t
 
 ## Reference discrimination mode
 
-When the question is whether a render passes for its reference, not whether a change improved it, follow [references/discrimination.md](references/discrimination.md): 12 shuffled reference and render crop pairs, one fresh judge picking the real one per trial, and `discriminate-score` for the count. The look passes at 7 or fewer correct of 12. Thresholds tighten only with Will's approval. Record the result and per-trial answers in the review packet.
+When the question is whether a render passes for its reference, not whether a change improved it, follow [references/discrimination.md](references/discrimination.md); it holds the trial setup, the pass bar and when the bar may change. Record the result and per-trial answers in the review packet.
 
 ## Rules
 

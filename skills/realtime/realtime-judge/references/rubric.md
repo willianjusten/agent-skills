@@ -43,7 +43,6 @@ Then compare each image to the benchmark under every heading below and list what
 
 You may be given a list of accepted differences: ways the user prefers to depart from the benchmark. Still list them under their heading, marked `(accepted)`, but do not count them against the gap score.
 
-
 - Light and glow: brightness, bloom, halo size, falloff.
 - Atmosphere and fog: haze, volume, drifting density, depth between layers.
 - Material and texture: internal detail, wisps, grain, edge quality.

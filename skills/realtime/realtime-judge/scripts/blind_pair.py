@@ -37,6 +37,32 @@ TRIAL_COUNT = 12
 MAX_CORRECT_TO_PASS = 7
 
 
+def read_json(path, what):
+    try:
+        return json.loads(Path(path).read_text())
+    except FileNotFoundError:
+        raise SystemExit(f"The {what} file {path} does not exist; pass the path prepare wrote")
+    except json.JSONDecodeError:
+        raise SystemExit(f"The {what} file {path} is not valid JSON")
+
+
+def require_fresh_judge_dir(judge_dir, leaked_thing):
+    if judge_dir.exists() and any(judge_dir.iterdir()):
+        raise SystemExit(f"{judge_dir} is not empty; use a fresh judge directory so no earlier {leaked_thing} reaches the judge")
+
+
+def parse_pairs(text, read_pair, expected_keys, wrong_count_message):
+    """Reads `key=value,key=value`: read_pair(key, value) validates one pair and returns (key, parsed value)."""
+    parsed = {}
+    for pair in text.split(","):
+        raw_key, _, raw_value = pair.partition("=")
+        key, value = read_pair(raw_key.strip(), raw_value)
+        parsed[key] = value
+    if set(parsed) != set(expected_keys):
+        raise SystemExit(wrong_count_message(parsed))
+    return parsed
+
+
 def prepare(arguments):
     rng = random.Random(arguments.seed) if arguments.seed is not None else random.SystemRandom()
     sides = list(SIDES)
@@ -47,8 +73,7 @@ def prepare(arguments):
     if sources[BEFORE].is_dir() and sorted(p.name for p in sources[BEFORE].iterdir()) != sorted(p.name for p in sources[AFTER].iterdir()):
         raise SystemExit("The two folders must hold the same file names, or the names give the order away")
     judge_dir = Path(arguments.judge_dir)
-    if judge_dir.exists() and any(judge_dir.iterdir()):
-        raise SystemExit(f"{judge_dir} is not empty; use a fresh judge directory so no earlier sheet reaches the judge")
+    require_fresh_judge_dir(judge_dir, "sheet")
     judge_dir.mkdir(parents=True, exist_ok=True)
     for label, side in zip((label.lower() for label in LABELS), sides):
         if sources[side].is_dir():
@@ -76,8 +101,7 @@ def discriminate_prepare(arguments):
     if len(references) != TRIAL_COUNT:
         raise SystemExit(f"Need exactly {TRIAL_COUNT} crop pairs, found {len(references)}")
     judge_dir = Path(arguments.judge_dir)
-    if judge_dir.exists() and any(judge_dir.iterdir()):
-        raise SystemExit(f"{judge_dir} is not empty; use a fresh judge directory so no earlier crop reaches the judge")
+    require_fresh_judge_dir(judge_dir, "crop")
     trial_order = list(range(1, TRIAL_COUNT + 1))
     rng.shuffle(trial_order)
     real_side = {}
@@ -96,22 +120,21 @@ def discriminate_prepare(arguments):
 
 
 def parse_answers(text, trial_names):
-    answers = {}
-    for pair in text.split(","):
-        trial, _, label = pair.partition("=")
-        trial, label = trial.strip(), label.strip().upper()
+    def read_answer(trial, label):
+        label = label.strip().upper()
         if trial not in trial_names:
             raise SystemExit(f"Unknown trial '{trial}' in '{text}'; use 01=X,02=Y,...")
         if label not in LABELS:
             raise SystemExit(f"Answer '{label}' for trial {trial} must be X or Y")
-        answers[trial] = label
-    if set(answers) != set(trial_names):
-        raise SystemExit(f"Need one answer for each of the {len(trial_names)} trials, got {len(answers)}")
-    return answers
+        return trial, label
+
+    return parse_pairs(
+        text, read_answer, trial_names, lambda answers: f"Need one answer for each of the {len(trial_names)} trials, got {len(answers)}"
+    )
 
 
 def discriminate_score(arguments):
-    key = json.loads(Path(arguments.key).read_text())
+    key = read_json(arguments.key, "answer key")
     answers = parse_answers(arguments.answers, set(key["real"]))
     per_trial = {trial: answers[trial] == key["real"][trial] for trial in sorted(key["real"])}
     correct = sum(per_trial.values())
@@ -144,10 +167,8 @@ def discriminate_markdown(result):
 
 
 def parse_scores(text):
-    scores = {}
-    for pair in text.split(","):
-        label, _, value = pair.partition("=")
-        label = label.strip().upper()
+    def read_score(label, value):
+        label = label.upper()
         if label not in LABELS:
             raise SystemExit(f"Unknown label '{label}' in '{text}'; use X=n,Y=n")
         try:
@@ -156,10 +177,9 @@ def parse_scores(text):
             raise SystemExit(f"Score '{value}' is not a number")
         if not MIN_SCORE <= score <= MAX_SCORE:
             raise SystemExit(f"Score {score:g} is outside {MIN_SCORE}-{MAX_SCORE}")
-        scores[label] = score
-    if set(scores) != set(LABELS):
-        raise SystemExit(f"Need both X and Y scores, got '{text}'")
-    return scores
+        return label, score
+
+    return parse_pairs(text, read_score, LABELS, lambda scores: f"Need both X and Y scores, got '{text}'")
 
 
 def format_score(value):
@@ -177,7 +197,7 @@ def unshuffle(mapping, text_by_lens):
 
 
 def decide(arguments):
-    mapping = json.loads(Path(arguments.mapping).read_text())
+    mapping = read_json(arguments.mapping, "mapping")
     if (arguments.visual is None) != (arguments.feel is None):
         raise SystemExit("Give both --visual and --feel, or neither")
     lens_scores = {lens: getattr(arguments, lens) for lens in LENSES if getattr(arguments, lens) is not None}

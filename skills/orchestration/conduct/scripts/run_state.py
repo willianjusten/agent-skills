@@ -5,7 +5,10 @@
   run_state.py budget <RUN.md> [--now <iso8601>]
 
 Entries are lines shaped `- <UTC timestamp> | <kind> | <text>`; anything else
-(headings, notes) is ignored. Defaults: 6 polish rounds, 4 hours per sitting.
+(headings, notes) is ignored. Defaults: 6 polish rounds, 4 hours of active run
+time. Active time is summed across sittings: a sitting runs from a `start` or
+`resume` entry to the next `stop` or `done`, so waiting for an answer is free.
+A sitting that ends without a stop (a crash) counts to its last entry.
 """
 
 import argparse
@@ -15,6 +18,7 @@ from datetime import datetime, timezone
 
 DEFAULT_ROUNDS = 6
 DEFAULT_HOURS = 4.0
+# Distinct from 1 (a usage error) so the conductor can tell a spent budget from a failed call.
 BUDGET_SPENT_EXIT = 3
 ENTRY = re.compile(r"^- (\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ) \| ([a-z-]+) \| ?(.*)$")
 
@@ -50,7 +54,7 @@ def next_action(entries):
     return "continue: " + last_text
 
 
-def limit(entries, key, default, cast):
+def configured_limit(entries, key, default, cast):
     value = default
     for _, kind, text in entries:
         if kind in ("start", "budget"):
@@ -60,20 +64,34 @@ def limit(entries, key, default, cast):
     return value
 
 
+def active_hours(entries, now):
+    total_seconds = 0.0
+    sitting_start = None
+    last_time = None
+    for time, kind, _ in entries:
+        if kind in ("start", "resume"):
+            if sitting_start is not None:
+                total_seconds += (last_time - sitting_start).total_seconds()
+            sitting_start = time
+        elif kind in ("stop", "done") and sitting_start is not None:
+            total_seconds += (time - sitting_start).total_seconds()
+            sitting_start = None
+        if kind != "note":
+            last_time = time
+    if sitting_start is not None:
+        total_seconds += (now - sitting_start).total_seconds()
+    return total_seconds / 3600
+
+
 def check_budget(entries, now):
-    max_rounds = limit(entries, "rounds", DEFAULT_ROUNDS, int)
-    max_hours = limit(entries, "hours", DEFAULT_HOURS, float)
+    max_rounds = configured_limit(entries, "rounds", DEFAULT_ROUNDS, int)
+    max_hours = configured_limit(entries, "hours", DEFAULT_HOURS, float)
     rounds = sum(1 for _, kind, _ in entries if kind == "round")
     if rounds >= max_rounds:
         return "stop: rounds spent (%d of %d)" % (rounds, max_rounds)
-    sitting_start = None
-    for time, kind, _ in entries:
-        if kind in ("start", "resume"):
-            sitting_start = time
-    if sitting_start is not None:
-        hours = (now - sitting_start).total_seconds() / 3600
-        if hours >= max_hours:
-            return "stop: hours spent (%.1f of %g)" % (hours, max_hours)
+    hours = active_hours(entries, now)
+    if hours >= max_hours:
+        return "stop: hours spent (%.1f of %g)" % (hours, max_hours)
     return "ok"
 
 
@@ -90,7 +108,10 @@ def main():
     if args.command == "next":
         print(next_action(entries))
         return 0
-    now = parse_time(args.now) if args.now else datetime.now(timezone.utc)
+    try:
+        now = parse_time(args.now) if args.now else datetime.now(timezone.utc)
+    except ValueError:
+        raise SystemExit(f"--now '{args.now}' is not a UTC time; use 2026-01-31T12:00:00Z")
     verdict = check_budget(entries, now)
     print(verdict)
     return 0 if verdict == "ok" else BUDGET_SPENT_EXIT
