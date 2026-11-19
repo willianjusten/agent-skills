@@ -1,0 +1,3 @@
+# Leaf skills and orchestrators
+
+Skills here are installed one at a time at different scopes, so a skill that silently relied on a sibling broke wherever the sibling was off. The rule was that no skill names a sibling. An autonomous run needs one thing that chains the brief, art bible, target loop, build, polish and judging, so we split skills into two kinds: leaf skills keep the rule; orchestrators (agents in `agents/` and skills in `skills/orchestration/`) may name and run siblings, and `install.sh check` fails when a named skill or agent is missing or scoped where the orchestrator can't see it. A missing dependency becomes an install error, not a run that fails at 3 a.m.
