@@ -82,4 +82,10 @@ grep -q "polish-scope.json" "$director" && pass "the director writes the scope f
 grep -q "visual-judge" "$director" && grep -q "feel-judge" "$director" && pass "the director calls both judges" || fail "the director calls both judges"
 grep -qi "review packet" "$director" && pass "the director ends the round with a review packet" || fail "the director ends the round with a review packet"
 
+grep -q "component checklist" "$director" && grep -q "COMPONENTS.md" "$director" && pass "the director accepts a component checklist" || fail "the director accepts a component checklist"
+grep -q "measurable target" "$director" && grep -q "judge lens" "$director" && grep -qF 'folder it owns' "$director" && pass "a checklist row carries a target, a folder and a judge lens" || fail "a checklist row carries a target, a folder and a judge lens"
+grep -q "only when no checklist is given" "$director" && pass "the fixed areas are the fallback without a checklist" || fail "the fixed areas are the fallback without a checklist"
+grep -q "motion-judge" "$director" && grep -q "lens its row names" "$director" && pass "the judge follows the component's lens" || fail "the judge follows the component's lens"
+grep -q "component" "$worker" && pass "the worker accepts a component" || fail "the worker accepts a component"
+
 [ "$failures" -eq 0 ] || exit 1
