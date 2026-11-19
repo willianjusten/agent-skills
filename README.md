@@ -64,7 +64,7 @@ For a bug: `/diagnosing-bugs` reproduces it and finds the cause, then the fix go
 | **Plan** | `grill-with-docs` (in a repo), `grill-me` (no repo), `prototype`, `research`, `to-spec`, `to-tickets`, `wayfinder` |
 | **Build** | `implement` (one ticket), `implement-spec` (whole spec, parallel), `tdd`, `ui-polish` (look at a UI change and fix it, before you review), `matt-code-review` |
 | **Realtime 3D** (lab repo) | `three-build` (apps on WebGPURenderer), `three-tsl` (shaders as TSL), `three-verify` (run and fix the gates), `asset-pipeline` (sourced, generated and licensed assets; with the `asset-wrangler` agent), `realtime-judge` (blind before/after scoring; with the `visual-judge` and `feel-judge` agents), `motion-review` (blind motion scoring from frame strips, 1:1 crops and a burst; with the `motion-judge` agent), `target-loop` (repainted, user-approved target frames that rounds chase); agents `polish-director` (Fable, runs a round; start it with `claude --agent polish-director`, since subagents cannot spawn subagents) and `polish-worker` (Opus, one area per worker, bound by the write-scope hook) |
-| **Brief** (before building) | `game-brief` (GDD, treatment, art bible), `creative-brief` (treatment with a "Not this" list), `art-bible` (palette, references, asset levels, sign-off) |
+| **Brief** (before building) | `ideation` (interview to a one-page pitch), `game-brief` (GDD, treatment, art bible), `creative-brief` (treatment with a "Not this" list), `art-bible` (palette, references, asset levels, sign-off) |
 | **Game feel** (lab repo) | `game-feel` (juice checklist, audio event map, ZzFX sounds) |
 | **Ship and learn** | `pr`, `retro` |
 | **Fix and tidy** | `diagnosing-bugs`, `triage`, `improve-codebase-architecture`, `codebase-design`, `domain-modeling` |
@@ -146,7 +146,8 @@ agent-skills/
 │   ├── product/
 │   ├── realtime/
 │   ├── game/
-│   └── creative/
+│   ├── creative/
+│   └── orchestration/
 ├── agents/                         role-scoped subagents, agents/<category>/<name>.md, linked into ~/.claude/agents
 ├── vendor/                         one skills-lock.json per source in git; skills fetched by install.sh
 │   ├── anthropics/skills/

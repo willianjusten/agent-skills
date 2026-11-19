@@ -149,4 +149,77 @@ else
   fail "markdown lists the motion judge"
 fi
 
+# reference discrimination: 12 shuffled trials, hidden key, real-pick scoring
+mkdir "$work/refs" "$work/renders"
+for n in 01 02 03 04 05 06 07 08 09 10 11 12; do
+  printf "REF-$n" > "$work/refs/$n.png"
+  printf "RENDER-$n" > "$work/renders/$n.png"
+done
+discriminate_prepare() { run discriminate-prepare --reference-dir "$work/refs" --render-dir "$work/renders" --judge-dir "$1" --key "$2" "${@:3}"; }
+discriminate_prepare "$work/disc" "$work/key.json" --seed 3 > /dev/null
+
+trial_dirs=$(ls "$work/disc" | wc -l | tr -d ' ')
+[ "$trial_dirs" = "12" ] && pass "discrimination builds 12 trials" || fail "discrimination builds 12 trials" "$trial_dirs"
+
+bad_trials=$(find "$work/disc" -type f | sed 's|.*/||' | sort | uniq -c | tr -s ' ' | tr '\n' ';')
+[ "$bad_trials" = " 12 x.png; 12 y.png;" ] && pass "each trial holds only x.png and y.png" || fail "each trial holds only x.png and y.png" "$bad_trials"
+
+if find "$work/disc" -iname '*ref*' -o -iname '*render*' -o -iname '*key*' | grep -q .; then
+  fail "judge dir leaks no reference or render names"
+else
+  pass "judge dir leaks no reference or render names"
+fi
+
+real_sides=$(python3 -c "import json; k=json.load(open('$work/key.json')); print(' '.join(k['real'][t] for t in sorted(k['real'])))")
+case "$real_sides" in *X*Y* | *Y*X*) pass "the real image lands on both sides across trials" ;; *) fail "the real image lands on both sides across trials" "$real_sides" ;; esac
+
+first_trial_real=$(python3 -c "import json; print(json.load(open('$work/key.json'))['real']['01'])")
+lower=$(echo "$first_trial_real" | tr 'XY' 'xy')
+case "$(cat "$work/disc/trial-01/$lower.png")" in REF-*) true ;; *) false ;; esac && pass "key names the reference crop's side" || fail "key names the reference crop's side"
+
+discriminate_prepare "$work/disc2" "$work/key2.json" --seed 3 > /dev/null
+cmp -s "$work/key.json" "$work/key2.json" && pass "discrimination: the same seed repeats" || fail "discrimination: the same seed repeats"
+
+if discriminate_prepare "$work/disc" "$work/key3.json" > /dev/null 2>&1; then
+  fail "discrimination refuses a non-empty judge dir"
+else
+  pass "discrimination refuses a non-empty judge dir"
+fi
+
+mkdir "$work/short"; cp "$work/refs/01.png" "$work/short/"
+if run discriminate-prepare --reference-dir "$work/short" --render-dir "$work/renders" --judge-dir "$work/disc3" --key "$work/k3.json" > /dev/null 2>&1; then
+  fail "discrimination refuses mismatched crop sets"
+else
+  pass "discrimination refuses mismatched crop sets"
+fi
+
+# scoring: answers name the side picked as real
+all_right=$(python3 -c "import json; k=json.load(open('$work/key.json')); print(','.join(f'{t}={k[\"real\"][t]}' for t in sorted(k['real'])))")
+flip() { echo "$all_right" | python3 -c "
+import sys
+n=int(sys.argv[1]); parts=sys.stdin.read().strip().split(',')
+out=[]
+for i,p in enumerate(parts):
+    t,_,v=p.partition('=')
+    out.append(f'{t}={(\"Y\" if v==\"X\" else \"X\") if i<n else v}')
+print(','.join(out))" "$1"; }
+score_line() { run discriminate-score --key "$work/key.json" --answers "$1" "${@:2}" | python3 -c "import json,sys; r=json.load(sys.stdin); print(r['correct'], r['trials'], r['result'])"; }
+
+result=$(score_line "$all_right")
+[ "$result" = "12 12 fail" ] && pass "12 of 12 correct fails the look" || fail "12 of 12 correct fails the look" "$result"
+result=$(score_line "$(flip 5)")
+[ "$result" = "7 12 pass" ] && pass "7 of 12 correct passes the look" || fail "7 of 12 correct passes the look" "$result"
+result=$(score_line "$(flip 4)")
+[ "$result" = "8 12 fail" ] && pass "8 of 12 correct fails the look" || fail "8 of 12 correct fails the look" "$result"
+if run discriminate-score --key "$work/key.json" --answers "01=X" > /dev/null 2>&1; then
+  fail "scoring refuses a missing answer"
+else
+  pass "scoring refuses a missing answer"
+fi
+if run discriminate-score --key "$work/key.json" --answers "$all_right" --markdown | grep -q '7 or fewer'; then
+  pass "discrimination markdown states the pass rule"
+else
+  fail "discrimination markdown states the pass rule"
+fi
+
 [ "$failures" -eq 0 ] || { echo "$failures failure(s)" >&2; exit 1; }
