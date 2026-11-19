@@ -135,6 +135,22 @@ frontmatter "$SKILL" | grep -q '^disable-model-invocation: true' && pass "/condu
 [ "$(field "$SKILL" name)" = "conduct" ] && pass "the skill name equals its folder" || fail "the skill name equals its folder"
 [ -f "$REPO_ROOT/skills/orchestration/conduct/README.md" ] && pass "the skill has a README" || fail "the skill has a README"
 
+# nesting: main -> conductor -> polish-director -> worker or judge, three levels at most
+if grep -rEn 'claude +(--agent|-p)' "$REPO_ROOT/skills" "$REPO_ROOT/agents" "$REPO_ROOT/README.md" >/dev/null; then
+  fail "no headless claude launch in skills, agents or the README" "$(grep -rEn 'claude +(--agent|-p)' "$REPO_ROOT/skills" "$REPO_ROOT/agents" "$REPO_ROOT/README.md" | head -5)"
+else
+  pass "no headless claude launch in skills, agents or the README"
+fi
+for spawner in "$AGENT" "$REPO_ROOT/agents/realtime/polish-director.md"; do
+  field "$spawner" tools | grep -qw Agent && pass "$(basename "$spawner") has the Agent tool" || fail "$(basename "$spawner") has the Agent tool"
+done
+for leaf in polish-worker visual-judge feel-judge motion-judge; do
+  field "$REPO_ROOT/agents/realtime/$leaf.md" tools | grep -qw Agent && fail "$leaf has no Agent tool, so depth stops at three" || pass "$leaf has no Agent tool, so depth stops at three"
+done
+grep -q "run_in_background" "$SKILL" && grep -q "Agent tool" "$SKILL" && pass "/conduct starts the conductor as a background subagent" || fail "/conduct starts the conductor as a background subagent"
+grep -q "polish-director" "$AGENT" && grep -q "Agent tool" "$AGENT" && pass "the conductor runs the director as a nested subagent" || fail "the conductor runs the director as a nested subagent"
+grep -q "Nesting" "$AGENT" && pass "the conductor documents the nesting depth" || fail "the conductor documents the nesting depth"
+
 # install check accepts the declared uses
 if output=$(cd "$REPO_ROOT" && ./install.sh check 2>&1); then
   pass "install.sh check passes with the conductor's uses"
