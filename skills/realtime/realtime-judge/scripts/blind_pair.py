@@ -37,6 +37,15 @@ TRIAL_COUNT = 12
 MAX_CORRECT_TO_PASS = 7
 
 
+def read_json(path, what):
+    try:
+        return json.loads(Path(path).read_text())
+    except FileNotFoundError:
+        raise SystemExit(f"The {what} file {path} does not exist; pass the path prepare wrote")
+    except json.JSONDecodeError:
+        raise SystemExit(f"The {what} file {path} is not valid JSON")
+
+
 def require_fresh_judge_dir(judge_dir, leaked_thing):
     if judge_dir.exists() and any(judge_dir.iterdir()):
         raise SystemExit(f"{judge_dir} is not empty; use a fresh judge directory so no earlier {leaked_thing} reaches the judge")
@@ -125,7 +134,7 @@ def parse_answers(text, trial_names):
 
 
 def discriminate_score(arguments):
-    key = json.loads(Path(arguments.key).read_text())
+    key = read_json(arguments.key, "answer key")
     answers = parse_answers(arguments.answers, set(key["real"]))
     per_trial = {trial: answers[trial] == key["real"][trial] for trial in sorted(key["real"])}
     correct = sum(per_trial.values())
@@ -188,7 +197,7 @@ def unshuffle(mapping, text_by_lens):
 
 
 def decide(arguments):
-    mapping = json.loads(Path(arguments.mapping).read_text())
+    mapping = read_json(arguments.mapping, "mapping")
     if (arguments.visual is None) != (arguments.feel is None):
         raise SystemExit("Give both --visual and --feel, or neither")
     lens_scores = {lens: getattr(arguments, lens) for lens in LENSES if getattr(arguments, lens) is not None}

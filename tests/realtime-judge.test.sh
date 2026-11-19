@@ -222,4 +222,7 @@ else
   fail "discrimination markdown states the pass rule"
 fi
 
+out=$(run decide --mapping "$work/missing.json" --visual X=5,Y=5 --feel X=5,Y=5 2>&1); status=$?
+{ [ "$status" -ne 0 ] && ! echo "$out" | grep -q Traceback && echo "$out" | grep -q "missing.json"; } && pass "a missing mapping file is named, not a traceback" || fail "a missing mapping file is named, not a traceback" "$out"
+
 [ "$failures" -eq 0 ] || { echo "$failures failure(s)" >&2; exit 1; }
