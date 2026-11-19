@@ -584,6 +584,67 @@ check_own_agents() {
   return "$failed"
 }
 
+# Reads a field nested under metadata: in a frontmatter block.
+frontmatter_metadata_field() {
+  awk -v field="$2" '
+    NR == 1 && $0 != "---" { exit }
+    NR > 1 && $0 == "---" { exit }
+    /^metadata:/ { in_metadata = 1; next }
+    in_metadata && /^[^ \t]/ { in_metadata = 0 }
+    in_metadata && $0 ~ "^[ \t]+" field ":" {
+      sub("^[ \t]+" field ":[ \t]*", "")
+      gsub(/,/, " ")
+      print
+      exit
+    }
+  ' "$1"
+}
+
+# Orchestrators (agents, and skills under skills/orchestration/) may run siblings,
+# listed in metadata.uses. Every one must exist and be visible at the
+# orchestrator's scope: personal sees personal and both, both sees only both.
+check_orchestrators() {
+  local failed=0 resolved_skills file kind scope uses dependency found dependency_scope
+  resolved_skills="$(resolve_skills)"
+  for file in $(own_skill_dirs | sed 's|$|/SKILL.md|') $(own_agent_files); do
+    uses="$(frontmatter_metadata_field "$file" uses)"
+    [ -n "$uses" ] || continue
+    case "$file" in
+      */SKILL.md)
+        kind=skill
+        if [ "$(basename "$(dirname "$(dirname "$file")")")" != orchestration ]; then
+          echo "ERROR uses: ${file#"$ROOT"/}: only orchestrators (agents, skills/orchestration/) may declare metadata.uses"
+          failed=1
+          continue
+        fi
+        ;;
+      *) kind=agent ;;
+    esac
+    scope="$(frontmatter_scope "$file")"
+    for dependency in $uses; do
+      found="$(echo "$resolved_skills" | awk -v name="$dependency" '$1 == name { print $2; exit }')"
+      [ -n "$found" ] || found="$(own_agent_files | while read -r agent_file; do
+        [ "$(basename "$agent_file" .md)" = "$dependency" ] && frontmatter_scope "$agent_file" && break
+      done)"
+      dependency_scope="$found"
+      if [ -z "$dependency_scope" ]; then
+        echo "ERROR uses: ${file#"$ROOT"/} ($kind) names $dependency: not found as a skill or agent"
+        failed=1
+      elif [ "$dependency_scope" = off ]; then
+        echo "ERROR uses: ${file#"$ROOT"/} names $dependency: scoped off, installed nowhere"
+        failed=1
+      elif [ "$scope" = both ] && [ "$dependency_scope" != both ]; then
+        echo "ERROR uses: ${file#"$ROOT"/} names $dependency: scoped $dependency_scope, not visible to a both orchestrator"
+        failed=1
+      elif [ "$scope" = personal ] && [ "$dependency_scope" = spoke ]; then
+        echo "ERROR uses: ${file#"$ROOT"/} names $dependency: scoped spoke, not visible to a personal orchestrator"
+        failed=1
+      fi
+    done
+  done
+  return "$failed"
+}
+
 # Points git at .githooks/ so the pre-commit check runs here and in every worktree.
 install_git_hook() {
   [ "$(git -C "$ROOT" rev-parse --show-toplevel 2>/dev/null)" = "$(cd "$ROOT" && pwd -P)" ] || return 0
@@ -598,6 +659,7 @@ main() {
       local status=0
       check_own_skills || status=1
       check_own_agents || status=1
+      check_orchestrators || status=1
       exit "$status"
       ;;
   esac
