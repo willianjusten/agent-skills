@@ -3,15 +3,23 @@
 
   run_state.py next   <RUN.md>
   run_state.py budget <RUN.md> [--now <iso8601>]
+  run_state.py lock   acquire|release|status <RUN.md> [--owner <name>] [--now <iso8601>]
 
 Entries are lines shaped `- <UTC timestamp> | <kind> | <text>`; anything else
 (headings, notes) is ignored. Defaults: 6 polish rounds, 4 hours of active run
 time. Active time is summed across sittings: a sitting runs from a `start` or
 `resume` entry to the next `stop` or `done`, so waiting for an answer is free.
 A sitting that ends without a stop (a crash) counts to its last entry.
+
+The lock is the file `RUN.md.lock` next to RUN.md, holding `owner` and `since`
+lines. One conductor holds it per run: acquire is refused (exit 4) while
+another owner holds it, the holder acquiring again refreshes `since`, release
+removes it, and a lock not refreshed for 2 hours is stale and taken over. The
+conductor re-acquires at every phase end, so a live run never goes stale.
 """
 
 import argparse
+import os
 import re
 import sys
 from datetime import datetime, timezone
@@ -20,6 +28,10 @@ DEFAULT_ROUNDS = 6
 DEFAULT_HOURS = 4.0
 # Distinct from 1 (a usage error) so the conductor can tell a spent budget from a failed call.
 BUDGET_SPENT_EXIT = 3
+# Exit code for a lock held by another owner.
+LOCK_HELD_EXIT = 4
+# A conductor refreshes the lock at every phase end; two hours without one means it died.
+LOCK_STALE_HOURS = 2.0
 ENTRY = re.compile(r"^- (\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ) \| ([a-z-]+) \| ?(.*)$")
 
 
@@ -95,24 +107,100 @@ def check_budget(entries, now):
     return "ok"
 
 
+def lock_path(run_file):
+    return run_file + ".lock"
+
+
+def read_lock(path):
+    try:
+        with open(path, encoding="utf-8") as handle:
+            fields = dict(line.rstrip("\n").split("=", 1) for line in handle if "=" in line)
+        return fields["owner"], parse_time(fields["since"])
+    except FileNotFoundError:
+        return None
+    except (KeyError, ValueError):
+        # An unreadable lock cannot name a holder; treat it as long expired.
+        return "unknown", datetime.fromtimestamp(0, timezone.utc)
+
+
+def write_lock(path, owner, now, exclusive):
+    text = "owner=%s\nsince=%s\n" % (owner, now.strftime("%Y-%m-%dT%H:%M:%SZ"))
+    flags = os.O_WRONLY | os.O_CREAT | (os.O_EXCL if exclusive else os.O_TRUNC)
+    descriptor = os.open(path, flags, 0o644)
+    with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+        handle.write(text)
+
+
+def run_lock(action, run_file, owner, now):
+    path = lock_path(run_file)
+    held = read_lock(path)
+    if action == "status":
+        if held is None:
+            print("free")
+            return 0
+        stale = (now - held[1]).total_seconds() / 3600 >= LOCK_STALE_HOURS
+        print("held by %s since %s%s" % (held[0], held[1].strftime("%Y-%m-%dT%H:%M:%SZ"), " (stale)" if stale else ""))
+        return 0 if stale else LOCK_HELD_EXIT
+    if not owner:
+        raise SystemExit("--owner is required for lock " + action)
+    if action == "release":
+        if held is None:
+            print("free")
+            return 0
+        if held[0] != owner:
+            print("not released: held by %s" % held[0])
+            return LOCK_HELD_EXIT
+        os.remove(path)
+        print("released")
+        return 0
+    if held is None:
+        try:
+            write_lock(path, owner, now, exclusive=True)
+        except FileExistsError:
+            print("refused: another conductor just took the lock")
+            return LOCK_HELD_EXIT
+        print("acquired")
+        return 0
+    held_owner, held_since = held
+    if held_owner == owner:
+        write_lock(path, owner, now, exclusive=False)
+        print("refreshed")
+        return 0
+    if (now - held_since).total_seconds() / 3600 >= LOCK_STALE_HOURS:
+        write_lock(path, owner, now, exclusive=False)
+        print("acquired: took over a stale lock from %s (since %s)" % (held_owner, held_since.strftime("%Y-%m-%dT%H:%M:%SZ")))
+        return 0
+    print("refused: held by %s since %s" % (held_owner, held_since.strftime("%Y-%m-%dT%H:%M:%SZ")))
+    return LOCK_HELD_EXIT
+
+
+def resolve_now(text):
+    try:
+        return parse_time(text) if text else datetime.now(timezone.utc)
+    except ValueError:
+        raise SystemExit(f"--now '{text}' is not a UTC time; use 2026-01-31T12:00:00Z")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("command", choices=["next", "budget"])
-    parser.add_argument("run_file")
+    parser.add_argument("command", choices=["next", "budget", "lock"])
+    parser.add_argument("rest", nargs="+", help="RUN.md, or for lock: acquire|release|status then RUN.md")
+    parser.add_argument("--owner", help="lock owner name, for example the conductor's run id")
     parser.add_argument("--now", help="UTC time as 2026-01-31T12:00:00Z; defaults to the clock")
     args = parser.parse_args()
+    if args.command == "lock":
+        if len(args.rest) != 2 or args.rest[0] not in ("acquire", "release", "status"):
+            raise SystemExit("usage: run_state.py lock acquire|release|status <RUN.md> [--owner <name>]")
+        return run_lock(args.rest[0], args.rest[1], args.owner, resolve_now(args.now))
+    run_file = args.rest[0]
     try:
-        entries = read_entries(args.run_file)
+        entries = read_entries(run_file)
     except FileNotFoundError:
         entries = []
     if args.command == "next":
         print(next_action(entries))
         return 0
-    try:
-        now = parse_time(args.now) if args.now else datetime.now(timezone.utc)
-    except ValueError:
-        raise SystemExit(f"--now '{args.now}' is not a UTC time; use 2026-01-31T12:00:00Z")
-    verdict = check_budget(entries, now)
+    verdict = check_budget(entries, resolve_now(args.now))
     print(verdict)
     return 0 if verdict == "ok" else BUDGET_SPENT_EXIT
 

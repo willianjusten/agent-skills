@@ -135,6 +135,33 @@ frontmatter "$SKILL" | grep -q '^disable-model-invocation: true' && pass "/condu
 [ "$(field "$SKILL" name)" = "conduct" ] && pass "the skill name equals its folder" || fail "the skill name equals its folder"
 [ -f "$REPO_ROOT/skills/orchestration/conduct/README.md" ] && pass "the skill has a README" || fail "the skill has a README"
 
+# run lock: one conductor per RUN.md
+lock="$work/RUN.md.lock"
+rm -f "$lock"
+lock_cmd() { python3 -I "$SCRIPT" lock "$@"; }
+lock_cmd status "$run" 2>&1 | grep -q '^free' && pass "lock: no lock file reads as free" || fail "lock: no lock file reads as free"
+output=$(lock_cmd acquire "$run" --owner alpha --now 2026-11-19T01:00:00Z 2>&1)
+{ [ $? -eq 0 ] && [ -f "$lock" ]; } && pass "lock: acquire creates the lock" || fail "lock: acquire creates the lock" "$output"
+grep -q 'alpha' "$lock" && grep -q '2026-11-19T01:00:00Z' "$lock" && pass "lock: file holds owner and start time" || fail "lock: file holds owner and start time" "$(cat "$lock")"
+output=$(lock_cmd acquire "$run" --owner beta --now 2026-11-19T01:10:00Z 2>&1)
+status=$?
+{ [ "$status" -eq 4 ] && echo "$output" | grep -q 'alpha'; } && pass "lock: a second owner is refused with exit 4 naming the holder" || fail "lock: a second owner is refused with exit 4 naming the holder" "status $status: $output"
+grep -q 'alpha' "$lock" && pass "lock: a refused acquire leaves the holder in place" || fail "lock: a refused acquire leaves the holder in place"
+lock_cmd acquire "$run" --owner alpha --now 2026-11-19T01:20:00Z >/dev/null 2>&1 && grep -q '2026-11-19T01:20:00Z' "$lock" && pass "lock: the holder re-acquiring refreshes the lock" || fail "lock: the holder re-acquiring refreshes the lock"
+output=$(lock_cmd release "$run" --owner beta 2>&1)
+{ [ $? -eq 4 ] && [ -f "$lock" ]; } && pass "lock: another owner cannot release" || fail "lock: another owner cannot release" "$output"
+lock_cmd release "$run" --owner alpha >/dev/null 2>&1 && [ ! -f "$lock" ] && pass "lock: the holder releases" || fail "lock: the holder releases"
+lock_cmd release "$run" --owner alpha >/dev/null 2>&1 && pass "lock: releasing a free lock is fine" || fail "lock: releasing a free lock is fine"
+lock_cmd acquire "$run" --owner alpha --now 2026-11-19T01:00:00Z >/dev/null 2>&1
+output=$(lock_cmd acquire "$run" --owner beta --now 2026-11-19T02:59:00Z 2>&1)
+[ $? -eq 4 ] && pass "lock: just under the stale timeout is still held" || fail "lock: just under the stale timeout is still held" "$output"
+output=$(lock_cmd acquire "$run" --owner beta --now 2026-11-19T03:01:00Z 2>&1)
+{ [ $? -eq 0 ] && grep -q 'beta' "$lock" && echo "$output" | grep -qi 'stale'; } && pass "lock: past the stale timeout the lock is taken over" || fail "lock: past the stale timeout the lock is taken over" "$output"
+lock_cmd status "$run" --now 2026-11-19T03:02:00Z 2>&1 | grep -q 'held by beta' && pass "lock: status names the holder" || fail "lock: status names the holder"
+rm -f "$lock"
+grep -q "run_state.py lock acquire" "$SKILL" && pass "/conduct checks the lock" || fail "/conduct checks the lock"
+grep -q "run_state.py\` lock acquire\|run_state.py lock acquire" "$AGENT" && grep -q "lock release" "$AGENT" && pass "the conductor takes and releases the lock" || fail "the conductor takes and releases the lock"
+
 # nesting: main -> conductor -> polish-director -> worker or judge, three levels at most
 if grep -rEn 'claude +(--agent|-p)' "$REPO_ROOT/skills" "$REPO_ROOT/agents" "$REPO_ROOT/README.md" >/dev/null; then
   fail "no headless claude launch in skills, agents or the README" "$(grep -rEn 'claude +(--agent|-p)' "$REPO_ROOT/skills" "$REPO_ROOT/agents" "$REPO_ROOT/README.md" | head -5)"
