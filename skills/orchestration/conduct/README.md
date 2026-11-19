@@ -38,6 +38,7 @@ flowchart LR
 ## Requirements
 
 - The lab repo with `pnpm verify` and `pnpm asset target`.
+- Subagents nest three levels (conductor, director, worker or judge); no extra launch or permission mode is needed.
 - Stops are announced with a push notification; without the tool, the line is in `RUN.md`.
 
 ## FAQ
