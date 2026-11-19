@@ -12,7 +12,7 @@ Still-frame judges cannot see motion or fine texture: an even layer of dust, spe
 ## Steps
 
 1. **Pick the window and the crop.** Choose a time window that shows the change moving (several seconds; a full cycle for a looping piece) and a crop centre over the detail the change is about (the band where the dust lives, not empty backdrop). In the lab, set them in the `motion` object of the app's `captures.json` (fields in the lab README, "Motion capture"). Done when before and after will be captured with the same window and crop.
-2. **Capture before and after.** Check out the before commit and run the app's motion capture (in the lab, `pnpm verify <app> --motion`), copy its `judge/` folder out (it is overwritten next run), then do the same at the after commit. Each `judge/` holds `strip.png`, `crops.png` and `burst.png`; the run also writes `motion.mp4` for people. Done when you have a before and an after folder with the same three file names.
+2. **Capture before and after.** With the after side checked out (committed or not), capture the commit before the change and the working tree in one run; in the lab, `pnpm verify <app> --motion --against <before commit>` writes `.verify/<app>/motion-before/` and `motion-after/`. Without such a command, capture each commit in turn and copy its sheets out before the next run. Each `judge/` holds `strip.png`, `crops.png` and `burst.png`; each side also has a `motion.mp4` for people. If the capture says the sheets are identical, move the window or the crop to where the change shows before judging. Done when you have a before and an after folder with the same three file names that differ.
 3. **Shuffle.** Use a fresh judge directory and keep the mapping file outside it:
 
    ```bash
