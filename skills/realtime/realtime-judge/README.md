@@ -22,6 +22,7 @@ flowchart LR
 Judge this polish round blind
 Did the new lighting actually improve the arena? Score before and after
 Put the judge scores in the review packet
+Can a judge tell my render from the reference? Run the 12-trial test
 ```
 
 ## Output
@@ -39,4 +40,5 @@ Put the judge scores in the review packet
 
 - Does a reject block a merge? No, judges advise; `verify` gates are the hard checks.
 - Why the lower score? One judge spotting a flaw should be enough to doubt the change.
+- Can it tell a render from its reference? Yes: `discriminate-prepare` builds 12 shuffled trials and `discriminate-score` counts the real picks; 7 or fewer of 12 passes.
 - Can it judge motion? Yes: `decide --motion` takes a motion judge's X and Y scores, and `prepare` shuffles two folders of motion sheets.

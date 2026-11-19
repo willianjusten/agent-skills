@@ -1,6 +1,6 @@
 ---
 name: realtime-judge
-description: Judges a polish-round change blind, with before and after captures shuffled as X and Y, two fresh judges on an anchored 10-point rubric, the lower score counting and the change kept only on a win or tie. Use when a polish round needs to know if a visual or feel change is an improvement, when asked to score or compare before and after captures of a game or piece, or when writing judge scores into a review packet.
+description: Judges a polish-round change blind, with before and after captures shuffled as X and Y, two fresh judges on an anchored 10-point rubric, the lower score counting and the change kept only on a win or tie. Use when a polish round needs to know if a visual or feel change is an improvement, when asked to score or compare before and after captures of a game or piece, when writing judge scores into a review packet, or when asked whether a judge can tell a render from its reference.
 metadata:
   scope: personal
 ---
@@ -38,6 +38,10 @@ Blind A/B judging for polish rounds only, not for every change. Judges advise; t
 5. **Record it in the packet.** Paste the markdown block from `decide`, with the judges' notes, their gap scores (after-image gap, lower of the two counts) and their after-image gap lists verbatim, into the app's review packet notes (e.g. in the lab, the round's entry beside `.verify/<app>/review-packet.html`). The mapping and seed live only there. Done when the packet shows both scores, the counted score and the decision.
 6. **Act on the decision.** Keep: carry on to step 7. Reject: revert the change or fix the lowest-scoring criterion and judge again with a new shuffle. Report a rejected change to the user; do not argue with a judge by re-running until it passes. Done when the change is kept, or reverted or reworked and rejudged.
 7. **Write the next brief.** Start from the after image's gap lists, so a win over the before image never hides what the target still has. Then check every item against the user's taste: the app's `taste.md`, the repo root `taste.md`, the app's `## Accepted differences`, the user's settled notes in the app's `DECISIONS.md` and any notes the user gave for this round. The user's taste outranks the judges: drop each item that contradicts it, and list every dropped item with the line that ruled it out. User notes are an optional override; the brief goes ahead from the gap lists and taste files whenever there are none. Done when every gap list item is either in the brief or listed as dropped with its reason.
+
+## Reference discrimination mode
+
+When the question is whether a render passes for its reference, not whether a change improved it, follow [references/discrimination.md](references/discrimination.md): 12 shuffled reference and render crop pairs, one fresh judge picking the real one per trial, and `discriminate-score` for the count. The look passes at 7 or fewer correct of 12. Thresholds tighten only with Will's approval. Record the result and per-trial answers in the review packet.
 
 ## Rules
 
