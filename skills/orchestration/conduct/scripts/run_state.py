@@ -6,10 +6,12 @@
   run_state.py lock   acquire|release|status <RUN.md> [--owner <name>] [--now <iso8601>]
 
 Entries are lines shaped `- <UTC timestamp> | <kind> | <text>`; anything else
-(headings, notes) is ignored. Defaults: 6 polish rounds, 4 hours of active run
+(headings, notes) is ignored. Defaults: 6 polish rounds, 6 hours of active run
 time. Active time is summed across sittings: a sitting runs from a `start` or
 `resume` entry to the next `stop` or `done`, so waiting for an answer is free.
-A sitting that ends without a stop (a crash) counts to its last entry.
+A sitting that ends without a stop (a crash) counts to its last entry written
+by the run; the user's `answer` and `budget` lines never extend it, and a
+`budget` line, like a `note`, never changes where the run resumes.
 
 The lock is the file `RUN.md.lock` next to RUN.md, holding `owner` and `since`
 lines. One conductor holds it per run: acquire is refused (exit 4) while
@@ -25,7 +27,10 @@ import sys
 from datetime import datetime, timezone
 
 DEFAULT_ROUNDS = 6
-DEFAULT_HOURS = 4.0
+DEFAULT_HOURS = 6.0
+# Written by the user or as asides: they never move the resume point or extend a sitting.
+NOT_RUN_STATE = ("note", "budget")
+NOT_RUN_TIME = ("note", "budget", "answer")
 # Distinct from 1 (a usage error) so the conductor can tell a spent budget from a failed call.
 BUDGET_SPENT_EXIT = 3
 # Exit code for a lock held by another owner.
@@ -50,7 +55,7 @@ def read_entries(path):
 
 
 def next_action(entries):
-    entries = [entry for entry in entries if entry[1] != "note"]
+    entries = [entry for entry in entries if entry[1] not in NOT_RUN_STATE]
     if not entries:
         return "start"
     _, last_kind, last_text = entries[-1]
@@ -88,7 +93,7 @@ def active_hours(entries, now):
         elif kind in ("stop", "done") and sitting_start is not None:
             total_seconds += (time - sitting_start).total_seconds()
             sitting_start = None
-        if kind != "note":
+        if kind not in NOT_RUN_TIME:
             last_time = time
     if sitting_start is not None:
         total_seconds += (now - sitting_start).total_seconds()

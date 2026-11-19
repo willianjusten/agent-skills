@@ -51,9 +51,13 @@ expect_next "a stop with no answer keeps waiting" "waiting: target-frames"
 
 echo "- 2026-11-19T01:30:05Z | note | notification fallback: target-frames" >>"$run"
 expect_next "a note after a stop does not end the wait" "waiting: target-frames"
+echo "- 2026-11-19T03:02:00Z | budget | hours=8" >>"$run"
+expect_next "a budget line after a stop does not end the wait" "waiting: target-frames"
 
 echo "- 2026-11-19T07:30:00Z | answer | approved target hero" >>"$run"
 expect_next "an appended answer resumes the stopped phase" "resume: target-frames | approved target hero"
+echo "- 2026-11-19T07:30:30Z | budget | hours=8" >>"$run"
+expect_next "a budget line after the answer still resumes with the answer" "resume: target-frames | approved target hero"
 
 echo "- 2026-11-19T07:31:00Z | resume | from target-frames" >>"$run"
 expect_next "after resume the run continues" "continue: from target-frames"
@@ -101,15 +105,30 @@ cat >"$run" <<'LOG'
 LOG
 out=$(budget 2026-11-19T11:30:00Z); status=$?
 [ "$status" -eq 0 ] && pass "the wait for an answer does not use up hours" || fail "the wait for an answer does not use up hours" "status $status: $out"
-out=$(budget 2026-11-19T12:30:00Z); status=$?
-[ "$status" -eq 3 ] && [ "$out" = "stop: hours spent (4.5 of 4)" ] && pass "hours add up across sittings" || fail "hours add up across sittings" "status $status: $out"
-echo "- 2026-11-19T12:00:00Z | budget | hours=6" >>"$run"
-out=$(budget 2026-11-19T12:30:00Z); status=$?
+out=$(budget 2026-11-19T14:30:00Z); status=$?
+[ "$status" -eq 3 ] && [ "$out" = "stop: hours spent (6.5 of 6)" ] && pass "hours add up across sittings" || fail "hours add up across sittings" "status $status: $out"
+echo "- 2026-11-19T14:00:00Z | budget | hours=8" >>"$run"
+out=$(budget 2026-11-19T14:30:00Z); status=$?
 [ "$status" -eq 0 ] && pass "a budget entry raises the hours limit" || fail "a budget entry raises the hours limit" "status $status: $out"
+
+# lines the user writes while the run waits do not count as run time
+cat >"$run" <<'LOG'
+- 2026-11-19T01:00:00Z | start | pitch=PITCH.md
+- 2026-11-19T02:00:00Z | step | first playable
+- 2026-11-19T09:00:00Z | answer | use packs
+- 2026-11-19T09:05:00Z | budget | hours=6
+- 2026-11-19T10:00:00Z | resume | from first playable
+LOG
+out=$(python3 -I "$SCRIPT" budget "$run" --now 2026-11-19T14:30:00Z); status=$?
+[ "$status" -eq 0 ] && pass "answer and budget lines after a crashed sitting do not extend it" || fail "answer and budget lines after a crashed sitting do not extend it" "status $status: $out"
+out=$(python3 -I "$SCRIPT" budget "$run" --now 2026-11-19T15:30:00Z); status=$?
+[ "$status" -eq 3 ] && [ "$out" = "stop: hours spent (6.5 of 6)" ] && pass "the crashed sitting counts to its last run entry" || fail "the crashed sitting counts to its last run entry" "status $status: $out"
 
 printf '%s\n' '- 2026-11-19T01:00:00Z | start | pitch=PITCH.md' >"$run"
 out=$(budget 2026-11-19T02:00:00Z); status=$?
-[ "$status" -eq 0 ] && pass "defaults are 6 rounds and 4 hours" || fail "defaults are 6 rounds and 4 hours" "$out"
+[ "$status" -eq 0 ] && pass "defaults are 6 rounds and 6 hours" || fail "defaults are 6 rounds and 6 hours" "$out"
+out=$(budget 2026-11-19T07:30:00Z); status=$?
+[ "$status" -eq 3 ] && [ "$out" = "stop: hours spent (6.5 of 6)" ] && pass "the default hour budget is 6" || fail "the default hour budget is 6" "status $status: $out"
 for round in 1 2 3 4 5 6; do echo "- 2026-11-19T01:3${round}:00Z | round | $round | x" >>"$run"; done
 out=$(budget 2026-11-19T02:00:00Z); status=$?
 [ "$status" -eq 3 ] && echo "$out" | grep -q "6 of 6" && pass "the default round budget is 6" || fail "the default round budget is 6" "$out"
