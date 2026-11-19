@@ -29,5 +29,5 @@ The playtest says an event has no sound wired, fix it
 
 ## FAQ
 
-- Where do sound effects come from? ZzFX, generated from parameter arrays; music and recordings must be CC0 or credited.
+- Where do sound effects come from? ZzFX, generated from parameter arrays; music and recordings may come from any source, with the license recorded.
 - Can an event have no sound? Only as a recorded decision in the map.

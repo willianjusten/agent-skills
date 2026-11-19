@@ -31,4 +31,4 @@ Work down the list per event. Pick the lightest option that reads; stop when the
 - Vary pitch slightly on frequent events so repeats do not grate.
 - Duck or cap overlapping copies of the same sound.
 - ZzFX generates effects from a parameter array; start from its generator presets and adjust by ear. Keep parameters in a plain-data module.
-- Music is CC0 or credited, and every file is in the manifest with its license.
+- Every music and recorded sound file is in the manifest with its license.
