@@ -55,7 +55,7 @@ The conductor never asks a question mid-run. Every call it makes instead is logg
 - polish plateau (judges flat two rounds, or every component at target)
 - a judge split on a taste call
 - a gate still failing after two fix attempts
-- a spent budget: 6 polish rounds or 4 hours of active run time, where waiting for an answer is free; override with `rounds=N hours=H` on `/conduct`
+- a spent budget: 6 polish rounds or 6 hours of active run time, where waiting for an answer is free; override with `rounds=N hours=H` on `/conduct`
 - any stop the brief adds
 
 To answer a stop, append `- <UTC timestamp> | answer | <text>` to the app's `RUN.md` and run `/conduct <app>` again.
