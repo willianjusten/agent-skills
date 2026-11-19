@@ -49,6 +49,9 @@ expect_next "an unfinished step resumes after the last step" "continue: art bibl
 echo "- 2026-11-19T01:30:00Z | stop | target-frames | 3 target frames ready, review packet .verify/x/review-packet.html" >>"$run"
 expect_next "a stop with no answer keeps waiting" "waiting: target-frames"
 
+echo "- 2026-11-19T01:30:05Z | note | notification fallback: target-frames" >>"$run"
+expect_next "a note after a stop does not end the wait" "waiting: target-frames"
+
 echo "- 2026-11-19T07:30:00Z | answer | approved target hero" >>"$run"
 expect_next "an appended answer resumes the stopped phase" "resume: target-frames | approved target hero"
 

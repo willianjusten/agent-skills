@@ -34,6 +34,7 @@ def read_entries(path):
 
 
 def next_action(entries):
+    entries = [entry for entry in entries if entry[1] != "note"]
     if not entries:
         return "start"
     _, last_kind, last_text = entries[-1]
