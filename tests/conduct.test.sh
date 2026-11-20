@@ -411,3 +411,41 @@ for skill_file in realtime/three-verify creative/motion-review realtime/realtime
   [ "$(wc -l <"$skill_path")" -lt 70 ] && pass "$skill_file stays a table of contents" || fail "$skill_file stays a table of contents"
 done
 grep -q -- '--trailer' "$REPO_ROOT/skills/realtime/three-verify/SKILL.md" && grep -q -- '--round' "$REPO_ROOT/skills/realtime/three-verify/SKILL.md" && grep -q 'sound' "$REPO_ROOT/skills/realtime/three-verify/SKILL.md" && grep -q 'declareColorControl' "$REPO_ROOT/skills/realtime/three-build/SKILL.md" && grep -q -- '--trailer' "$REPO_ROOT/skills/creative/motion-review/SKILL.md" && grep -q -- '--round' "$REPO_ROOT/skills/realtime/realtime-judge/SKILL.md" && pass "the four skills name --trailer, --round, the sound report and the colour control" || fail "the four skills name --trailer, --round, the sound report and the colour control"
+
+# checkpoints: check tiers, the checks share and the checkpoint rule
+checkpoint_state() { python3 -I "$SCRIPT" checkpoint "$run" --now "${1:-2026-11-19T03:00:00Z}"; }
+cat >"$run" <<'LOG'
+- 2026-11-19T01:00:00Z | start | pitch=PITCH.md rounds=6 hours=6
+LOG
+[ "$(checkpoint_state)" = "checkpoint-due" ] && pass "a run with no checkpoint yet is due" || fail "a run with no checkpoint yet is due"
+cat >>"$run" <<'LOG'
+- 2026-11-19T01:10:00Z | checkpoint | baseline | verify --layer-cost --record-seconds 45
+- 2026-11-19T01:20:00Z | round-start | 1 | branch=a base=b
+- 2026-11-19T01:50:00Z | round | 1 | first round
+- 2026-11-19T01:51:00Z | checks | r1 | 20
+LOG
+[ "$(checkpoint_state)" = "light" ] && pass "the round after a checkpoint is light" || fail "the round after a checkpoint is light"
+cat >>"$run" <<'LOG'
+- 2026-11-19T02:00:00Z | round-start | 2 | branch=a base=b
+- 2026-11-19T02:30:00Z | round | 2 | second round
+- 2026-11-19T02:31:00Z | checks | r2 | 5
+LOG
+[ "$(checkpoint_state)" = "checkpoint-due" ] && pass "the third round after a checkpoint is due" || fail "the third round after a checkpoint is due"
+echo "- 2026-11-19T02:40:00Z | checkpoint | r3 | full set" >>"$run"
+[ "$(checkpoint_state)" = "light" ] && pass "a checkpoint entry resets the count" || fail "a checkpoint entry resets the count"
+[ "$(checkpoint_state 2026-11-19T06:30:00Z)" = "checkpoint-due" ] && pass "the delivery reserve makes the next round due" || fail "the delivery reserve makes the next round due"
+
+out=$(python3 -I "$SCRIPT" checks "$run" --now 2026-11-19T03:00:00Z)
+[ "$out" = "checks=25m run=120m share=21%" ] && pass "checks prints the check minutes, run minutes and share" || fail "checks prints the check minutes, run minutes and share" "$out"
+echo "- 2026-11-19T02:51:00Z | checks | r1 | 20" >>"$run"
+out=$(python3 -I "$SCRIPT" checks "$run" --now 2026-11-19T03:00:00Z)
+case "$out" in *"lighter: r1 spent 20m of 30m in checks"*) pass "checks over half a round asks for a lighter set";; *) fail "checks over half a round asks for a lighter set" "$out";; esac
+rm -f "$run"
+printf -- '- 2026-11-19T01:00:00Z | start | pitch=P rounds=2 hours=6\n- 2026-11-19T01:05:00Z | checkpoint | baseline | x\n- 2026-11-19T01:30:00Z | round | 1 | x\n' >"$run"
+[ "$(checkpoint_state)" = "checkpoint-due" ] && pass "the last round the limit allows is due" || fail "the last round the limit allows is due"
+printf -- '- 2026-11-19T01:00:00Z | start | pitch=P\n- 2026-11-19T01:05:00Z | step | tidy\n- 2026-11-19T01:40:00Z | checks | r1 | 3\n- 2026-11-19T01:41:00Z | checkpoint | r1 | x\n' >"$run"
+out=$(next_state)
+case "$out" in *"last=step"*) pass "checks and checkpoint lines never move the resume point";; *) fail "checks and checkpoint lines never move the resume point" "$out";; esac
+CHECKPOINTS="$REFS/checkpoints.md"
+grep -q 'checkpoints.md' "$AGENT" && grep -q 'tier: light' "$DIRECTOR" && grep -q 'tier: checkpoint' "$DIRECTOR" && grep -q 'layer-cost' "$CHECKPOINTS" && grep -q 'every third' "$CHECKPOINTS" && grep -q 'never put a time cap\|Never put a time cap' "$CHECKPOINTS" && pass "the conductor, the checkpoints reference and the director name the check tiers" || fail "the conductor, the checkpoints reference and the director name the check tiers"
+! grep -q 'verify <app> --layer-cost` (layer' "$DIRECTOR" && pass "the director no longer runs --layer-cost on every round" || fail "the director no longer runs --layer-cost on every round"
