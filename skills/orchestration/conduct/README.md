@@ -28,7 +28,7 @@ flowchart LR
 ```text
 /conduct apps/games/tide-runner/PITCH.md
 /conduct apps/games/tide-runner
-/conduct apps/pieces/fog/PITCH.md rounds=3 hours=2, also stop before delivery
+/conduct apps/experiments/fog/PITCH.md rounds=3 hours=2, also stop before delivery
 ```
 
 ## Output
