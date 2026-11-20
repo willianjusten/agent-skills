@@ -59,7 +59,7 @@ status=0; out=$(state limits "$run" 2>&1) || status=$?
 
 # limits and accepts
 echo "- 2026-11-19T01:00:00Z | start | pitch=PITCH.md process=minimal" >"$run"
-expect "limits prints autoAccepts with its default" "process=minimal rounds=2 hours=6 autoAccepts=3" state limits "$run"
+expect "limits prints autoAccepts with its default" "mode=review process=minimal rounds=2 hours=6 autoAccepts=3" state limits "$run"
 cat >"$run" <<'LOG'
 - 2026-11-19T01:00:00Z | start | pitch=PITCH.md autoAccepts=2
 - 2026-11-19T02:00:00Z | accept | round 1 | a.png | moved
@@ -73,6 +73,54 @@ echo "- 2026-11-19T06:00:00Z | accept | round 3 | c.png | moved" >>"$run"
 expect "accepts at the limit" "accepts-since-answer=2 of 2" state accepts "$run"
 echo "- 2026-11-19T06:30:00Z | budget | autoAccepts=5" >>"$run"
 expect "a budget line raises the accept limit" "accepts-since-answer=2 of 5" state accepts "$run"
+
+# run modes: overnight is uncapped and look=auto, review stops after every round
+echo "- 2026-11-19T01:00:00Z | start | pitch=PITCH.md" >"$run"
+expect "no mode means review" "mode=review process=standard rounds=6 hours=6 autoAccepts=3" state limits "$run"
+echo "- 2026-11-19T01:00:00Z | start | pitch=PITCH.md mode=overnight hours=8" >"$run"
+expect "overnight limits are unlimited, hours set the budget" "mode=overnight process=standard rounds=unlimited hours=8 autoAccepts=unlimited" state limits "$run"
+expect "overnight accepts print unlimited" "accepts-since-answer=0 of unlimited" state accepts "$run"
+expect "overnight implies look=auto" "look=auto target=no
+state=none" state look "$run"
+echo "- 2026-11-19T01:30:00Z | accept | round 1 | a.png | moved" >>"$run"
+echo "- 2026-11-19T01:40:00Z | accept | round 1 | b.png | moved" >>"$run"
+echo "- 2026-11-19T01:50:00Z | accept | round 2 | c.png | moved" >>"$run"
+expect "overnight accepts still count" "accepts-since-answer=3 of unlimited" state accepts "$run"
+echo "- 2026-11-19T01:00:00Z | start | pitch=PITCH.md mode=overnight autoAccepts=2 rounds=4 look=ask" >"$run"
+expect "explicit autoAccepts and rounds beat overnight" "mode=overnight process=standard rounds=4 hours=6 autoAccepts=2" state limits "$run"
+expect "explicit look=ask beats overnight" "look=ask target=no
+state=none" state look "$run"
+echo "- 2026-11-19T02:00:00Z | budget | mode=review" >>"$run"
+expect "a budget line can switch the mode back" "mode=review process=standard rounds=4 hours=6 autoAccepts=2" state limits "$run"
+echo "- 2026-11-19T01:00:00Z | start | pitch=PITCH.md mode=overnight" >"$run"
+for round in 1 2 3 4 5 6 7; do echo "- 2026-11-19T01:0${round}:00Z | round | $round | x" >>"$run"; done
+expect "overnight is not stopped by the default round limit" "ok" state budget "$run" --now 2026-11-19T03:00:00Z
+status=0; out=$(state budget "$run" --now 2026-11-19T08:00:00Z 2>&1) || status=$?
+{ [ "$status" -eq 3 ] && echo "$out" | grep -q "hours spent"; } && pass "overnight stops when the hours are spent" || fail "overnight stops when the hours are spent" "$status: $out"
+echo "- 2026-11-19T01:00:00Z | start | pitch=PITCH.md mode=nightly" >"$run"
+status=0; out=$(state limits "$run" 2>&1) || status=$?
+{ [ "$status" -eq 1 ] && echo "$out" | grep -q "overnight or review"; } && pass "an unknown mode is refused" || fail "an unknown mode is refused" "$status: $out"
+cat >"$run" <<'LOG'
+- 2026-11-19T01:00:00Z | start | pitch=PITCH.md mode=review
+- 2026-11-19T01:10:00Z | round-start | 1 | branch=r1 base=abc
+- 2026-11-19T01:50:00Z | round | 1 | done
+LOG
+expect "review mode waits for the round review after a round" "waiting: round-review" state next "$run"
+echo "- 2026-11-19T02:00:00Z | answer | keep, but less bloom" >>"$run"
+expect "the answer to the round review resumes it, with no stray note" "resume: round-review | keep, but less bloom" state next "$run"
+echo "- 2026-11-19T02:01:00Z | resume | from round-review" >>"$run"
+expect "after the resume the run continues" "continue: phase=setup | last=resume: from round-review" state next "$run"
+cat >"$run" <<'LOG'
+- 2026-11-19T01:00:00Z | start | pitch=PITCH.md
+- 2026-11-19T01:50:00Z | round | 1 | done
+- 2026-11-19T01:51:00Z | stop | round-review | read the packet | p
+LOG
+expect "a logged round-review stop reads as any stop" "waiting: round-review" state next "$run"
+cat >"$run" <<'LOG'
+- 2026-11-19T01:00:00Z | start | pitch=PITCH.md mode=overnight
+- 2026-11-19T01:50:00Z | round | 1 | done
+LOG
+expect "overnight carries on after a round" "continue: phase=setup | last=round: 1 | done" state next "$run"
 
 # pending round: explain why a round is redone
 cat >"$run" <<'LOG'

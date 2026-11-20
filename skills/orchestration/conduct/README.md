@@ -32,6 +32,8 @@ flowchart LR
 /conduct apps/experiments/fog/PITCH.md rounds=3 hours=2, also stop before delivery
 /conduct apps/experiments/fog/PITCH.md process=minimal
 /conduct apps/games/tide-runner/PITCH.md look=auto
+/conduct work on this game overnight for 6h
+/conduct work on this game and call me each round
 ```
 
 ## Output
@@ -46,5 +48,6 @@ flowchart LR
 
 ## FAQ
 
+- Overnight or review? "Overnight for 6h" runs autonomously until the hours are spent (no accept cap, judge splits settled by the lower score); "call me each round" or no mode stops after every round with the packet. `mode=overnight|review`.
 - Default stops? Look variant (none with `look=auto`), target frames (only when the pitch asks for a target), polish plateau, split taste call, a gate failing twice, a spent budget.
 - Default budget? 6 polish rounds (fewer with `process=minimal`) and 6 hours of active run time per run, summed across stops and resumes, overridable in the request or the brief.

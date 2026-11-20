@@ -6,7 +6,7 @@ Read at step 1 of the conductor. `RUN.md` is in the app folder, committed and ap
 
 One entry per line, `- <UTC timestamp> | <kind> | <text>`. Kinds:
 
-- `start`: text carries `pitch=<path>` and optional `process=minimal|standard|full rounds=N hours=H autoAccepts=N look=auto target=yes`.
+- `start`: text carries `pitch=<path>` and optional `mode=overnight|review process=minimal|standard|full rounds=N hours=H autoAccepts=N look=auto target=yes`.
 - `step`, `assumption`, `judge`, `revert`.
 - `phase`: text is the phase name, logged when a phase begins: `brief`, `art-bible`, `first-playable`, `look-variants`, `checklist`, `polish`, `reference-judge`, `deliver`.
 - `round-start`: `<N> | branch=<round branch> base=<sha>`, written before the director spawns.
@@ -27,13 +27,13 @@ A line that starts with `- ` and has two ` | ` but does not parse is skipped and
 
 | Command | Prints |
 | ------- | ------ |
-| `next` | `start`, `done`, `waiting: <stop>`, `resume: <stop> \| <answer>`, `read result: round N branch <b>`, `redo: round N` (with a reason in parentheses when the branch could not be checked: read the branch first) or `continue: phase=<phase> \| last=<kind>: <text>`; then a `notes for the next round: <text>` line per `answer` that arrived with no stop pending |
+| `next` | `start`, `done`, `waiting: <stop>` (also `waiting: round-review` in review mode right after a round), `resume: <stop> \| <answer>`, `read result: round N branch <b>`, `redo: round N` (with a reason in parentheses when the branch could not be checked: read the branch first) or `continue: phase=<phase> \| last=<kind>: <text>`; then a `notes for the next round: <text>` line per `answer` that arrived with no stop pending |
 | `budget` | `ok`, or `stop: ...` with exit 3 |
-| `limits` | `process=<p> rounds=N hours=H autoAccepts=N` |
-| `accepts` | `accepts-since-answer=K of N` |
+| `limits` | `mode=<m> process=<p> rounds=N hours=H autoAccepts=N` (`unlimited` for rounds and autoAccepts in overnight mode unless given) |
+| `accepts` | `accepts-since-answer=K of N` (`of unlimited` overnight) |
 | `phases` | active time per phase, then a total |
 | `phase-names` | the phase names in run order |
-| `look` | `look=ask\|auto target=yes\|no`, then `state=none\|pending\|chosen <preset> [\| note]\|auto <preset>\|unclear \| <answer>` |
+| `look` | `look=ask\|auto target=yes\|no` (`auto` by default overnight), then `state=none\|pending\|chosen <preset> [\| note]\|auto <preset>\|unclear \| <answer>` |
 | `lock acquire\|release\|status --owner <id>` | exit 4 when another owner holds it |
 
 Hours are active run time summed across sittings (a sitting runs from `start` or `resume` to the next `stop` or `done`), so time spent waiting for an answer is free.

@@ -54,6 +54,7 @@ The conductor never asks a question mid-run. Every call it makes instead is logg
 
 - a look variant chosen (skipped with `look=auto`)
 - target frames chosen (only when the pitch asks for a target)
+- the end of every polish round, in `mode=review` (the default; `mode=overnight` runs on, with no accept cap, until the hours are spent)
 - polish plateau (judges flat two rounds, or every component at target)
 - a judge split on a taste call
 - a gate still failing after two fix attempts

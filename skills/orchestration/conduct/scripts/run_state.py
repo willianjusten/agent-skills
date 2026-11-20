@@ -23,6 +23,14 @@ limit (2, 6, 6) unless an explicit whole-number `rounds=N` is given; `limits`
 prints the result with `autoAccepts=N`. `accepts` prints `accepts-since-answer=K
 of N`: the `accept` entries since the user's last `answer`, against the limit.
 
+`mode=overnight|review` in a `start` or `budget` line (default `review`) says who
+decides between rounds. `limits` prints it first. Overnight is fully autonomous:
+`accepts` and `limits` print `unlimited` for the accept limit and the round limit
+unless `autoAccepts=N` or `rounds=N` was given, and `look` defaults to `auto`;
+the hours still bound the run. In review mode `next` prints `waiting: round-review`
+when the last run entry is a `round` (the conductor normally writes `stop |
+round-review` itself, and the answer to it reads like any stop's answer).
+
 `next` prints `continue: phase=<name> | last=<kind>: <text>`, where the phase
 is the last `phase` entry (`setup` before the first) and the last entry is the
 last run entry (a `note` or `budget` line is not one).
@@ -78,6 +86,10 @@ DEFAULT_ROUNDS = 6
 DEFAULT_HOURS = 6.0
 DEFAULT_AUTO_ACCEPTS = 3
 DEFAULT_PROCESS = "standard"
+DEFAULT_MODE = "review"
+MODES = ("overnight", "review")
+# What an uncapped limit prints, so a reader never mistakes it for a number.
+UNLIMITED = "unlimited"
 PHASE_NAMES = ("brief", "art-bible", "first-playable", "look-variants", "checklist", "polish", "reference-judge", "deliver")
 # Polish rounds per process setting; minimal is a quick prototype, full adds judges rather than rounds.
 PROCESS_ROUNDS = {"minimal": 2, "standard": 6, "full": 6}
@@ -158,9 +170,14 @@ def next_action(entries, run_file=None):
         return "done"
     if last_kind == "stop":
         return "waiting: " + last_text.split(" | ")[0].strip()
+    run_entries = [entry for entry in entries if entry[1] != "answer"]
+    if configured_mode(entries) == "review" and run_entries and run_entries[-1][1] == "round":
+        # A round ended and the user has not reviewed it; a missing `stop` line must not let the run carry on.
+        if last_kind == "answer":
+            return "resume: round-review | " + last_text
+        return "waiting: round-review"
     if last_kind == "answer":
         # The answer answers a stop only when the stop is the last run entry before it.
-        run_entries = [entry for entry in entries if entry[1] != "answer"]
         if run_entries and run_entries[-1][1] == "stop":
             return "resume: " + run_entries[-1][2].split(" | ")[0].strip() + " | " + last_text
         if run_entries:
@@ -182,11 +199,13 @@ def round_notes(entries):
     """Answers that arrived with no stop pending and no round begun since: notes for the next round."""
     notes = []
     previous_run_kind = None
+    review_mode = configured_mode(entries) == "review"
     for _, kind, text in entries:
         if kind in NOT_RUN_STATE:
             continue
         if kind == "answer":
-            if previous_run_kind != "stop":
+            answers_round_review = review_mode and previous_run_kind == "round"
+            if previous_run_kind != "stop" and not answers_round_review:
                 notes.append(text)
             continue
         if kind == "round-start":
@@ -215,6 +234,21 @@ def configured_limit(entries, key, default, cast):
     return cast(value)
 
 
+def configured_mode(entries):
+    value = last_setting(entries, "mode", r"[a-z]+") or DEFAULT_MODE
+    if value not in MODES:
+        raise SystemExit("mode=%s is not valid; use overnight or review" % value)
+    return value
+
+
+def accept_limit(entries):
+    """The autonomous-accept limit: the explicit autoAccepts=N, else unlimited overnight, else the default; None means unlimited."""
+    explicit = last_setting(entries, "autoAccepts", r"\d+(?:\.\d+)?")
+    if explicit is None and configured_mode(entries) == "overnight":
+        return None
+    return configured_limit(entries, "autoAccepts", DEFAULT_AUTO_ACCEPTS, int)
+
+
 def accepts_report(entries):
     """`accepts-since-answer=K of N`: accept entries after the user's last answer, against the limit."""
     since_answer = 0
@@ -223,8 +257,8 @@ def accepts_report(entries):
             since_answer = 0
         elif kind == "accept":
             since_answer += 1
-    limit = configured_limit(entries, "autoAccepts", DEFAULT_AUTO_ACCEPTS, int)
-    return "accepts-since-answer=%d of %d" % (since_answer, limit)
+    limit = accept_limit(entries)
+    return "accepts-since-answer=%d of %s" % (since_answer, UNLIMITED if limit is None else limit)
 
 
 def configured_process(entries):
@@ -235,6 +269,9 @@ def configured_process(entries):
 
 
 def round_limit(entries):
+    """The polish round limit; None (unlimited) overnight unless rounds=N was given, since the hours bound that run."""
+    if last_setting(entries, "rounds", r"\d+(?:\.\d+)?") is None and configured_mode(entries) == "overnight":
+        return None
     return configured_limit(entries, "rounds", PROCESS_ROUNDS[configured_process(entries)], int)
 
 
@@ -286,6 +323,11 @@ def report_phases(entries, now):
 
 def configured_flag(entries, key, default):
     return last_setting(entries, key, r"[a-z]+") or default
+
+
+def configured_look(entries):
+    """look=ask|auto; overnight implies auto unless look= was given."""
+    return configured_flag(entries, "look", "auto" if configured_mode(entries) == "overnight" else "ask")
 
 
 def parse_variant_answer(answer, variants):
@@ -343,7 +385,7 @@ def check_budget(entries, now):
     max_rounds = round_limit(entries)
     max_hours = configured_limit(entries, "hours", DEFAULT_HOURS, float)
     rounds = sum(1 for _, kind, _ in entries if kind == "round")
-    if rounds >= max_rounds:
+    if max_rounds is not None and rounds >= max_rounds:
         return "stop: rounds spent (%d of %d)" % (rounds, max_rounds)
     hours = active_hours(entries, now)
     if hours >= max_hours:
@@ -468,15 +510,16 @@ def main():
             print("notes for the next round: " + note)
         return 0
     if args.command == "limits":
-        print("process=%s rounds=%d hours=%g autoAccepts=%d" % (
-            configured_process(entries), round_limit(entries), configured_limit(entries, "hours", DEFAULT_HOURS, float),
-            configured_limit(entries, "autoAccepts", DEFAULT_AUTO_ACCEPTS, int)))
+        rounds, accepts = round_limit(entries), accept_limit(entries)
+        print("mode=%s process=%s rounds=%s hours=%g autoAccepts=%s" % (
+            configured_mode(entries), configured_process(entries), UNLIMITED if rounds is None else rounds,
+            configured_limit(entries, "hours", DEFAULT_HOURS, float), UNLIMITED if accepts is None else accepts))
         return 0
     if args.command == "accepts":
         print(accepts_report(entries))
         return 0
     if args.command == "look":
-        print("look=%s target=%s" % (configured_flag(entries, "look", "ask"), configured_flag(entries, "target", "no")))
+        print("look=%s target=%s" % (configured_look(entries), configured_flag(entries, "target", "no")))
         print("state=" + look_state(entries))
         return 0
     if args.command == "phases":
