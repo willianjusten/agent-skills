@@ -27,12 +27,12 @@ Blind A/B judging for polish rounds only, not for every change. Judges advise; t
    ```bash
    python3 -I <skill dir>/scripts/blind_pair.py decide --mapping <mapping.json> \
      --visual X=6,Y=8 --feel X=6,Y=7 \
-     --questions player_visible=yes:yes,hud_readable=yes:no \
-     --questions player_visible=yes:yes,hud_readable=yes:yes \
+     --questions player_visible=yes:yes,threats_readable=yes:yes,light_direction=yes:yes,nothing_clipped=yes:yes,hud_readable=yes:no \
+     --questions player_visible=yes:yes,threats_readable=yes:yes,light_direction=yes:yes,nothing_clipped=yes:yes,hud_readable=yes:yes \
      [--visual-gap X=4,Y=5 --feel-gap X=5,Y=5] --markdown
    ```
 
-   `--questions` is given once per judge, each answer `X:Y` as `yes`, `no` or `na`. A side's answer is `yes` only when every judge said yes. Pass `--questions` for every still moment.
+   `--questions` is given once per judge, with all five questions, each answer `X:Y` as `yes`, `no` or `na` (`python3 -I <skill dir>/scripts/blind_pair.py questions` lists the names). A side's answer is `yes` only when every judge said yes. A still moment without `--questions`, or a judge that leaves a question out, is an error; `--no-questions` is for a moment that has none on purpose.
 
    Pass the gap flags whenever the judges had a benchmark; the script then rejects a change whose counted gap score drops.
 
