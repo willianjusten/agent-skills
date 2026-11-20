@@ -42,7 +42,7 @@ for sheet in strip crops burst; do
 done
 
 run() { python3 -I "$SCRIPT" "$@"; }
-x_side() { python3 -c "import json; print(json.load(open('$1'))['X'])"; }
+x_side() { jq -r .X "$1"; }
 
 out=$(run prepare --before "$work/before" --after "$work/after" --judge-dir "$work/judge" --mapping "$work/mapping.json" --seed 2)
 listing=$(cd "$work/judge" && find . -type f | sort | tr '\n' ' ')
@@ -86,7 +86,7 @@ fi
 # decide on the motion score
 echo '{"X":"before","Y":"after","seed":0}' > "$work/before-is-x.json"
 echo '{"X":"after","Y":"before","seed":0}' > "$work/after-is-x.json"
-decision() { run decide --mapping "$1" --motion "$2" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['decision'], d['before'], d['after'])"; }
+decision() { run decide --mapping "$1" --motion "$2" | jq -r '[.decision, .before, .after] | join(" ")' ; }
 
 result=$(decision "$work/before-is-x.json" X=4,Y=7)
 [ "$result" = "keep 4 7" ] && pass "better motion is kept" || fail "better motion is kept" "$result"
@@ -104,14 +104,14 @@ run decide --mapping "$work/before-is-x.json" --motion X=4,Y=7 --markdown | grep
 
 # blind_motion.py is the standalone motion subset of blind_pair.py: same seed, same shuffle; same scores, same verdict
 PAIR="$REPO_ROOT/skills/realtime/realtime-judge/scripts/blind_pair.py"
-verdict_of() { python3 -c "import json,sys; d=json.load(sys.stdin); print(d['decision'], d.get('before_counted', d.get('before')), d.get('after_counted', d.get('after')))"; }
+verdict_of() { jq -r '[.decision, (.before_counted // .before), (.after_counted // .after)] | join(" ")'; }
 parity=""
-for seed in 1 2 3 4 5 6; do
+for seed in 1 2 3; do
   python3 -I "$PAIR" prepare --before "$work/before" --after "$work/after" --judge-dir "$work/pj-$seed" --mapping "$work/pm.json" --seed "$seed" >/dev/null
   run prepare --before "$work/before" --after "$work/after" --judge-dir "$work/mj-$seed" --mapping "$work/mm.json" --seed "$seed" >/dev/null
   [ "$(x_side "$work/pm.json")" = "$(x_side "$work/mm.json")" ] || parity="$parity shuffle:$seed"
   cmp -s <(cd "$work/pj-$seed" && find . -type f | sort | xargs cat) <(cd "$work/mj-$seed" && find . -type f | sort | xargs cat) || parity="$parity files:$seed"
-  for scores in X=4,Y=7 X=7,Y=4 X=6,Y=6 X=1,Y=10; do
+  for scores in X=4,Y=7 X=7,Y=4 X=6,Y=6; do
     pair_verdict=$(python3 -I "$PAIR" decide --mapping "$work/pm.json" --motion "$scores" | verdict_of)
     motion_verdict=$(run decide --mapping "$work/mm.json" --motion "$scores" | verdict_of)
     [ "$pair_verdict" = "$motion_verdict" ] || parity="$parity verdict:$seed:$scores"

@@ -13,7 +13,7 @@ printf 'IMG-TWO' > "$work/after.png"
 
 run() { python3 -I "$SCRIPT" "$@"; }
 prepare() { run prepare --before "$work/before.png" --after "$work/after.png" --judge-dir "$1" --mapping "$2" "${@:3}"; }
-x_side() { python3 -c "import json; print(json.load(open('$1'))['X'])"; }
+x_side() { jq -r .X "$1"; }
 
 # prepare: judges get x.png and y.png only, nothing naming before or after
 prepare "$work/judge" "$work/mapping.json" --seed 1 > /dev/null
@@ -67,7 +67,7 @@ echo '{"X":"after","Y":"before","seed":0}' > "$work/after-is-x.json"
 
 decision() {
   run decide --mapping "$1" --visual "$2" --feel "$3" --no-questions |
-    python3 -c "import json,sys; d=json.load(sys.stdin); print(d['decision'], d['before_counted'], d['after_counted'])"
+    jq -r '[.decision, .before_counted, .after_counted] | join(" ")' 
 }
 
 result=$(decision "$work/before-is-x.json" X=6,Y=8 X=6,Y=9)
@@ -112,7 +112,7 @@ esac
 
 motion_decision() {
   run decide --mapping "$1" "${@:2}" |
-    python3 -c "import json,sys; d=json.load(sys.stdin); print(d['decision'], d['before_counted'], d['after_counted'])"
+    jq -r '[.decision, .before_counted, .after_counted] | join(" ")' 
 }
 
 result=$(motion_decision "$work/before-is-x.json" --motion X=4,Y=7)
@@ -153,7 +153,7 @@ fill() {
 }
 question_decision() {
   run decide --mapping "$1" --visual "$2" --feel "$3" "${@:4}" |
-    python3 -c "import json,sys; d=json.load(sys.stdin); print(d['decision'], ','.join(d['question_regressions']))"
+    jq -r '[.decision, (.question_regressions | join(","))] | join(" ")' 
 }
 
 result=$(question_decision "$work/before-is-x.json" X=6,Y=8 X=6,Y=8 --questions "$(fill player_visible=yes:no)")
