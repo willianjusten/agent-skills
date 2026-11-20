@@ -35,9 +35,19 @@ The captures are still frames, so judge what a frame shows about feel:
 - Clarity at play size: still readable at the size and speed it is played.
 - Mood and intent: the frame conveys the experience the experiment aims for.
 
+## Concrete questions (still moments)
+
+Besides the score, answer these five for X and for Y, each `yes` or `no` (`na` only when the moment truly has no such thing, for example no HUD on screen), with one line of evidence naming what you see. Answer for the image as it is; a doubtful `yes` is a `no`.
+
+1. `player_visible`: player visible against the floor.
+2. `threats_readable`: threats readable.
+3. `light_direction`: light direction matches the look.
+4. `nothing_clipped`: nothing clipped or cropped.
+5. `hud_readable`: HUD readable at play size.
+
 ## Target gap (only with a benchmark image)
 
-When a benchmark is given, score each image a second time on closeness to it, 1 to 10: 10 is indistinguishable in look, 5 has the right idea with major layers missing, 1 shares only the layout. This is separate from the lens score; do not let one image's distance from the other soften it.
+The benchmark is an approved target frame or an art-bible reference image, never a capture of the app itself (that rewards sameness); with none, report no gap score. When a benchmark is given, score each image a second time on closeness to it, 1 to 10: 10 is indistinguishable in look, 5 has the right idea with major layers missing, 1 shares only the layout. This is separate from the lens score; do not let one image's distance from the other soften it.
 
 Then compare each image to the benchmark under every heading below and list what differs. Write `matches` only when it truly does.
 
@@ -71,6 +81,19 @@ X gaps:
 - composition: ...
 Y gaps:
 - (same five headings)
+```
+
+Both formats add the five questions after the score lines, one line each, evidence in one line:
+
+```text
+X questions:
+- player_visible: yes  <one line of evidence>
+- threats_readable: no  <one line of evidence>
+- light_direction: ...
+- nothing_clipped: ...
+- hud_readable: ...
+Y questions:
+- (same five)
 ```
 
 Notes name what you see, never which image is newer or better made by whom.

@@ -6,14 +6,7 @@
 
 REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 HOOK="$REPO_ROOT/harness/claude/hooks/write-scope.sh"
-failures=0
-
-pass() { echo "ok   $1"; }
-fail() {
-  echo "FAIL $1"
-  [ -n "${2:-}" ] && echo "$2" | sed 's/^/       /'
-  failures=$((failures + 1))
-}
+. "$(dirname "$0")/lib.sh"
 
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT

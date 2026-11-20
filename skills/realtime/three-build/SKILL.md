@@ -27,6 +27,9 @@ Apps in the lab monorepo share one renderer bootstrap, loop and template set. Bu
 - Experiments: a frame is a pure function of the seekable time. No clock reads, `Math.random` or frame deltas inside it.
 - Build a hard effect alone on the template's lab route first, then port it into the main app.
 - Honour `prefers-reduced-motion`.
+- Tuning: a colour is one control, `declareColorControl({ name, hex })` from `@lab/engine`; the look module declares its colours that way, not as hue, saturation and lightness sliders.
+- Trailer: an app declares `"trailer": { "query": "autopilot=1", "seconds": 30 }` in `app.json` and a shot list in `src/trailer.ts` (`createTrailer` and shot kinds from `@lab/engine`; `createAutopilot` in a game, `startExperiment({ autopilot })` in an experiment). `?autopilot=1` starts at once with no UI or sound; `pnpm verify <app> --trailer` records it.
+- Sound: a game with a bot policy maps events to sounds in `src/sounds.ts` (`SOUNDS`, `EVENT_MAP`); `verify` renders each offline, reports loudness and runs the `sound` gate, so the bot in `src/balance.ts` must reach every mapped event.
 - A full-screen effect: use `createFullscreenEffect` from `@lab/engine` (`packages/engine/src/fullscreen-effect.ts`), which covers the canvas at any camera and aspect, not a sized plane in the perspective scene. The `edge-bands` gate fails an experiment with empty bands at the edges.
 
 ## Perf habits

@@ -23,6 +23,10 @@ Never create, generate, approve or choose a target yourself. If the user has not
 6. **Judge against the target.** Use blind judges: shuffle before and after as X and Y, pass each judge the absolute target path from step 4 as the benchmark and the app's `## Accepted differences` word for word, anchored 10-point rubric, lower score counts, keep only a win or tie, and reject a change whose counted target-gap score drops even when it wins on the lens. If `workflow-score-to-target` is installed, use it for the multi-round climb; without it, repeat steps 5 and 6 until the target score is met or progress plateaus. Done when each moment has a decision and both scores.
 7. **Re-target or stop.** If rounds plateau because the target is unreachable in real time (photographic detail, impossible geometry), report that to the user and offer a new capture and repaint (back to step 1); never edit the target.
 
+## Without a target
+
+A target frame is optional. When the pitch asks for none, the benchmark is an art-bible reference image when the bible names one: judges get its absolute path as they would a target's, and rounds chase it the same way (steps 5 and 6, with no `target path` check). With neither there is no benchmark and no gap score; judges score the lens only. A capture of the app itself (the chosen look, an earlier round) is never a benchmark, since it rewards sameness. The hard rule above still holds for any real target.
+
 ## Rules
 
 - One approved target per moment; every round and judge uses the same file.
