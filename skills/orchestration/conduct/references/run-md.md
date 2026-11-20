@@ -6,7 +6,7 @@ Read at step 1 of the conductor. `RUN.md` is in the app folder, committed and ap
 
 One entry per line, `- <UTC timestamp> | <kind> | <text>`. Kinds:
 
-- `start`: text carries `pitch=<path>` and optional `mode=overnight|review process=minimal|standard|full rounds=N hours=H reserve=M roundMinutes=N autoAccepts=N look=auto target=yes`.
+- `start`: text carries `pitch=<path>` and optional `mode=overnight|review process=minimal|standard|full rounds=N hours=H reserve=M autoAccepts=N look=auto target=yes`.
 - `step`, `assumption`, `judge`, `revert`.
 - `phase`: text is the phase name, logged when a phase begins: `brief`, `art-bible`, `first-playable`, `look-variants`, `checklist`, `polish`, `reference-judge`, `trailer`, `deliver`.
 - `round-start`: `<N> | branch=<round branch> base=<sha>`, written before the director spawns.
@@ -30,7 +30,6 @@ A line that starts with `- ` and has two ` | ` but does not parse is skipped and
 | ------- | ------ |
 | `next` | `start`, `done`, `waiting: <stop>` (also `waiting: round-review` in review mode right after a round), `resume: <stop> \| <answer>`, `read result: round N branch <b>`, `redo: round N` (with a reason in parentheses when the branch could not be checked: read the branch first) or `continue: phase=<phase> \| last=<kind>: <text>`; then a `notes for the next round: <text>` line per `answer` that arrived with no stop pending |
 | `budget` | `ok`; `reserve: <left> left of <H>h, delivery reserve <N>m` (exit 0) once the time left is at or below the delivery reserve (`reserve=<minutes>`; `run_state.py` holds the default); or `stop: ...` with exit 3 |
-| `round-budget` | `round-budget: <M>m (workers <W>m)`: the next round's minutes (`roundMinutes=N`, default 45, cut to the time before the reserve) and the workers' share |
 | `rows` | one line per row: `<name> turns=N score=V/F counted=C target=T at-target=yes\|no last=kept\|reverted\|none [lost=K]` (a side of the score is `-` for the trailer and sound rows; the sound line adds `gate=pass\|fail\|none`); then `next: <rows to pick, in order>` (a lost row carries `(new approach)`, one lost twice `(shrink scope)`, or `(same approach, write a new one)` when both losses used the same approach) and `all-at-target=yes\|no` |
 | `limits` | `mode=<m> process=<p> rounds=N hours=H autoAccepts=N` (`unlimited` for rounds and autoAccepts in overnight mode unless given) |
 | `accepts` | `accepts-since-answer=K of N` (`of unlimited` overnight) |

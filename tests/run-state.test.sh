@@ -270,12 +270,4 @@ expect "reserve=N sets the delivery reserve" "reserve: 55m left of 6h, delivery 
 status=0; out=$(state budget "$run" --now 2026-11-19T07:00:00Z 2>&1) || status=$?
 { [ "$status" -eq 3 ] && echo "$out" | grep -q "hours spent"; } && pass "a spent budget still stops" || fail "a spent budget still stops" "$status: $out"
 
-# round budget: a fixed round length, cut to the time left before the reserve
-printf '%s\n' '- 2026-11-19T01:00:00Z | start | pitch=PITCH.md mode=overnight hours=6' >"$run"
-expect "round-budget defaults to 45 minutes" "round-budget: 45m (workers 24m)" state round-budget "$run" --now 2026-11-19T02:00:00Z
-expect "round-budget is cut to the time before the reserve" "round-budget: 20m (workers 11m)" state round-budget "$run" --now 2026-11-19T06:00:00Z
-expect "round-budget is zero inside the reserve" "round-budget: 0m (workers 0m)" state round-budget "$run" --now 2026-11-19T06:30:00Z
-echo "- 2026-11-19T01:00:01Z | budget | roundMinutes=30" >>"$run"
-expect "roundMinutes=N sets the round length" "round-budget: 30m (workers 16m)" state round-budget "$run" --now 2026-11-19T02:00:00Z
-
 [ "$failures" -eq 0 ] || exit 1
