@@ -213,6 +213,27 @@ rm -f "$lock"
 grep -q "run_state.py lock acquire" "$SKILL" && pass "/conduct checks the lock" || fail "/conduct checks the lock"
 grep -q "run_state.py\` lock acquire\|run_state.py lock acquire" "$AGENT" && grep -q "lock release" "$AGENT" && pass "the conductor takes and releases the lock" || fail "the conductor takes and releases the lock"
 
+# resume after a cut-off: a recorded round branch with later commits is read, not redone
+repo="$work/repo"
+git init -q "$repo" && git -C "$repo" -c user.name=t -c user.email=t@t commit -q --allow-empty -m base
+base_sha=$(git -C "$repo" rev-parse HEAD)
+git -C "$repo" branch round-1
+mkdir -p "$repo/app"
+cutoff_run="$repo/app/RUN.md"
+cat >"$cutoff_run" <<LOG
+- 2026-11-19T01:00:00Z | start | pitch=PITCH.md
+- 2026-11-19T01:10:00Z | round-start | 1 | branch=round-1 base=$base_sha
+LOG
+output=$(python3 -I "$SCRIPT" next "$cutoff_run" 2>&1)
+[ "$output" = "redo: round 1" ] && pass "a round branch with no new commits is redone" || fail "a round branch with no new commits is redone" "$output"
+git -C "$repo" checkout -q round-1 && git -C "$repo" -c user.name=t -c user.email=t@t commit -q --allow-empty -m "polish: lighting"
+output=$(python3 -I "$SCRIPT" next "$cutoff_run" 2>&1)
+[ "$output" = "read result: round 1 branch round-1" ] && pass "a round branch with later commits is read, not redone" || fail "a round branch with later commits is read, not redone" "$output"
+echo "- 2026-11-19T02:00:00Z | round | 1 | lighting kept" >>"$cutoff_run"
+output=$(python3 -I "$SCRIPT" next "$cutoff_run" 2>&1)
+[ "$output" = "continue: 1 | lighting kept" ] && pass "a logged round is no longer pending" || fail "a logged round is no longer pending" "$output"
+grep -q "round-start" "$AGENT" && grep -q "read result" "$AGENT" && grep -q "redo" "$AGENT" && pass "the conductor records the round branch and states the resume rule" || fail "the conductor records the round branch and states the resume rule"
+
 # nesting: main -> conductor -> polish-director -> worker or judge, three levels at most
 if grep -rEn 'claude +(--agent|-p)' "$REPO_ROOT/skills" "$REPO_ROOT/agents" "$REPO_ROOT/README.md" >/dev/null; then
   fail "no headless claude launch in skills, agents or the README" "$(grep -rEn 'claude +(--agent|-p)' "$REPO_ROOT/skills" "$REPO_ROOT/agents" "$REPO_ROOT/README.md" | head -5)"

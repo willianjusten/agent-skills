@@ -20,6 +20,12 @@ a `total`. A `phase | <name>` entry starts a phase (time before the first is
 that comes back is summed. Waiting for an answer is not counted, so the total
 equals the hours `budget` spends.
 
+A `round-start | N | branch=<name> base=<sha>` entry, written before the
+polish director spawns, makes a cut-off round recoverable: when the run ends
+with that entry unanswered by a `round` entry, `next` prints `read result:
+round N branch <name>` if the branch has commits after `base` (the director
+finished, so read its result), and `redo: round N` if it has none.
+
 The lock is the file `RUN.md.lock` next to RUN.md, holding `owner` and `since`
 lines. One conductor holds it per run: acquire is refused (exit 4) while
 another owner holds it, the holder acquiring again refreshes `since`, release
@@ -30,6 +36,7 @@ conductor re-acquires at every phase end, so a live run never goes stale.
 import argparse
 import os
 import re
+import subprocess
 import sys
 from datetime import datetime, timezone
 
@@ -61,7 +68,31 @@ def read_entries(path):
     return entries
 
 
-def next_action(entries):
+def branch_has_new_commits(run_file, branch, base):
+    """True when the round branch holds commits past the base recorded at round start."""
+    run_dir = os.path.dirname(os.path.abspath(run_file))
+    result = subprocess.run(
+        ["git", "-C", run_dir, "rev-list", "--count", base + ".." + branch],
+        capture_output=True, text=True,
+    )
+    return result.returncode == 0 and int(result.stdout.strip() or 0) > 0
+
+
+def pending_round(entries, run_file):
+    """The resume verdict for a round started but never logged as finished, or None."""
+    for _, kind, text in reversed(entries):
+        if kind == "round":
+            return None
+        if kind == "round-start":
+            number = text.split(" | ")[0].strip()
+            fields = dict(re.findall(r"(\w+)=(\S+)", text))
+            if "branch" in fields and "base" in fields and branch_has_new_commits(run_file, fields["branch"], fields["base"]):
+                return "read result: round %s branch %s" % (number, fields["branch"])
+            return "redo: round " + number
+    return None
+
+
+def next_action(entries, run_file=None):
     entries = [entry for entry in entries if entry[1] not in NOT_RUN_STATE]
     if not entries:
         return "start"
@@ -75,7 +106,8 @@ def next_action(entries):
             if kind == "stop":
                 return "resume: " + text.split(" | ")[0].strip() + " | " + last_text
         return "continue: " + last_text
-    return "continue: " + last_text
+    pending = pending_round(entries, run_file) if run_file else None
+    return pending or "continue: " + last_text
 
 
 def configured_limit(entries, key, default, cast):
@@ -254,7 +286,7 @@ def main():
     except FileNotFoundError:
         entries = []
     if args.command == "next":
-        print(next_action(entries))
+        print(next_action(entries, run_file))
         return 0
     if args.command == "phases":
         print(report_phases(entries, resolve_now(args.now)))
