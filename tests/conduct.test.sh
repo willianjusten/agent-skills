@@ -135,17 +135,17 @@ for case in "minimal:2" "standard:6" "full:6"; do
   setting="${case%%:*}"; expected_rounds="${case##*:}"
   printf -- '- 2026-11-19T01:00:00Z | start | pitch=PITCH.md process=%s\n' "$setting" >"$run"
   out=$(process_limits); status=$?
-  [ "$status" -eq 0 ] && [ "$out" = "process=$setting rounds=$expected_rounds hours=6 autoAccepts=3" ] && pass "process=$setting reports $expected_rounds rounds" || fail "process=$setting reports $expected_rounds rounds" "status $status: $out"
+  [ "$status" -eq 0 ] && [ "$out" = "mode=review process=$setting rounds=$expected_rounds hours=6 autoAccepts=3" ] && pass "process=$setting reports $expected_rounds rounds" || fail "process=$setting reports $expected_rounds rounds" "status $status: $out"
 done
 echo "- 2026-11-19T01:00:00Z | start | pitch=PITCH.md" >"$run"
 out=$(process_limits)
-[ "$out" = "process=standard rounds=6 hours=6 autoAccepts=3" ] && pass "no process setting means standard" || fail "no process setting means standard" "$out"
+[ "$out" = "mode=review process=standard rounds=6 hours=6 autoAccepts=3" ] && pass "no process setting means standard" || fail "no process setting means standard" "$out"
 echo "- 2026-11-19T01:00:00Z | start | pitch=PITCH.md process=minimal rounds=4" >"$run"
 out=$(process_limits)
-[ "$out" = "process=minimal rounds=4 hours=6 autoAccepts=3" ] && pass "an explicit rounds= beats the process default" || fail "an explicit rounds= beats the process default" "$out"
+[ "$out" = "mode=review process=minimal rounds=4 hours=6 autoAccepts=3" ] && pass "an explicit rounds= beats the process default" || fail "an explicit rounds= beats the process default" "$out"
 echo "- 2026-11-19T02:00:00Z | budget | process=full" >>"$run"
 out=$(process_limits)
-[ "$out" = "process=full rounds=4 hours=6 autoAccepts=3" ] && pass "a budget line can change the process" || fail "a budget line can change the process" "$out"
+[ "$out" = "mode=review process=full rounds=4 hours=6 autoAccepts=3" ] && pass "a budget line can change the process" || fail "a budget line can change the process" "$out"
 printf -- '- 2026-11-19T01:00:00Z | start | pitch=PITCH.md process=minimal\n- 2026-11-19T01:30:00Z | round | 1 | a\n- 2026-11-19T01:40:00Z | round | 2 | b\n' >"$run"
 out=$(budget 2026-11-19T02:00:00Z); status=$?
 [ "$status" -eq 3 ] && [ "$out" = "stop: rounds spent (2 of 2)" ] && pass "process=minimal stops the budget after 2 rounds" || fail "process=minimal stops the budget after 2 rounds" "status $status: $out"
@@ -276,7 +276,7 @@ output=$(python3 -I "$SCRIPT" next "$cutoff_run" 2>&1)
 [ "$output" = "read result: round 1 branch round-1" ] && pass "a round branch with later commits is read, not redone" || fail "a round branch with later commits is read, not redone" "$output"
 echo "- 2026-11-19T02:00:00Z | round | 1 | lighting kept" >>"$cutoff_run"
 output=$(python3 -I "$SCRIPT" next "$cutoff_run" 2>&1)
-[ "$output" = "continue: phase=setup | last=round: 1 | lighting kept" ] && pass "a logged round is no longer pending" || fail "a logged round is no longer pending" "$output"
+[ "$output" = "waiting: round-review" ] && pass "a logged round is no longer pending; review mode then waits for the round review" || fail "a logged round is no longer pending; review mode then waits for the round review" "$output"
 grep -q "round-start" "$CONDUCT_TEXT" && grep -q "read result" "$CONDUCT_TEXT" && grep -q "redo" "$CONDUCT_TEXT" && pass "the conductor records the round branch and states the resume rule" || fail "the conductor records the round branch and states the resume rule"
 
 # notifications and the wip line
