@@ -8,7 +8,9 @@ motion capture's sheets), it copies them to x/ and y/ instead. It never prints t
 decide: reads the mapping and each judge's scores for X and Y, maps them back to
 before and after, counts the lowest judge per capture, and keeps the change only
 if it wins or ties. A still moment takes --visual and --feel; a motion window
-takes --motion; all three together count the lowest of the three. With --visual-gap and --feel-gap (target-gap
+takes --motion; all three together count the lowest of the three. With --questions (one per
+judge, repeatable) the fixed yes/no questions are answered per capture; a question that turns from yes to
+no rejects the change even when the score rises. With --visual-gap and --feel-gap (target-gap
 scores against a benchmark), the lower gap score per capture must also win or tie.
 
 discriminate-prepare: builds 12 trials from matching reference and render crops,
@@ -33,6 +35,9 @@ SIDES = (BEFORE, AFTER)
 FIRST_LABEL, SECOND_LABEL = "X", "Y"
 LABELS = (FIRST_LABEL, SECOND_LABEL)
 MIN_SCORE, MAX_SCORE = 1, 10
+QUESTIONS = ("player_visible", "threats_readable", "light_direction", "nothing_clipped", "hud_readable")
+YES, NO, NOT_APPLICABLE = "yes", "no", "na"
+ANSWERS = (YES, NO, NOT_APPLICABLE)
 TRIAL_COUNT = 12
 MAX_CORRECT_TO_PASS = 7
 
@@ -186,6 +191,36 @@ def parse_scores(text):
     return parse_pairs(text, read_score, LABELS, lambda scores: f"Need both X and Y scores, got '{text}'")
 
 
+def parse_questions(text):
+    """Reads `question=<X answer>:<Y answer>,...`, each answer yes, no or na; a question left out counts as na."""
+    answers = {}
+    for pair in text.split(","):
+        raw_question, _, raw_answers = pair.partition("=")
+        question = raw_question.strip()
+        if question not in QUESTIONS:
+            raise SystemExit(f"Unknown question '{question}' in '{text}'; use one of {', '.join(QUESTIONS)}")
+        pieces = [piece.strip().lower() for piece in raw_answers.split(":")]
+        if len(pieces) != len(LABELS) or any(piece not in ANSWERS for piece in pieces):
+            raise SystemExit(f"Answers for {question} must be X-answer:Y-answer, each yes, no or na, got '{raw_answers}'")
+        answers[question] = dict(zip(LABELS, pieces))
+    return answers
+
+
+def unshuffle_questions(mapping, texts):
+    """Per question and side, yes only when every judge said yes; no when any said no; na when none answered."""
+    combined = {question: {side: NOT_APPLICABLE for side in SIDES} for question in QUESTIONS}
+    for text in texts:
+        for question, by_label in parse_questions(text).items():
+            for label, answer in by_label.items():
+                side = mapping[label]
+                current = combined[question][side]
+                if answer == NO or current == NO:
+                    combined[question][side] = NO
+                elif answer == YES or current == YES:
+                    combined[question][side] = YES
+    return combined
+
+
 def format_score(value):
     return int(value) if float(value).is_integer() else value
 
@@ -224,6 +259,12 @@ def decide(arguments):
         result["gap_scores"] = gap_scores
         result["gap_before_counted"] = format_score(gap_counted[BEFORE])
         result["gap_after_counted"] = format_score(gap_counted[AFTER])
+    if arguments.questions:
+        answers = unshuffle_questions(mapping, arguments.questions)
+        regressions = [question for question, by_side in answers.items() if by_side[BEFORE] == YES and by_side[AFTER] == NO]
+        keep = keep and not regressions
+        result["questions"] = answers
+        result["question_regressions"] = regressions
     result["decision"] = "keep" if keep else "reject"
     if arguments.markdown:
         print(markdown(result))
@@ -242,6 +283,12 @@ def markdown(result):
             f"| {lens.capitalize()} judge, target gap | {result['gap_scores'][lens]['before']} | {result['gap_scores'][lens]['after']} |\n"
             for lens in STILL_LENSES
         ) + f"| Counted target gap (lowest judge) | {result['gap_before_counted']} | {result['gap_after_counted']} |\n"
+    question_rows = ""
+    if "questions" in result:
+        question_rows = "\n| Question | Before | After |\n| --- | --- | --- |\n" + "".join(
+            f"| {question.replace('_', ' ')} | {by_side[BEFORE]} | {by_side[AFTER]}{' (regressed)' if question in result['question_regressions'] else ''} |\n"
+            for question, by_side in result["questions"].items()
+        )
     return (
         "### Blind judging\n\n"
         f"Shown to judges as X = {result['mapping']['X']}, Y = {result['mapping']['Y']} "
@@ -249,7 +296,7 @@ def markdown(result):
         "| Judge | Before | After |\n| --- | --- | --- |\n"
         f"{rows}\n"
         f"| Counted (lowest judge) | {result['before_counted']} | {result['after_counted']} |\n"
-        f"{gap_rows}\n"
+        f"{gap_rows}{question_rows}\n"
         f"Decision: **{result['decision']}**. Advisory; a judge never gates a merge alone."
     )
 
@@ -273,6 +320,9 @@ def main():
     decide_parser.add_argument("--motion", help="motion judge scores, e.g. X=5,Y=7")
     decide_parser.add_argument("--visual-gap", help="visual judge target-gap scores, e.g. X=4,Y=5")
     decide_parser.add_argument("--feel-gap", help="feel judge target-gap scores, e.g. X=4,Y=5")
+    decide_parser.add_argument(
+        "--questions", action="append", help="one judge's yes/no answers as question=X:Y, e.g. player_visible=yes:no; repeat per judge"
+    )
     decide_parser.add_argument("--markdown", action="store_true")
     decide_parser.set_defaults(run=decide)
 

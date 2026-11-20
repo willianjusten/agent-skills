@@ -149,6 +149,56 @@ else
   fail "markdown lists the motion judge"
 fi
 
+# yes/no questions: a yes turning to no rejects even when the score rises
+question_decision() {
+  run decide --mapping "$1" --visual "$2" --feel "$3" "${@:4}" |
+    python3 -c "import json,sys; d=json.load(sys.stdin); print(d['decision'], ','.join(d['question_regressions']))"
+}
+
+result=$(question_decision "$work/before-is-x.json" X=6,Y=8 X=6,Y=8 --questions player_visible=yes:no)
+[ "$result" = "reject player_visible" ] && pass "a question turning yes to no rejects although the score rose" || fail "a question turning yes to no rejects although the score rose" "$result"
+
+result=$(question_decision "$work/after-is-x.json" X=6,Y=8 X=6,Y=8 --questions player_visible=no:yes)
+[ "$result" = "reject player_visible" ] && pass "question answers are mapped back by the shuffle" || fail "question answers are mapped back by the shuffle" "$result"
+
+result=$(question_decision "$work/before-is-x.json" X=7,Y=7 X=7,Y=7 --questions player_visible=yes:yes,hud_readable=no:yes,threats_readable=na:na)
+[ "$result" = "keep " ] && pass "a held score with no yes-to-no is kept" || fail "a held score with no yes-to-no is kept" "$result"
+
+result=$(question_decision "$work/before-is-x.json" X=7,Y=7 X=7,Y=7 --questions hud_readable=no:no)
+[ "$result" = "keep " ] && pass "a question that stays no is not a regression" || fail "a question that stays no is not a regression" "$result"
+
+result=$(question_decision "$work/before-is-x.json" X=7,Y=8 X=7,Y=8 --questions player_visible=yes:yes --questions player_visible=yes:no)
+[ "$result" = "reject player_visible" ] && pass "one judge answering no counts as no" || fail "one judge answering no counts as no" "$result"
+
+result=$(question_decision "$work/before-is-x.json" X=7,Y=5 X=7,Y=5 --questions player_visible=no:yes)
+[ "$result" = "reject " ] && pass "a falling score still rejects when answers improve" || fail "a falling score still rejects when answers improve" "$result"
+
+if run decide --mapping "$work/before-is-x.json" --visual X=6,Y=8 --feel X=6,Y=8 --questions flashy=yes:yes > /dev/null 2>&1; then
+  fail "an unknown question is refused"
+else
+  pass "an unknown question is refused"
+fi
+if run decide --mapping "$work/before-is-x.json" --visual X=6,Y=8 --feel X=6,Y=8 --questions player_visible=maybe:yes > /dev/null 2>&1; then
+  fail "an answer other than yes, no or na is refused"
+else
+  pass "an answer other than yes, no or na is refused"
+fi
+
+packet=$(run decide --mapping "$work/before-is-x.json" --visual X=6,Y=8 --feel X=6,Y=8 --questions player_visible=yes:no --markdown)
+if echo "$packet" | grep -q 'Counted (lowest judge)' && echo "$packet" | grep -q '| player visible | yes | no (regressed) |'; then
+  pass "the packet block shows scores and answers together"
+else
+  fail "the packet block shows scores and answers together" "$packet"
+fi
+
+for text in "$REPO_ROOT/skills/realtime/realtime-judge/SKILL.md" "$REPO_ROOT/skills/realtime/realtime-judge/references/rubric.md" "$REPO_ROOT/agents/realtime/visual-judge.md" "$REPO_ROOT/agents/realtime/feel-judge.md"; do
+  if grep -qi 'player visible' "$text" && grep -qi 'hud readable' "$text" && grep -qi 'one line of evidence\|one-line evidence\|one line of evidence' "$text"; then
+    pass "$(basename "$text") carries the question list and the evidence format"
+  else
+    fail "$(basename "$text") carries the question list and the evidence format"
+  fi
+done
+
 # reference discrimination: 12 shuffled trials, hidden key, real-pick scoring
 mkdir "$work/refs" "$work/renders"
 for n in 01 02 03 04 05 06 07 08 09 10 11 12; do
