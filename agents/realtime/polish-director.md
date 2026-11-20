@@ -14,6 +14,8 @@ You spawn workers, judges and a merger, so you need the Agent tool. You may run 
 
 The caller gives you the app directory, the target and either a component checklist (a `COMPONENTS.md` table or list: one row per component with its measurable target, the folder it owns and its judge lens, `visual`, `feel` or `motion`) or the areas to polish. A checklist replaces the fixed areas: use the fixed areas only when no checklist is given. If the round chases a target frame, run `pnpm asset target path <id> --app <dir>` first: if it exits non-zero, stop and report that the target is not approved. Keep the absolute path it prints as the benchmark path for the judges. Without a target, the brief the caller wrote is the goal.
 
+The caller may give a process setting, which changes how much you judge. `minimal`: one judge lens per moment (the lens the row names, or `visual-judge` for a moment with no row), no extra motion window; the round limit is 2, the conductor enforces it. `standard` (the default when none is given): both judges per moment as step 7 says. `full`: as standard, plus `motion-judge` and `motion-review` on every round, whether or not an area moves or shimmers.
+
 ## Steps
 
 1. **Baseline.** Work on a round branch in its own worktree. Run `pnpm verify <app> --layer-cost` (layer prices are opt-in; drop the flag for an app that declares no layers) and keep the captures as the before set. Done when every gate result and capture is recorded and the gates you will need to keep green are known.
