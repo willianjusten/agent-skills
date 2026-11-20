@@ -391,3 +391,9 @@ look_stops=$(sed -n '/^## Stop points/,/^At a stop/p' "$AGENT")
 echo "$look_stops" | grep -q 'With `look=ask` (default) also: look variant chosen' && ! echo "$look_stops" | grep -q '^Always: look variant' && pass "the Always stop list holds only the stops that survive look=auto" || fail "the Always stop list holds only the stops that survive look=auto"
 
 [ "$failures" -eq 0 ] || exit 1
+
+# run modes: the skill text names them and the reference exists
+MODES_REF="$REPO_ROOT/skills/orchestration/conduct/references/run-modes.md"
+[ -f "$MODES_REF" ] && grep -q 'mode=overnight' "$MODES_REF" && grep -q 'round-review' "$MODES_REF" && pass "run-modes.md covers overnight and the round review" || fail "run-modes.md covers overnight and the round review"
+grep -q 'mode=overnight|review' "$SKILL" && grep -q 'overnight for 6h' "$SKILL" && grep -q 'call me each round' "$SKILL" && pass "conduct turns overnight and call-me phrasing into a mode" || fail "conduct turns overnight and call-me phrasing into a mode"
+grep -q 'run-modes.md' "$AGENT" && grep -q 'lower counted score' "$AGENT" && pass "the conductor settles a judge split overnight and stops each round in review" || fail "the conductor settles a judge split overnight and stops each round in review"
