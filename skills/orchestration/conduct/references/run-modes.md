@@ -21,6 +21,7 @@ Fully autonomous, bounded by the hours (default 6).
 - `look=auto` is implied: no look-variants stop, and you log the pick as an `assumption`.
 - No cap on autonomous reference accepts: `accepts` and `limits` print `unlimited` unless `autoAccepts=N` was given. Every accept still gets an `accept` line, after a reviewer subagent has read the old and new capture side by side, and the hand-off lists them all.
 - No round limit unless `rounds=N` was given; `budget` stops on the hours.
+- It uses the whole budget: delivery comes early only when `run_state.py rows` prints `all-at-target=yes`; otherwise rounds go on until `budget` prints `reserve:`, then the trailer round and delivery. A flat round changes approach and a plateau is not a stop (`references/polish-rounds.md`, "Use the whole budget").
 - A judge split on a taste call is yours to settle: the lower counted score decides (keep the change only on a win or tie); log an `assumption | judge split resolved: <moment>, <scores>, <decision>`. It is not a stop.
 - The only stops are a gate failing after two fix attempts, a spent budget and delivery. Everything else is an `assumption`.
 

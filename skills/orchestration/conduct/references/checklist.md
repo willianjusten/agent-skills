@@ -4,7 +4,7 @@ Read at step 5 of the conductor.
 
 `COMPONENTS.md` in the app folder is a table with one row per component: its measurable target (a number or a named gap to the target frame), the folder it owns and its lens (`visual`, `feel` or `motion`). Games usually need feel and motion rows (movement, hit feedback, audio), experiments visual and motion rows. Components own disjoint folders.
 
-With a target, run `pnpm asset target path <id> --app <app dir>` after the answer: it must print an approved target; if it fails, stop again. Without one, the chosen look is the benchmark.
+With a target, run `pnpm asset target path <id> --app <app dir>` after the answer: it must print an approved target; if it fails, stop again. Without one, an art-bible reference image is the benchmark when the bible names one; otherwise the gap score is not reported.
 
 ## Baseline
 

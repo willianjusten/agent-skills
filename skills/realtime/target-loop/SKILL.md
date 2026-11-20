@@ -25,7 +25,7 @@ Never create, generate, approve or choose a target yourself. If the user has not
 
 ## Without a target
 
-A target frame is optional. When the pitch asks for none, the look the user chose from the look variants (their capture of the chosen preset, kept in the app folder) is the benchmark: judges get its absolute path as they would a target's, and rounds chase it the same way (steps 5 and 6, with no `target path` check). It is a capture of the app itself, so it is never repainted, submitted or approved here, and the hard rule above still holds for any real target.
+A target frame is optional. When the pitch asks for none, the benchmark is an art-bible reference image when the bible names one: judges get its absolute path as they would a target's, and rounds chase it the same way (steps 5 and 6, with no `target path` check). With neither there is no benchmark and no gap score; judges score the lens only. A capture of the app itself (the chosen look, an earlier round) is never a benchmark, since it rewards sameness. The hard rule above still holds for any real target.
 
 ## Rules
 

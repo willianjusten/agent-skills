@@ -17,8 +17,8 @@ Pick a moment where the game is mid-action (a game's `game.capture` name such as
 
 Copy the chosen preset's values (and the note's change on top) into the app's `src/look.ts` spec, keep the other presets in `src/presets/`, run `pnpm verify <app>` green and append `step | look chosen: <preset> | <note, if any>`.
 
-The chosen look's capture is the judges' benchmark whenever no target frame exists: copy `.verify/<app>/variants/<preset>.png` to `looks/chosen.png` in the app folder, commit it, and give its absolute path to the director as the look benchmark.
+Keep the chosen preset's capture (`.verify/<app>/variants/<preset>.png`) as a record only. It is never a judge benchmark: the gap lens compares against a target frame or an art-bible reference image, so a run with neither reports no gap score.
 
 ## Target frame (only when `target=yes`)
 
-Follow `target-loop` steps 2 and 3 from the chosen look (capture, `pnpm asset target prepare <id> --app <app dir> --capture <png>`, then the stop) and append `stop | target-frames | ... | <packet path>`. You never approve, generate or swap a target. Without `target=yes` there is no target stop and no target: the chosen look is the benchmark.
+Follow `target-loop` steps 2 and 3 from the chosen look (capture, `pnpm asset target prepare <id> --app <app dir> --capture <png>`, then the stop) and append `stop | target-frames | ... | <packet path>`. You never approve, generate or swap a target. Without `target=yes` there is no target stop and no target: there is no gap benchmark unless the art bible names a reference image.
