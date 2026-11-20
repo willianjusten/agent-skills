@@ -134,7 +134,7 @@ printf -- '- 2026-11-19T01:00:00Z | start | pitch=PITCH.md\n- 2026-11-19T01:10:0
 expect "a failed branch check says so and is not a silent redo" "redo: round 1 (branch check failed, read the branch before respawning)" state next "$repo/RUN.md"
 
 # phase names
-expect "phase-names lists the phases in run order" "brief art-bible first-playable look-variants checklist polish reference-judge deliver" bash -c "python3 -I '$SCRIPT' phase-names | tr '\n' ' ' | sed 's/ \$//'"
+expect "phase-names lists the phases in run order" "brief art-bible first-playable look-variants checklist polish reference-judge trailer deliver" bash -c "python3 -I '$SCRIPT' phase-names | tr '\n' ' ' | sed 's/ \$//'"
 
 # phases: a crashed sitting is not counted twice
 cat >"$run" <<'LOG'
