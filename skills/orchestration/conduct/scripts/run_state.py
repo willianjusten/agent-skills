@@ -8,6 +8,8 @@
   run_state.py limits <RUN.md>
   run_state.py accepts <RUN.md>
   run_state.py phases <RUN.md> [--now <iso8601>]
+  run_state.py checks <RUN.md> [--now <iso8601>]
+  run_state.py checkpoint <RUN.md> [--now <iso8601>]
   run_state.py phase-names
   run_state.py look   <RUN.md>
   run_state.py lock   acquire|release|status <RUN.md> [--owner <name>] [--now <iso8601>]
@@ -65,6 +67,19 @@ by the run; the user's `answer` and `budget` lines never extend it, and a
 
 `phase-names` prints the phase names in run order, one per line.
 
+`checks` reads `checks | <round label> | <minutes>` entries (wall minutes a round
+spent in checks) and prints `checks=<M>m run=<R>m share=<P>%`: check minutes, active
+run minutes and their share. When the newest `checks` entry is a round (`r<N>`)
+whose checks took more than half of the time from its `round-start` to its `round`
+line, a second line `lighter: <label> spent <M>m of <R>m in checks` says the next
+light round must use a lighter set. It is never a cap on the round's work.
+
+`checkpoint` prints `checkpoint-due` or `light` for the next polish round. Due when
+no `checkpoint | <label> | <what ran>` entry exists yet, when two rounds have been
+logged since the last one (so every third round), when the budget has reached the
+delivery reserve, or when the next round is the last one the round limit allows.
+Delivery and the trailer round's lead-in are checkpoints the conductor runs itself.
+
 `phases` prints the active time per phase, one `<name> <duration>` line each and
 a `total`. A `phase | <name>` entry starts a phase (time before the first is
 `setup`); a resume carries on in the phase the sitting stopped in, and a phase
@@ -120,7 +135,7 @@ PHASE_NAMES = ("brief", "art-bible", "first-playable", "look-variants", "checkli
 # Polish rounds per process setting; minimal is a quick prototype, full adds judges rather than rounds.
 PROCESS_ROUNDS = {"minimal": 2, "standard": 6, "full": 6}
 # Written by the user or as asides: they never move the resume point or extend a sitting.
-NOT_RUN_STATE = ("note", "budget")
+NOT_RUN_STATE = ("note", "budget", "checks", "checkpoint")
 NOT_RUN_TIME = ("note", "budget", "answer")
 # Distinct from 1 (a usage error) so the conductor can tell a spent budget from a failed call.
 BUDGET_SPENT_EXIT = 3
@@ -467,6 +482,70 @@ def check_budget(entries, now):
     return BudgetVerdict("ok", "ok")
 
 
+# A checkpoint runs the full check set every third polish round: two light rounds between.
+LIGHT_ROUNDS_BETWEEN_CHECKPOINTS = 2
+# Checks that took more than this share of a round's time make the next light round lighter.
+HEAVY_CHECK_SHARE = 0.5
+CHECKS_ENTRY = re.compile(r"^(\S+) \| (\d+(?:\.\d+)?)\s*$")
+
+
+def checks_minutes(entries):
+    """(label, minutes) per `checks` entry, skipping text that does not parse."""
+    parsed = []
+    for _, kind, text in entries:
+        match = CHECKS_ENTRY.match(text) if kind == "checks" else None
+        if match:
+            parsed.append((match.group(1), float(match.group(2))))
+    return parsed
+
+
+def round_minutes(entries, label):
+    """Minutes from `round-start | N` to `round | N` for a label like r3; None when either line is missing."""
+    match = re.fullmatch(r"r(\d+)", label)
+    if not match:
+        return None
+    number = match.group(1)
+    started = finished = None
+    for time, kind, text in entries:
+        first_field = text.split(" | ")[0].strip()
+        if kind == "round-start" and first_field == number:
+            started = time
+        elif kind == "round" and text.split()[0:1] == [number] and started is not None:
+            finished = time
+    return (finished - started).total_seconds() / 60 if started and finished else None
+
+
+def checks_report(entries, now):
+    parsed = checks_minutes(entries)
+    total_checks = sum(minutes for _, minutes in parsed)
+    run_minutes = active_hours(entries, now) * 60
+    share = 100 * total_checks / run_minutes if run_minutes > 0 else 0
+    lines = ["checks=%gm run=%gm share=%d%%" % (round(total_checks, 1), round(run_minutes, 1), round(share))]
+    if parsed:
+        label, minutes = parsed[-1]
+        duration = round_minutes(entries, label)
+        if duration and minutes > HEAVY_CHECK_SHARE * duration:
+            lines.append("lighter: %s spent %gm of %gm in checks" % (label, round(minutes, 1), round(duration, 1)))
+    return "\n".join(lines)
+
+
+def checkpoint_due(entries, now):
+    """`checkpoint-due` or `light` for the next polish round."""
+    last_checkpoint = max((index for index, entry in enumerate(entries) if entry[1] == "checkpoint"), default=None)
+    if last_checkpoint is None:
+        return "checkpoint-due"
+    rounds_since = sum(1 for _, kind, _ in entries[last_checkpoint + 1:] if kind == "round")
+    if rounds_since >= LIGHT_ROUNDS_BETWEEN_CHECKPOINTS:
+        return "checkpoint-due"
+    if check_budget(entries, now).kind == "reserve":
+        return "checkpoint-due"
+    max_rounds = round_limit(entries)
+    rounds = sum(1 for _, kind, _ in entries if kind == "round")
+    if max_rounds is not None and rounds + 1 >= max_rounds:
+        return "checkpoint-due"
+    return "light"
+
+
 @dataclass
 class Turn:
     outcome: str
@@ -670,7 +749,7 @@ def resolve_now(text):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("command", choices=["next", "budget", "rows", "limits", "accepts", "phases", "phase-names", "look", "lock"])
+    parser.add_argument("command", choices=["next", "budget", "rows", "limits", "accepts", "phases", "checks", "checkpoint", "phase-names", "look", "lock"])
     parser.add_argument("rest", nargs="*", help="RUN.md, or for lock: acquire|release|status then RUN.md")
     parser.add_argument("--allow-missing", action="store_true", help="next only: a missing RUN.md reads as a new run")
     parser.add_argument("--owner", help="lock owner name, for example the conductor's run id")
@@ -713,6 +792,12 @@ def main():
         return 0
     if args.command == "phases":
         print(report_phases(entries, resolve_now(args.now)))
+        return 0
+    if args.command == "checks":
+        print(checks_report(entries, resolve_now(args.now)))
+        return 0
+    if args.command == "checkpoint":
+        print(checkpoint_due(entries, resolve_now(args.now)))
         return 0
     if args.command == "rows":
         print(row_report(entries))

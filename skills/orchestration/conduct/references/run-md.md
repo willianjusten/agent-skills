@@ -17,6 +17,8 @@ One entry per line, `- <UTC timestamp> | <kind> | <text>`. Kinds:
 - `wip`: the first finished slice is playable: play links.
 - `budget`: a limit the user raised.
 - `row`: `<name> | turn <N> | score <V>/<F> of target <T> | kept|reverted|pending | approach: <text>`, one per row per turn: V and F are the visual and feel scores of the row's moment as it stands after the turn (a reverted turn carries the kept version's scores). The checklist phase declares each row once as `<name> | turn 0 | score -/- of target <T> | pending | approach: none`.
+- `checks`: `<round label> | <minutes>`, the wall minutes the round spent in checks.
+- `checkpoint`: `<round label> | <what ran>`, written after a checkpoint (`references/checkpoints.md`).
 - `accept`: references accepted without the user: round, capture names and why.
 - `note`: ignored when resuming.
 
@@ -34,6 +36,8 @@ A line that starts with `- ` and has two ` | ` but does not parse is skipped and
 | `limits` | `mode=<m> process=<p> rounds=N hours=H autoAccepts=N` (`unlimited` for rounds and autoAccepts in overnight mode unless given) |
 | `accepts` | `accepts-since-answer=K of N` (`of unlimited` overnight) |
 | `phases` | active time per phase, then a total |
+| `checks` | `checks=<M>m run=<R>m share=<P>%`; a `lighter: <label> spent <M>m of <R>m in checks` line follows when the newest round spent more than half of its time in checks |
+| `checkpoint` | `checkpoint-due` or `light` for the next polish round: due with no checkpoint yet, two rounds after the last one, at the delivery reserve, or on the last round the limit allows |
 | `phase-names` | the phase names in run order |
 | `look` | `look=ask\|auto target=yes\|no` (`auto` by default overnight), then `state=none\|pending\|chosen <preset> [\| note]\|auto <preset>\|unclear \| <answer>` |
 | `lock acquire\|release\|status --owner <id>` | exit 4 when another owner holds it |

@@ -4,7 +4,7 @@ Read at step 4 (baseline), step 6 (every round) and step 8 of the conductor. The
 
 ## Recording a round
 
-`pnpm verify <app> --round <label> [--round-notes <file>]` is a normal verify run (add `--record-seconds 45` as usual) that also snapshots the captures, and the trailer sheet and mp4 when `.verify/<app>/trailer/` exists, into `.verify/<app>/evolution/<NN>-<label>/`. Not with `--motion`, `--variants`, `--url` or `--preset`.
+`pnpm verify <app> --round <label> [--round-notes <file>]` is a normal verify run (add `--record-seconds 45` at a checkpoint or when the round judges motion of real play; `references/checkpoints.md`) that also snapshots the captures, and the trailer sheet and mp4 when `.verify/<app>/trailer/` exists, into `.verify/<app>/evolution/<NN>-<label>/`. Not with `--motion`, `--variants`, `--url` or `--preset`.
 
 - **When.** Once after the first playable, labelled `baseline` (no notes). Then after every polish round, labelled `r<N>`, and once more for every reverted try, labelled `r<N>-try<K>-reverted`, run before the revert so the captures are the tried state. The trailer round uses `trailer-baseline`, `trailer-t<K>` and `trailer-t<K>-reverted`; pass `--trailer` in the same run, so the sheet is in the round (the sheet of an earlier `--trailer` run is picked up too).
 - **Labels.** Letters, digits, `-` and `_`. Reusing a label replaces that round in place; folders are numbered by creation order and earlier rounds persist.
