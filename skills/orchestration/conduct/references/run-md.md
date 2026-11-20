@@ -8,7 +8,7 @@ One entry per line, `- <UTC timestamp> | <kind> | <text>`. Kinds:
 
 - `start`: text carries `pitch=<path>` and optional `mode=overnight|review process=minimal|standard|full rounds=N hours=H reserve=M autoAccepts=N look=auto target=yes`.
 - `step`, `assumption`, `judge`, `revert`.
-- `phase`: text is the phase name, logged when a phase begins: `brief`, `art-bible`, `first-playable`, `look-variants`, `checklist`, `polish`, `reference-judge`, `deliver`.
+- `phase`: text is the phase name, logged when a phase begins: `brief`, `art-bible`, `first-playable`, `look-variants`, `checklist`, `polish`, `reference-judge`, `trailer`, `deliver`.
 - `round-start`: `<N> | branch=<round branch> base=<sha>`, written before the director spawns.
 - `round`: text starts with the round number.
 - `stop`: `<stop name> | <one-line reason> | <packet path>`.
