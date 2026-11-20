@@ -322,4 +322,40 @@ fi
 grep -q 'process=minimal|standard|full' "$SKILL" && pass "conduct accepts process=" || fail "conduct accepts process="
 grep -q '\*\*Process setting.\*\*' "$AGENT" && grep -q 'no art bible document' "$AGENT" && grep -q 'reference discrimination judge' "$AGENT" && grep -q 'scripts/run_state.py limits' "$AGENT" && pass "the conductor describes what each process setting changes" || fail "the conductor describes what each process setting changes"
 
+# look variants: the first stop, look=auto and the optional target
+look() { python3 -I "$SCRIPT" look "$run"; }
+cat >"$run" <<'LOG'
+- 2026-11-19T01:00:00Z | start | pitch=PITCH.md
+- 2026-11-19T01:30:00Z | stop | look-variants | pick one of variants=dusk,neon,noon | packet.html
+LOG
+[ "$(look)" = "look=ask target=no
+state=pending" ] && pass "a look-variants stop with no answer is pending, look=ask and no target by default" || fail "a look-variants stop with no answer is pending" "$(look)"
+for case in "neon|chosen neon" "Noon, less bloom|chosen noon | less bloom" "pick dusk: warmer fog|chosen dusk | warmer fog" "the second, darker|chosen neon | darker" "3|chosen noon" "mauve|unclear | mauve"; do
+  answer="${case%%|*}"; expected="${case#*|}"
+  cp "$run" "$work/look.base"
+  echo "- 2026-11-19T02:00:00Z | answer | $answer" >>"$run"
+  actual=$(look | tail -1)
+  [ "$actual" = "state=$expected" ] && pass "answer '$answer' names a variant" || fail "answer '$answer' names a variant" "expected 'state=$expected', got '$actual'"
+  cp "$work/look.base" "$run"
+done
+echo "- 2026-11-19T02:00:00Z | answer | neon, less bloom" >>"$run"
+expect_next "the look answer resumes the look-variants stop" "resume: look-variants | neon, less bloom"
+cat >"$run" <<'LOG'
+- 2026-11-19T01:00:00Z | start | pitch=PITCH.md look=auto target=yes
+- 2026-11-19T01:30:00Z | assumption | look=auto dusk | fits the quiet harbour mood
+LOG
+[ "$(look)" = "look=auto target=yes
+state=auto dusk" ] && pass "an assumption for look=auto names the picked preset" || fail "an assumption for look=auto names the picked preset" "$(look)"
+expect_next "look=auto leaves no stop to wait for" "continue: look=auto dusk | fits the quiet harbour mood"
+printf '%s\n' '- 2026-11-19T01:00:00Z | start | pitch=PITCH.md' >"$run"
+[ "$(look | tail -1)" = "state=none" ] && pass "a run with no look decision reports none" || fail "a run with no look decision reports none"
+
+grep -q 'run_state.py` look' "$AGENT" || grep -q 'run_state.py look' "$AGENT" && grep -q 'verify <app> --variants' "$AGENT" && grep -q 'stop | look-variants' "$AGENT" && pass "the conductor stops for look variants captured with verify --variants" || fail "the conductor stops for look variants captured with verify --variants"
+grep -q 'look=auto' "$AGENT" && grep -q 'assumption | look=auto' "$AGENT" && grep -q 'target=yes' "$AGENT" && pass "the conductor handles look=auto and the optional target" || fail "the conductor handles look=auto and the optional target"
+grep -qi 'only a judge split, a failing gate, a spent budget and delivery' "$AGENT" && pass "with look=auto the stops are judge split, failing gate, spent budget and delivery" || fail "with look=auto the stops are judge split, failing gate, spent budget and delivery"
+grep -q 'chosen look' "$AGENT" && grep -qi 'benchmark' "$AGENT" && pass "the chosen look is the benchmark when no target exists" || fail "the chosen look is the benchmark when no target exists"
+grep -q 'look=auto' "$SKILL" && pass "conduct accepts look=auto" || fail "conduct accepts look=auto"
+grep -qi 'without a target' "$REPO_ROOT/skills/realtime/target-loop/SKILL.md" && grep -qi 'chose' "$REPO_ROOT/skills/realtime/target-loop/SKILL.md" && pass "target-loop uses the chosen look as the benchmark with no target" || fail "target-loop uses the chosen look as the benchmark with no target"
+grep -qi 'no target, the capture of the look the user chose' "$REPO_ROOT/skills/realtime/realtime-judge/SKILL.md" && pass "realtime-judge benchmarks against the chosen look with no target" || fail "realtime-judge benchmarks against the chosen look with no target"
+
 [ "$failures" -eq 0 ] || exit 1
