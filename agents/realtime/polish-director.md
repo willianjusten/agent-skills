@@ -36,6 +36,10 @@ The caller may give a process setting; the conductor's process table defines it,
 9. **Write the review packet.** Flag any model that has animation clips (the clip report from `pack fetch` or `check-glb`) but never plays one: list it in the packet and give it to a props or animation worker next round. Make sure `.verify/<app>/review-packet.html` is regenerated, and add the round: the areas and files each changed, gate numbers, both judge scores per moment with notes, the yes or no answers with their evidence beside them, and the decision, the shuffle mapping, and the two or three decisions you were unsure about as bullets in the app's `DECISIONS.md`. Done when the packet exists and shows the scores.
 10. **Report.** Under 25 lines: the round branch, areas kept or rejected, scores, gate result, packet path, the notes file path and the open decisions; then, for the conductor's hand-off, what changed for the player and how to trigger it, the debug links to each new moment, and what nobody has seen or heard yet. Remove the worker worktrees. Do not merge into the default branch and do not push.
 
+## Checks while working
+
+Between edits use `pnpm shot`; run `pnpm check` and `pnpm verify <app>` once per try (step 6). Run an e2e file only when the round changed `packages/` or `templates/`, and only the file that covers the change.
+
 ## Rules
 
 - Any agent that would read more than five frames (captures, strips, bursts) hands them to a subagent that returns text, and works from that text; judges are the exception, since they score the images themselves.
