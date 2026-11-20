@@ -353,7 +353,7 @@ printf '%s\n' '- 2026-11-19T01:00:00Z | start | pitch=PITCH.md' >"$run"
 
 grep -q 'run_state.py` look' "$CONDUCT_TEXT" || grep -q 'run_state.py look' "$CONDUCT_TEXT" && grep -q 'verify <app> --variants' "$CONDUCT_TEXT" && grep -q 'stop | look-variants' "$AGENT" && pass "the conductor stops for look variants captured with verify --variants" || fail "the conductor stops for look variants captured with verify --variants"
 grep -q 'look=auto' "$CONDUCT_TEXT" && grep -q 'assumption | look=auto' "$CONDUCT_TEXT" && grep -q 'target=yes' "$CONDUCT_TEXT" && pass "the conductor handles look=auto and the optional target" || fail "the conductor handles look=auto and the optional target"
-grep -qi 'only a judge split, a failing gate, a spent budget and delivery' "$CONDUCT_TEXT" && pass "with look=auto the stops are judge split, failing gate, spent budget and delivery" || fail "with look=auto the stops are judge split, failing gate, spent budget and delivery"
+grep -q 'A spent budget is not a stop' "$AGENT" && grep -q 'With `look=ask` (the review default) also' "$AGENT" && pass "a spent budget moves on to delivery and the look stops need look=ask" || fail "a spent budget moves on to delivery and the look stops need look=ask"
 grep -qi 'never a judge benchmark' "$CONDUCT_TEXT" && pass "the chosen look is never the benchmark" || fail "the chosen look is never the benchmark"
 grep -q 'look=auto' "$SKILL" && pass "conduct accepts look=auto" || fail "conduct accepts look=auto"
 grep -qi 'no gap score' "$REPO_ROOT/skills/realtime/target-loop/SKILL.md" && grep -qi 'never a benchmark' "$REPO_ROOT/skills/realtime/target-loop/SKILL.md" && pass "target-loop reports no gap score without a target or reference image" || fail "target-loop reports no gap score without a target or reference image"
@@ -374,13 +374,13 @@ PHASES=$(python3 -I "$SCRIPT" phase-names | tr '\n' ' ')
 listed=$(grep '^- `phase`: text is the phase name' "$REFERENCES/run-md.md" | sed 's/^[^:]*:[^:]*://' | grep -o '`[a-z-]*`' | tr -d '`' | tr '\n' ' ')
 [ "$listed" = "$PHASES" ] && pass "run-md.md lists the phase names run_state.py reports, in run order" || fail "run-md.md lists the phase names run_state.py reports, in run order" "$listed vs $PHASES"
 for phase in $PHASES; do
-  grep -q "phase | $phase\`" "$AGENT" && pass "phase $phase is appended by a step" || fail "phase $phase is appended by a step"
+  grep -q "^- \*\*$phase\.\*\*" "$AGENT" && pass "phase $phase has an entry under Phases" || fail "phase $phase has an entry under Phases"
 done
-grep -q 'at every round boundary' "$CONDUCT_TEXT" && pass "the conductor re-reads next at each round boundary" || fail "the conductor re-reads next at each round boundary"
-grep -q 'phase=<name>' "$AGENT" && grep -q 'phase=<phase>' "$REFERENCES/run-md.md" && pass "continue resumes the phase the next line names" || fail "continue resumes the phase the next line names"
-grep -q 'step 2 also fixes what step 3 would have' "$CONDUCT_TEXT" && grep -q 'from the brief and the pitch' "$CONDUCT_TEXT" && pass "process=minimal chooses the asset source in the brief and writes presets from the brief" || fail "process=minimal chooses the asset source in the brief and writes presets from the brief"
+grep -q 'again after every action' "$AGENT" && grep -q 'run_state.py step RUN.md' "$AGENT" && pass "the conductor re-runs step after every action" || fail "the conductor re-runs step after every action"
+grep -q 'phase: <name> \\| done when <check>' "$AGENT" && grep -q 'work: <name>' "$AGENT" && grep -q '`step`' "$REFERENCES/run-md.md" && pass "the loop table covers phase and work lines, and run-md.md lists step" || fail "the loop table covers phase and work lines, and run-md.md lists step"
+grep -q 'the brief phase also fixes what the art bible would have' "$CONDUCT_TEXT" && grep -q 'from the brief and the pitch' "$CONDUCT_TEXT" && pass "process=minimal chooses the asset source in the brief and writes presets from the brief" || fail "process=minimal chooses the asset source in the brief and writes presets from the brief"
 grep -q 'Only with `process=full`' "$CONDUCT_TEXT" && pass "the reference judge runs only with process=full" || fail "the reference judge runs only with process=full"
-grep -q 'run_state.py limits RUN.md` prints' "$CONDUCT_TEXT" && ! grep -q '6 rounds, 6 hours of active run time per run' "$CONDUCT_TEXT" && pass "the budget stop reads the limits from run_state.py" || fail "the budget stop reads the limits from run_state.py"
+grep -q 'run `limits` and `profile`' "$AGENT" && ! grep -q '6 rounds, 6 hours of active run time per run' "$CONDUCT_TEXT" && pass "the conductor reads the limits and profile from run_state.py" || fail "the conductor reads the limits and profile from run_state.py"
 grep -q 'regression moment' "$CONDUCT_TEXT" && grep -q 'regression moment: <name>' "$CONDUCT_TEXT" && pass "the conductor logs and passes the regression moment" || fail "the conductor logs and passes the regression moment"
 DIRECTOR="$REPO_ROOT/agents/realtime/polish-director.md"
 grep -q 'regression moment is a named capture' "$DIRECTOR" && grep -q 'judges the regression moment alone' "$DIRECTOR" && pass "the director fixes one named regression moment and handles a round with no changed capture" || fail "the director fixes one named regression moment and handles a round with no changed capture"
@@ -389,9 +389,8 @@ grep -q -- '--questions' "$DIRECTOR" && grep -q 'no new `no` answer' "$DIRECTOR"
 MOTION="$REPO_ROOT/skills/creative/motion-review/SKILL.md"
 grep -q -- '--motion --from-recording <from>-<to>' "$MOTION" && grep -q 'play/play-contact-sheet.png' "$MOTION" && grep -q 'motion-play/judge/' "$MOTION" && grep -q 'cannot use `--against`' "$MOTION" && pass "motion-review documents the real-play recording range" || fail "motion-review documents the real-play recording range"
 look_stops=$(sed -n '/^## Stop points/,/^At a stop/p' "$AGENT")
-echo "$look_stops" | grep -q 'With `look=ask` (default) also: look variant chosen' && ! echo "$look_stops" | grep -q '^Always: look variant' && pass "the Always stop list holds only the stops that survive look=auto" || fail "the Always stop list holds only the stops that survive look=auto"
+echo "$look_stops" | grep -q 'With `look=ask` (the review default) also: the look variant' && ! echo "$look_stops" | grep -q '^Always: look variant' && pass "the Always stop list holds only the stops that survive look=auto" || fail "the Always stop list holds only the stops that survive look=auto"
 
-[ "$failures" -eq 0 ] || exit 1
 
 # run modes: the skill text names them and the reference exists
 MODES_REF="$REPO_ROOT/skills/orchestration/conduct/references/run-modes.md"
@@ -403,7 +402,7 @@ grep -q 'run-modes.md' "$AGENT" && grep -q 'lower counted score' "$AGENT" && pas
 REFS="$REPO_ROOT/skills/orchestration/conduct/references"
 grep -q 'trailer-round.md' "$AGENT" && grep -q -- '--trailer' "$REFS/trailer-round.md" && grep -q 'motion-judge' "$REFS/trailer-round.md" && grep -q 'row | trailer' "$REFS/trailer-round.md" && pass "the conductor runs a trailer round recorded with --trailer and judged by motion judges" || fail "the conductor runs a trailer round recorded with --trailer and judged by motion judges"
 grep -q 'reserve' "$REFS/trailer-round.md" && grep -q 'round-review' "$REFS/trailer-round.md" && grep -q 'offered' "$REFS/trailer-round.md" && pass "the trailer round runs in the reserve and is offered at the last review round" || fail "the trailer round runs in the reserve and is offered at the last review round"
-grep -q -- '--round <label> --round-notes' "$AGENT" && grep -q 'reverted' "$REFS/evolution-sound.md" && grep -q 'evolution.html' "$REFS/hand-off.md" && pass "rounds are recorded with --round, reverted tries too, and the hand-off links evolution.html" || fail "rounds are recorded with --round, reverted tries too, and the hand-off links evolution.html"
+grep -q -- '--round r<N> --round-notes' "$REFS/polish-rounds.md" && grep -q 'evolution-sound.md' "$AGENT" && grep -q 'reverted' "$REFS/evolution-sound.md" && grep -q 'evolution.html' "$REFS/hand-off.md" && pass "rounds are recorded with --round, reverted tries too, and the hand-off links evolution.html" || fail "rounds are recorded with --round, reverted tries too, and the hand-off links evolution.html"
 grep -q -- '--round' "$DIRECTOR" && grep -q 'try<K>-reverted' "$DIRECTOR" && pass "the director records a rejected try before reverting it" || fail "the director records a rejected try before reverting it"
 grep -q 'Sound:' "$REPO_ROOT/agents/realtime/feel-judge.md" && grep -q 'sound.report.sounds' "$REPO_ROOT/skills/realtime/realtime-judge/references/sound.md" && grep -q 'gate=pass' "$DIRECTOR" && grep -q "\`sound\` gate passes" "$REFS/checklist.md" && pass "the feel judge gets the sound table and a sound row needs the gate and no audio problem" || fail "the feel judge gets the sound table and a sound row needs the gate and no audio problem"
 for skill_file in realtime/three-verify creative/motion-review realtime/realtime-judge realtime/three-build; do
@@ -449,3 +448,10 @@ case "$out" in *"last=step"*) pass "checks and checkpoint lines never move the r
 CHECKPOINTS="$REFS/checkpoints.md"
 grep -q 'checkpoints.md' "$AGENT" && grep -q 'tier: light' "$DIRECTOR" && grep -q 'tier: checkpoint' "$DIRECTOR" && grep -q 'layer-cost' "$CHECKPOINTS" && grep -q 'every third' "$CHECKPOINTS" && grep -q 'never put a time cap\|Never put a time cap' "$CHECKPOINTS" && pass "the conductor, the checkpoints reference and the director name the check tiers" || fail "the conductor, the checkpoints reference and the director name the check tiers"
 ! grep -q 'verify <app> --layer-cost` (layer' "$DIRECTOR" && pass "the director no longer runs --layer-cost on every round" || fail "the director no longer runs --layer-cost on every round"
+
+# reopen: a delivered app goes back to polish without a new pitch
+grep -q 'it is a reopen' "$SKILL" && grep -q 'never needs a new pitch' "$SKILL" && grep -q '<start|resume|reopen>' "$SKILL" && pass "/conduct reopens a done app instead of stopping" || fail "/conduct reopens a done app instead of stopping"
+grep -q '^- \*\*Reopen\.\*\*' "$AGENT" && grep -q 'reopen | after done | focus:' "$AGENT" && grep -q 'DECISIONS.md' "$AGENT" && pass "the conductor has a reopen step seeded from the open items" || fail "the conductor has a reopen step seeded from the open items"
+grep -q '^- `reopen`' "$REFERENCES/run-md.md" && grep -q 'starts a new leg' "$REFERENCES/run-md.md" && pass "run-md.md documents the reopen entry and its budget leg" || fail "run-md.md documents the reopen entry and its budget leg"
+
+[ "$failures" -eq 0 ] || exit 1

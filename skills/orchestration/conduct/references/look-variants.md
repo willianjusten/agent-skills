@@ -1,6 +1,6 @@
 # Look variants and the target frame
 
-Read at step 4b of the conductor.
+Read in the look-variants phase.
 
 The pitch or caller may say `look=auto` and `target=yes`; copy them into the `start` or a `budget` line.
 

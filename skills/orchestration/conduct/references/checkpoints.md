@@ -1,6 +1,6 @@
 # Checkpoints
 
-Read at step 4 (baseline), step 6 (every round) and step 8 of the conductor. Checks earn their time at a few rigorous points, not every round: the run spends its hours on coding and improving the app, and the middle rounds stay light. Never put a time cap on a round or a worker; make the checks lighter instead.
+Read in the first-playable phase (baseline), every polish round and the deliver phase. Checks earn their time at a few rigorous points, not every round: the run spends its hours on coding and improving the app, and the middle rounds stay light. Never put a time cap on a round or a worker; make the checks lighter instead.
 
 ## Tiers
 

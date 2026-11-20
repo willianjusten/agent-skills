@@ -15,6 +15,7 @@ flowchart LR
   F --> G[Polish rounds]
   G --> H[Reference judge]
   H --> I[Delivery]
+  I -. /conduct app: reopen .-> G
 ```
 
 | Phase | Output |
@@ -34,6 +35,7 @@ flowchart LR
 /conduct apps/games/tide-runner/PITCH.md look=auto
 /conduct work on this game overnight for 6h
 /conduct work on this game and call me each round
+/conduct apps/games/tide-runner rounds=3, focus on the waterfalls
 ```
 
 ## Output
@@ -51,4 +53,6 @@ flowchart LR
 - Overnight or review? "Overnight for 6h", "while I sleep", "on its own" and "autonomously" run autonomously until the hours are spent and every row, trailer and sound included, is at target (no accept cap, judge splits settled by the lower score); "call me each round", a bare duration ("work on this for 6h", which only sets `hours=6`) or no mode stops after every round with the packet. `mode=overnight|review`.
 - Trailer and evolution? Before delivery the conductor directs and judges the app's trailer (`pnpm verify <app> --trailer`), inside the delivery reserve; every round, reverted tries included, is recorded with `--round`, and the hand-off links `evolution.html`.
 - Default stops? Look variant (none with `look=auto`), target frames (only when the pitch asks for a target), polish plateau, split taste call, a gate failing twice, a spent budget.
+- More polish after delivery? Run `/conduct <app>` on the delivered app, no new pitch: it reopens the run in polish with a fresh budget leg, seeded from the open items in `DECISIONS.md` and the judges' notes.
+- Games and experiments? One flow for both. `run_state.py step` decides each next action and `profile` says what the app's kind changes: an experiment (an audio visualizer, a particle field) writes a treatment, gets no game rows, gets `motion` and `input` rows, and judges motion every round.
 - Default budget? 6 polish rounds (fewer with `process=minimal`) and 6 hours of active run time per run, summed across stops and resumes, overridable in the request or the brief.

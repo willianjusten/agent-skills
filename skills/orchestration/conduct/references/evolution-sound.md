@@ -1,6 +1,6 @@
 # Evolution and sound
 
-Read at step 4 (baseline), step 6 (every round) and step 8 of the conductor. The review packet's Evolution section and `.verify/<app>/evolution.html` show every moment as a row of stills in round order, with scores and a kept or reverted chip under each. They are only complete when every round was recorded, reverted tries included.
+Read in the first-playable phase (baseline), every polish round and the deliver phase. The review packet's Evolution section and `.verify/<app>/evolution.html` show every moment as a row of stills in round order, with scores and a kept or reverted chip under each. They are only complete when every round was recorded, reverted tries included.
 
 ## Recording a round
 

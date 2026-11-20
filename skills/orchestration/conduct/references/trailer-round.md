@@ -1,6 +1,6 @@
 # Trailer round
 
-Read at step 7b of the conductor. The trailer is the app's directed shot list (`src/trailer.ts`: cameras, shot order, a final reveal), played by `?autopilot=1` and recorded by `pnpm verify <app> --trailer`. This round judges and directs it like any other round. It runs inside the delivery reserve, so it is the last work before delivery, and it is not a numbered polish round: it never counts against `rounds=N`.
+Read in the trailer phase. The trailer is the app's directed shot list (`src/trailer.ts`: cameras, shot order, a final reveal), played by `?autopilot=1` and recorded by `pnpm verify <app> --trailer`. This round judges and directs it like any other round. It runs inside the delivery reserve, so it is the last work before delivery, and it is not a numbered polish round: it never counts against `rounds=N`.
 
 ## When it runs
 
