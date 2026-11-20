@@ -39,6 +39,10 @@ when the remaining hours are at or below the delivery reserve, the time kept for
 trailer round and delivery: the conductor then stops polishing and moves on. The
 reserve is `reserve=<minutes>` in a `start` or `budget` line (default 40).
 
+`round-budget` prints `round-budget: <M>m (workers <W>m)`: the minutes the next polish
+round may take, `roundMinutes=<N>` (default 45) cut to the time left before the
+reserve, and the workers' share of it. The director ends the round at M.
+
 `rows` reads `row` entries, `row | <name> | turn <N> | score <V>/<F> of target <T> |
 kept|reverted|pending | [gate=pass|fail | ]approach: <text>`: one per row per turn, with
 the row's state after the turn (a reverted turn carries the score of the version it
@@ -113,6 +117,9 @@ DEFAULT_PROCESS = "standard"
 DEFAULT_MODE = "review"
 # Minutes kept at the end of the budget for the trailer round and delivery.
 DEFAULT_RESERVE_MINUTES = 40
+DEFAULT_ROUND_MINUTES = 45
+# Workers get this share of a round; capture, judging, merge and the packet take the rest.
+WORKER_SHARE_TWENTIETHS = 11
 MODES = ("overnight", "review")
 # What an uncapped limit prints, so a reader never mistakes it for a number.
 UNLIMITED = "unlimited"
@@ -467,6 +474,15 @@ def check_budget(entries, now):
     return BudgetVerdict("ok", "ok")
 
 
+def round_budget(entries, now):
+    round_minutes = configured_limit(entries, "roundMinutes", DEFAULT_ROUND_MINUTES, int)
+    max_hours = configured_limit(entries, "hours", DEFAULT_HOURS, float)
+    reserve_minutes = configured_limit(entries, "reserve", DEFAULT_RESERVE_MINUTES, int)
+    minutes_before_reserve = (max_hours - active_hours(entries, now)) * 60 - reserve_minutes
+    minutes = max(0, min(round_minutes, int(minutes_before_reserve)))
+    return "round-budget: %dm (workers %dm)" % (minutes, minutes * WORKER_SHARE_TWENTIETHS // 20)
+
+
 @dataclass
 class Turn:
     outcome: str
@@ -670,7 +686,7 @@ def resolve_now(text):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("command", choices=["next", "budget", "rows", "limits", "accepts", "phases", "phase-names", "look", "lock"])
+    parser.add_argument("command", choices=["next", "budget", "round-budget", "rows", "limits", "accepts", "phases", "phase-names", "look", "lock"])
     parser.add_argument("rest", nargs="*", help="RUN.md, or for lock: acquire|release|status then RUN.md")
     parser.add_argument("--allow-missing", action="store_true", help="next only: a missing RUN.md reads as a new run")
     parser.add_argument("--owner", help="lock owner name, for example the conductor's run id")
@@ -716,6 +732,9 @@ def main():
         return 0
     if args.command == "rows":
         print(row_report(entries))
+        return 0
+    if args.command == "round-budget":
+        print(round_budget(entries, resolve_now(args.now)))
         return 0
     verdict = check_budget(entries, resolve_now(args.now))
     print(verdict.text)
