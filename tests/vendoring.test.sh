@@ -5,14 +5,7 @@
 
 REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 SCOPES="$REPO_ROOT/scopes.json"
-failures=0
-
-pass() { echo "ok   $1"; }
-fail() {
-  echo "FAIL $1"
-  [ -n "${2:-}" ] && echo "$2" | sed 's/^/       /'
-  failures=$((failures + 1))
-}
+. "$(dirname "$0")/lib.sh"
 
 # install.sh owns the renames ("<upstream name>:<installed name>" pairs); read them from there.
 RENAMES=$(sed -n 's/^RENAMES="\(.*\)"$/\1/p' "$REPO_ROOT/install.sh")

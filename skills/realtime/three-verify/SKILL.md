@@ -32,6 +32,9 @@ All optional; none is a gate.
 - `--layer-cost`: prices each layer of an app that declares layers and adds the table to the review packet. Off by default and the slow part of `verify` (about a minute for ripple-toy); pass it when the packet needs layer prices. Not with `--motion` or `--url`.
 - `--uncapped`: also runs the desktop profile once with Chromium's frame cap off and reports average fps, p95 and headroom at 60 fps in the packet and `results.json`. The gate fps stays capped. Read p95 as a floor for a GPU-bound app. Not with `--motion` or `--url`.
 - `--preset <name>`: captures with `<app>/presets/<name>.json` loaded, to judge a tuned look; references are not compared. Not with `--accept` or `--motion`.
+- `--accept`: rewrites the reference images from this run. Only for a change that altered the look on purpose, after viewing every capture against its reference. Not with `--motion`, `--variants` or `--preset`.
+- `--variants <a>,<b>,<c> --moment <capture name>`: captures that one moment once per preset in `<app>/src/presets/`, into `.verify/<app>/variants/<preset>.png`. It runs alone: no gates and no results, so it takes none of the other flags; run a plain `pnpm verify <app>` afterwards to refresh the packet.
+- `--motion --from-recording <from>-<to>`: cuts a range of seconds from the last play recording into `motion-play/judge/`. Needs `--motion`, not `--against` or `--url`. `--record-seconds <n>` sets how long a play recording runs.
 
 ## Game captures
 

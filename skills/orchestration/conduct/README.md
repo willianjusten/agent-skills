@@ -47,4 +47,4 @@ flowchart LR
 ## FAQ
 
 - Default stops? Look variant (none with `look=auto`), target frames (only when the pitch asks for a target), polish plateau, split taste call, a gate failing twice, a spent budget.
-- Default budget? 6 polish rounds (2 with `process=minimal`) and 6 hours of active run time per run, summed across stops and resumes, overridable in the request or the brief.
+- Default budget? 6 polish rounds (fewer with `process=minimal`) and 6 hours of active run time per run, summed across stops and resumes, overridable in the request or the brief.

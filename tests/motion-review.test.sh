@@ -7,18 +7,8 @@ REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 SKILL_DIR="$REPO_ROOT/skills/creative/motion-review"
 SCRIPT="$SKILL_DIR/scripts/blind_motion.py"
 AGENT="$REPO_ROOT/agents/realtime/motion-judge.md"
-failures=0
+. "$(dirname "$0")/lib.sh"
 
-pass() { echo "ok   $1"; }
-fail() {
-  echo "FAIL $1"
-  [ -n "${2:-}" ] && echo "$2" | sed 's/^/       /'
-  failures=$((failures + 1))
-}
-
-frontmatter() { awk 'NR == 1 { next } /^---$/ { exit } { print }' "$1"; }
-field() { frontmatter "$1" | awk -v key="$2" -F': *' '$1 == key { print $2; exit }'; }
-scope_of() { frontmatter "$1" | awk '/^metadata:/ { in_meta = 1; next } in_meta && /scope:/ { sub(/.*scope:[ \t]*/, ""); sub(/[ \t]*#.*/, ""); print; exit }'; }
 
 # shape of the skill and the agent
 [ "$(field "$SKILL_DIR/SKILL.md" name)" = "motion-review" ] && pass "skill name equals its folder" || fail "skill name equals its folder"
@@ -52,7 +42,7 @@ for sheet in strip crops burst; do
 done
 
 run() { python3 -I "$SCRIPT" "$@"; }
-x_side() { python3 -c "import json; print(json.load(open('$1'))['X'])"; }
+x_side() { jq -r .X "$1"; }
 
 out=$(run prepare --before "$work/before" --after "$work/after" --judge-dir "$work/judge" --mapping "$work/mapping.json" --seed 2)
 listing=$(cd "$work/judge" && find . -type f | sort | tr '\n' ' ')
@@ -96,7 +86,7 @@ fi
 # decide on the motion score
 echo '{"X":"before","Y":"after","seed":0}' > "$work/before-is-x.json"
 echo '{"X":"after","Y":"before","seed":0}' > "$work/after-is-x.json"
-decision() { run decide --mapping "$1" --motion "$2" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['decision'], d['before'], d['after'])"; }
+decision() { run decide --mapping "$1" --motion "$2" | jq -r '[.decision, .before, .after] | join(" ")' ; }
 
 result=$(decision "$work/before-is-x.json" X=4,Y=7)
 [ "$result" = "keep 4 7" ] && pass "better motion is kept" || fail "better motion is kept" "$result"
@@ -111,5 +101,25 @@ else
   pass "scores outside 1-10 are refused"
 fi
 run decide --mapping "$work/before-is-x.json" --motion X=4,Y=7 --markdown | grep -q 'Motion judge' && pass "markdown names the motion judge" || fail "markdown names the motion judge"
+
+# blind_motion.py is the standalone motion subset of blind_pair.py: same seed, same shuffle; same scores, same verdict
+PAIR="$REPO_ROOT/skills/realtime/realtime-judge/scripts/blind_pair.py"
+verdict_of() { jq -r '[.decision, (.before_counted // .before), (.after_counted // .after)] | join(" ")'; }
+parity=""
+for seed in 1 2 3; do
+  python3 -I "$PAIR" prepare --before "$work/before" --after "$work/after" --judge-dir "$work/pj-$seed" --mapping "$work/pm.json" --seed "$seed" >/dev/null
+  run prepare --before "$work/before" --after "$work/after" --judge-dir "$work/mj-$seed" --mapping "$work/mm.json" --seed "$seed" >/dev/null
+  [ "$(x_side "$work/pm.json")" = "$(x_side "$work/mm.json")" ] || parity="$parity shuffle:$seed"
+  cmp -s <(cd "$work/pj-$seed" && find . -type f | sort | xargs cat) <(cd "$work/mj-$seed" && find . -type f | sort | xargs cat) || parity="$parity files:$seed"
+  for scores in X=4,Y=7 X=7,Y=4 X=6,Y=6; do
+    pair_verdict=$(python3 -I "$PAIR" decide --mapping "$work/pm.json" --motion "$scores" | verdict_of)
+    motion_verdict=$(run decide --mapping "$work/mm.json" --motion "$scores" | verdict_of)
+    [ "$pair_verdict" = "$motion_verdict" ] || parity="$parity verdict:$seed:$scores"
+  done
+done
+[ -z "$parity" ] && pass "blind_motion.py shuffles and decides exactly like blind_pair.py" || fail "blind_motion.py shuffles and decides exactly like blind_pair.py" "$parity"
+printf '{"X":"before"}' >"$work/bad-mapping.json"
+out=$(run decide --mapping "$work/bad-mapping.json" --motion X=5,Y=5 2>&1); status=$?
+{ [ "$status" -ne 0 ] && echo "$out" | grep -q "bad-mapping.json" && ! echo "$out" | grep -q Traceback; } && pass "a mapping missing a label is named, not a traceback" || fail "a mapping missing a label is named, not a traceback" "$out"
 
 [ "$failures" -eq 0 ] || { echo "$failures failure(s)" >&2; exit 1; }

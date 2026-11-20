@@ -5,14 +5,7 @@
 # the orchestrator cannot see it. Runs against a fixture copy of the repo.
 
 REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
-failures=0
-
-pass() { echo "ok   $1"; }
-fail() {
-  echo "FAIL $1"
-  [ -n "${2:-}" ] && echo "$2" | sed 's/^/       /'
-  failures=$((failures + 1))
-}
+. "$(dirname "$0")/lib.sh"
 
 write_skill() {
   local root="$1" category="$2" name="$3" scope="$4" uses="${5:-}"

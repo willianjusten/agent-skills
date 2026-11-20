@@ -62,10 +62,10 @@ The conductor never asks a question mid-run. Every call it makes instead is logg
 
 To answer a stop, append `- <UTC timestamp> | answer | <text>` to the app's `RUN.md` and run `/conduct <app>` again.
 
-`RUN.md` lives in the app folder, is committed and append-only. Each line is `- <UTC timestamp> | <kind> | <text>`; kinds are `start`, `step`, `assumption`, `judge`, `revert`, `round`, `stop`, `answer`, `resume`, `budget`, `note` and `done`. `run_state.py` (in `skills/orchestration/conduct/scripts/`) reads it:
+`RUN.md` lives in the app folder, is committed and append-only. Each line is `- <UTC timestamp> | <kind> | <text>`; kinds are `start`, `step`, `phase`, `assumption`, `judge`, `revert`, `round-start`, `round`, `stop`, `answer`, `resume`, `wip`, `budget`, `accept`, `note` and `done` (the full list is in the conductor's `references/run-md.md`). `run_state.py` (in `skills/orchestration/conduct/scripts/`) reads it:
 
 ```bash
-python3 -I skills/orchestration/conduct/scripts/run_state.py next <app>/RUN.md     # start, done, waiting, resume or continue
+python3 -I skills/orchestration/conduct/scripts/run_state.py next <app>/RUN.md     # start, done, waiting, resume, read result, redo or continue (exits 2 on a missing file)
 python3 -I skills/orchestration/conduct/scripts/run_state.py budget <app>/RUN.md   # ok, or stop: ... with exit 3
 python3 -I skills/orchestration/conduct/scripts/run_state.py lock status <app>/RUN.md
 ```
