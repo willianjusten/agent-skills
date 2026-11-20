@@ -154,8 +154,10 @@ out=$(next_state 2>&1)
   || fail "an answer with no pending stop is reported as notes, and the run keeps going" "$out"
 echo "- 2026-11-19T03:12:00Z | answer | and louder hits" >>"$run"
 next_state | grep -c '^notes for the next round' | grep -qx 2 && pass "every unread answer is listed as notes" || fail "every unread answer is listed as notes"
-echo "- 2026-11-19T03:20:00Z | round | 1 | started" >>"$run"
-expect_next "a round line consumes the notes" "continue: 1 | started"
+echo "- 2026-11-19T03:20:00Z | step | round 1 reads the notes" >>"$run"
+echo "- 2026-11-19T03:21:00Z | round-start | 1 | branch=none base=none" >>"$run"
+echo "- 2026-11-19T03:30:00Z | answer | during the round" >>"$run"
+expect_next "a round start consumes the notes, and an answer during the round is kept for the next" "$(printf 'redo: round 1\nnotes for the next round: during the round')"
 cat >"$run" <<'LOG'
 - 2026-11-19T01:00:00Z | start | pitch=PITCH.md
 - 2026-11-19T02:00:00Z | stop | look-variants | pick a look | p.html
@@ -205,6 +207,27 @@ lock_cmd status "$run" --now 2026-11-19T03:02:00Z 2>&1 | grep -q 'held by beta' 
 rm -f "$lock"
 grep -q "run_state.py lock acquire" "$SKILL" && pass "/conduct checks the lock" || fail "/conduct checks the lock"
 grep -q "run_state.py\` lock acquire\|run_state.py lock acquire" "$AGENT" && grep -q "lock release" "$AGENT" && pass "the conductor takes and releases the lock" || fail "the conductor takes and releases the lock"
+
+# resume after a cut-off: a recorded round branch with later commits is read, not redone
+repo="$work/repo"
+git init -q "$repo" && git -C "$repo" -c user.name=t -c user.email=t@t commit -q --allow-empty -m base
+base_sha=$(git -C "$repo" rev-parse HEAD)
+git -C "$repo" branch round-1
+mkdir -p "$repo/app"
+cutoff_run="$repo/app/RUN.md"
+cat >"$cutoff_run" <<LOG
+- 2026-11-19T01:00:00Z | start | pitch=PITCH.md
+- 2026-11-19T01:10:00Z | round-start | 1 | branch=round-1 base=$base_sha
+LOG
+output=$(python3 -I "$SCRIPT" next "$cutoff_run" 2>&1)
+[ "$output" = "redo: round 1" ] && pass "a round branch with no new commits is redone" || fail "a round branch with no new commits is redone" "$output"
+git -C "$repo" checkout -q round-1 && git -C "$repo" -c user.name=t -c user.email=t@t commit -q --allow-empty -m "polish: lighting"
+output=$(python3 -I "$SCRIPT" next "$cutoff_run" 2>&1)
+[ "$output" = "read result: round 1 branch round-1" ] && pass "a round branch with later commits is read, not redone" || fail "a round branch with later commits is read, not redone" "$output"
+echo "- 2026-11-19T02:00:00Z | round | 1 | lighting kept" >>"$cutoff_run"
+output=$(python3 -I "$SCRIPT" next "$cutoff_run" 2>&1)
+[ "$output" = "continue: 1 | lighting kept" ] && pass "a logged round is no longer pending" || fail "a logged round is no longer pending" "$output"
+grep -q "round-start" "$AGENT" && grep -q "read result" "$AGENT" && grep -q "redo" "$AGENT" && pass "the conductor records the round branch and states the resume rule" || fail "the conductor records the round branch and states the resume rule"
 
 # notifications and the wip line
 grep -q "PushNotification" "$SKILL" && grep -qi "main thread" "$SKILL" && grep -q "stop line" "$SKILL" && pass "/conduct sends the notification from the main thread with the stop line" || fail "/conduct sends the notification from the main thread with the stop line"

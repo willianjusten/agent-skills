@@ -88,4 +88,11 @@ grep -q "only when no checklist is given" "$director" && pass "the fixed areas a
 grep -q "motion-judge" "$director" && grep -q "lens its row names" "$director" && pass "the judge follows the component's lens" || fail "the judge follows the component's lens"
 grep -q "component" "$worker" && pass "the worker accepts a component" || fail "the worker accepts a component"
 
+grep -q "lean round" "$director" && grep -q "parallel round" "$director" && grep -q "touches one area" "$director" && grep -q "two or more areas" "$director" && pass "the director picks lean or parallel from the areas and logs the mode" || fail "the director picks lean or parallel from the areas and logs the mode"
+grep -q "whose captures changed" "$director" && grep -q "one fixed regression moment" "$director" && pass "judging covers changed moments plus one regression moment" || fail "judging covers changed moments plus one regression moment"
+conductor="$REPO_ROOT/agents/orchestration/conductor.md"
+for frame_file in "$director" "$conductor"; do
+  grep -q "more than five frames" "$frame_file" && pass "$(basename "$frame_file") has the frame-reading rule" || fail "$(basename "$frame_file") has the frame-reading rule"
+done
+
 [ "$failures" -eq 0 ] || exit 1
