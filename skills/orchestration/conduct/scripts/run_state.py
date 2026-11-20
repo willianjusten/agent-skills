@@ -5,6 +5,7 @@
   run_state.py budget <RUN.md> [--now <iso8601>]
   run_state.py limits <RUN.md>
   run_state.py phases <RUN.md> [--now <iso8601>]
+  run_state.py look   <RUN.md>
   run_state.py lock   acquire|release|status <RUN.md> [--owner <name>] [--now <iso8601>]
 
 Entries are lines shaped `- <UTC timestamp> | <kind> | <text>`; anything else
@@ -21,6 +22,14 @@ a `total`. A `phase | <name>` entry starts a phase (time before the first is
 `setup`); a resume carries on in the phase the sitting stopped in, and a phase
 that comes back is summed. Waiting for an answer is not counted, so the total
 equals the hours `budget` spends.
+
+`look` prints the look settings and the look decision. `look=auto` and
+`target=yes` in a `start` or `budget` line set the mode (default `look=ask
+target=no`). The first stop is `stop | look-variants | ... variants=a,b,c`; an
+`answer` after it names a variant (its name, or its 1-based number) with an
+optional note, and prints `state=chosen <preset> | <note>`. An `assumption`
+starting `look=auto <preset>` prints `state=auto <preset>`; a stop with no
+answer prints `state=pending`, otherwise `state=none`.
 
 A `round-start | N | branch=<name> base=<sha>` entry, written before the
 polish director spawns, makes a cut-off round recoverable: when the run ends
@@ -222,6 +231,60 @@ def report_phases(entries, now):
     return "\n".join(lines)
 
 
+def configured_flag(entries, key, default):
+    value = default
+    for _, kind, text in entries:
+        if kind in ("start", "budget"):
+            found = re.search(r"\b" + key + r"=([a-z]+)", text)
+            if found:
+                value = found.group(1)
+    return value
+
+
+def parse_variant_answer(answer, variants):
+    """The preset an answer names and its note: `dusk`, `variant dusk, warmer`, `2`, `the second`."""
+    words = re.sub(r"^(?:i |let's |lets )?(?:pick|choose|take|go with|variant|look|use)\b[:= ]*", "", answer.strip(), flags=re.I)
+    words = re.sub(r"^(?:the |option |variant )", "", words, flags=re.I)
+    first = re.match(r"([A-Za-z0-9_-]+)[\s,.:;-]*(.*)$", words, flags=re.S)
+    if not first:
+        return None, ""
+    token, note = first.group(1), first.group(2).strip()
+    ordinals = {"first": 1, "second": 2, "third": 3, "1st": 1, "2nd": 2, "3rd": 3}
+    if variants:
+        for name in variants:
+            if token.lower() == name.lower():
+                return name, note
+        index = int(token) if token.isdigit() else ordinals.get(token.lower())
+        if index and 1 <= index <= len(variants):
+            return variants[index - 1], note
+        return None, ""
+    return token, note
+
+
+def look_state(entries):
+    """The look decision: auto pick, the user's answer to the look-variants stop, pending, or none."""
+    variants = []
+    stop_index = None
+    for index, (_, kind, text) in enumerate(entries):
+        if kind == "stop" and text.split(" | ")[0].strip() == "look-variants":
+            stop_index = index
+            found = re.search(r"\bvariants=([\w,-]+)", text)
+            variants = found.group(1).split(",") if found else []
+    for _, kind, text in reversed(entries):
+        auto = re.match(r"look=auto\b[:, ]*(?:picked |pick |chose |chosen )?([\w-]+)", text) if kind == "assumption" else None
+        if auto:
+            return "auto " + auto.group(1)
+    if stop_index is None:
+        return "none"
+    for _, kind, text in entries[stop_index + 1:]:
+        if kind == "answer":
+            preset, note = parse_variant_answer(text, variants)
+            if preset is None:
+                return "unclear | " + text
+            return "chosen " + preset + (" | " + note if note else "")
+    return "pending"
+
+
 def check_budget(entries, now):
     max_rounds = round_limit(entries)
     max_hours = configured_limit(entries, "hours", DEFAULT_HOURS, float)
@@ -310,7 +373,7 @@ def resolve_now(text):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("command", choices=["next", "budget", "limits", "phases", "lock"])
+    parser.add_argument("command", choices=["next", "budget", "limits", "phases", "look", "lock"])
     parser.add_argument("rest", nargs="+", help="RUN.md, or for lock: acquire|release|status then RUN.md")
     parser.add_argument("--owner", help="lock owner name, for example the conductor's run id")
     parser.add_argument("--now", help="UTC time as 2026-01-31T12:00:00Z; defaults to the clock")
@@ -331,6 +394,10 @@ def main():
         return 0
     if args.command == "limits":
         print("process=%s rounds=%d hours=%g" % (configured_process(entries), round_limit(entries), configured_limit(entries, "hours", DEFAULT_HOURS, float)))
+        return 0
+    if args.command == "look":
+        print("look=%s target=%s" % (configured_flag(entries, "look", "ask"), configured_flag(entries, "target", "no")))
+        print("state=" + look_state(entries))
         return 0
     if args.command == "phases":
         print(report_phases(entries, resolve_now(args.now)))
