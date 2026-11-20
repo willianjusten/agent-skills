@@ -117,6 +117,22 @@ cat >"$run" <<'LOG'
 LOG
 expect "a logged round-review stop reads as any stop" "waiting: round-review" state next "$run"
 cat >"$run" <<'LOG'
+- 2026-11-19T01:00:00Z | start | pitch=PITCH.md mode=review
+- 2026-11-19T01:10:00Z | round-start | 1 | branch=r1 base=abc
+- 2026-11-19T01:50:00Z | round | 1 | done
+- 2026-11-19T01:51:00Z | judge | sky | 7/6
+- 2026-11-19T01:52:00Z | row | sky | turn 1 | score 7/6 of target 8 | kept | approach: warmer gradient
+- 2026-11-19T01:53:00Z | revert | water | foam sprites
+- 2026-11-19T01:54:00Z | note | aside
+LOG
+expect "judge, row and revert lines after a round still wait for the round review" "waiting: round-review" state next "$run"
+echo "- 2026-11-19T02:00:00Z | answer | less bloom" >>"$run"
+expect "an answer after those lines resumes the round review" "resume: round-review | less bloom" state next "$run"
+echo "- 2026-11-19T02:01:00Z | resume | from round-review" >>"$run"
+expect "the resume ends the round review" "continue: phase=setup | last=resume: from round-review" state next "$run"
+head -7 "$run" >"$work/rr.md"; echo "- 2026-11-19T02:00:00Z | answer | less bloom" >>"$work/rr.md"
+expect "that answer is no stray note" "resume: round-review | less bloom" state next "$work/rr.md"
+cat >"$run" <<'LOG'
 - 2026-11-19T01:00:00Z | start | pitch=PITCH.md mode=overnight
 - 2026-11-19T01:50:00Z | round | 1 | done
 LOG
@@ -193,7 +209,7 @@ out=$(state rows "$run")
 echo "$out" | grep -q '^sky turns=1 score=7/6 counted=6 target=8 at-target=no last=kept$' && pass "rows prints a worked row" || fail "rows prints a worked row" "$out"
 echo "$out" | grep -q '^creatures turns=0 score=- counted=- target=8 at-target=no last=none$' && pass "rows prints a never-worked row" || fail "rows prints a never-worked row" "$out"
 expect_last "never-worked rows go first, then a lost row with a new approach" "next: creatures, sound, water (new approach), sky" state rows "$run"
-printf '%s\n' '- 2026-11-19T01:40:00Z | row | creatures | turn 1 | score 8/9 of target 8 | kept | approach: rig' '- 2026-11-19T01:50:00Z | row | sound | turn 1 | score 7/7 of target 7 | kept | approach: synth' >>"$run"
+printf '%s\n' '- 2026-11-19T01:40:00Z | row | creatures | turn 1 | score 8/9 of target 8 | kept | approach: rig' '- 2026-11-19T01:50:00Z | row | sound | turn 1 | score -/7 of target 7 | kept | gate=pass | approach: synth' >>"$run"
 out=$(state rows "$run")
 echo "$out" | grep -q '^creatures .* counted=8 target=8 at-target=yes' && pass "a counted score at target is at target" || fail "a counted score at target is at target" "$out"
 expect_last "rows at target leave the pick list" "next: water (new approach), sky" state rows "$run"
@@ -206,6 +222,41 @@ expect_last "every row at target" "all-at-target=yes" state rows "$run"
 echo "- 2026-11-19T02:30:00Z | row | oops | turn x" >>"$run"
 out=$(state rows "$run" 2>&1)
 echo "$out" | grep -q 'oops' && echo "$out" | grep -q 'not a valid row' && pass "a malformed row line is named, not silently dropped" || fail "a malformed row line is named" "$out"
+# one-sided scores: trailer is V/-, sound is -/F; the lone number is the counted score
+cat >"$work/oneside.md" <<'LOG'
+- 2026-11-19T01:00:00Z | start | pitch=PITCH.md
+- 2026-11-19T01:05:00Z | row | trailer | turn 0 | score -/- of target 7 | pending | approach: none
+- 2026-11-19T01:05:01Z | row | sound | turn 0 | score -/- of target 7 | pending | approach: none
+- 2026-11-19T01:20:00Z | row | trailer | turn 1 | score 7/- of target 7 | kept | approach: cuts
+- 2026-11-19T01:30:00Z | row | sound | turn 1 | score -/6 of target 7 | kept | gate=pass | approach: synth
+LOG
+out=$(state rows "$work/oneside.md" 2>&1)
+echo "$out" | grep -q '^trailer turns=1 score=7/- counted=7 target=7 at-target=yes' && pass "a trailer score V/- counts V" || fail "a trailer score V/- counts V" "$out"
+echo "$out" | grep -q '^sound turns=1 score=-/6 counted=6 target=7 at-target=no' && pass "a sound score -/F counts F" || fail "a sound score -/F counts F" "$out"
+echo "$out" | grep -q 'not a valid' && fail "one-sided scores parse" "$out" || pass "one-sided scores parse"
+expect_last "a sound row below target keeps all-at-target at no" "all-at-target=no" state rows "$work/oneside.md"
+echo "- 2026-11-19T01:40:00Z | row | sound | turn 2 | score -/8 of target 7 | kept | gate=pass | approach: mix" >>"$work/oneside.md"
+expect_last "trailer and sound at target make all-at-target yes" "all-at-target=yes" state rows "$work/oneside.md"
+
+# the sound row is at target only when the gate passes
+for gate in "gate=fail" ""; do
+  printf '%s\n' '- 2026-11-19T01:00:00Z | start | pitch=PITCH.md' "- 2026-11-19T01:40:00Z | row | sound | turn 1 | score -/9 of target 7 | kept | ${gate:+$gate | }approach: mix" >"$work/gate.md"
+  out=$(state rows "$work/gate.md" 2>&1)
+  echo "$out" | grep -q '^sound .*counted=9 .*at-target=no' && echo "$out" | grep -q 'all-at-target=no' && pass "sound row with '${gate:-no gate}' is not at target" || fail "sound row with '${gate:-no gate}' is not at target" "$out"
+done
+echo "- 2026-11-19T01:50:00Z | row | other | turn 1 | score 9/9 of target 7 | kept | gate=fail | approach: x" >"$work/gate2.md"
+expect_last "the gate rule is for the sound row only" "all-at-target=yes" state rows "$work/gate2.md"
+
+# a retried lost row with the same approach is named; shrink needs two different approaches
+cat >"$work/same.md" <<'LOG'
+- 2026-11-19T01:00:00Z | start | pitch=PITCH.md
+- 2026-11-19T01:30:00Z | row | water | turn 1 | score 6/7 of target 8 | reverted | approach: Foam sprites.
+- 2026-11-19T02:00:00Z | row | water | turn 2 | score 6/7 of target 8 | reverted | approach: foam  sprites
+LOG
+expect_last "a lost row retried with the same approach is named" "next: water (same approach, write a new one)" state rows "$work/same.md"
+sed -i.bak 's/foam  sprites/mist mesh/' "$work/same.md"
+expect_last "two different lost approaches shrink the scope" "next: water (shrink scope)" state rows "$work/same.md"
+
 printf '%s\n' '- 2026-11-19T01:00:00Z | start | pitch=PITCH.md' >"$work/norows.md"
 expect "no rows logged" "no rows logged" state rows "$work/norows.md"
 

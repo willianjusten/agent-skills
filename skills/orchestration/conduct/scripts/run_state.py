@@ -29,8 +29,10 @@ decides between rounds. `limits` prints it first. Overnight is fully autonomous:
 `accepts` and `limits` print `unlimited` for the accept limit and the round limit
 unless `autoAccepts=N` or `rounds=N` was given, and `look` defaults to `auto`;
 the hours still bound the run. In review mode `next` prints `waiting: round-review`
-when the last run entry is a `round` (the conductor normally writes `stop |
-round-review` itself, and the answer to it reads like any stop's answer).
+while the latest `round` has no later `round-start`, `stop`, `resume` or `answer`:
+the `judge`, `row`, `revert` and `note` lines a round leaves behind do not end the
+wait (the conductor normally writes `stop | round-review` itself, and the answer
+to it reads like any stop's answer).
 
 `budget` prints `reserve: <left> left of <hours>h, delivery reserve <N>m` (exit 0)
 when the remaining hours are at or below the delivery reserve, the time kept for the
@@ -38,14 +40,18 @@ trailer round and delivery: the conductor then stops polishing and moves on. The
 reserve is `reserve=<minutes>` in a `start` or `budget` line (default 40).
 
 `rows` reads `row` entries, `row | <name> | turn <N> | score <V>/<F> of target <T> |
-kept|reverted|pending | approach: <text>`: one per row per turn, with the row's
-state after the turn (a reverted turn carries the score of the version it kept).
-`turn 0 | score -/- | pending` declares a row before it is worked. It prints one
+kept|reverted|pending | [gate=pass|fail | ]approach: <text>`: one per row per turn, with
+the row's state after the turn (a reverted turn carries the score of the version it
+kept). `turn 0 | score -/- | pending` declares a row before it is worked. A side of
+the score may be `-` (trailer: `7/-`, sound: `-/6`); the lone number is the counted
+score. The `sound` row is at target only when its latest turn carries `gate=pass`
+(the `sound` gate passed) as well as the score, and prints `gate=pass|fail|none`. It prints one
 line per row (`turns`, `score` as V/F, `counted` as the lower of the two, `target`,
 `at-target`, `last`, and `lost=K` after K losses in a row), then `next:` with the
 rows to pick, never-worked first, then fewest turns, then lowest counted score,
 then checklist order; a row whose last turn was reverted carries `(new approach)`,
-and one lost twice in a row `(shrink scope)`. The last line is `all-at-target=yes|no`.
+and one lost twice in a row `(shrink scope)` when the two lost approaches differ,
+`(same approach, write a new one)` when they say the same thing. The last line is `all-at-target=yes|no`.
 
 `next` prints `continue: phase=<name> | last=<kind>: <text>`, where the phase
 is the last `phase` entry (`setup` before the first) and the last entry is the
@@ -96,7 +102,9 @@ import os
 import re
 import subprocess
 import sys
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from typing import NamedTuple, Optional
 
 DEFAULT_ROUNDS = 6
 DEFAULT_HOURS = 6.0
@@ -125,10 +133,14 @@ LOCK_STALE_HOURS = 2.0
 ENTRY = re.compile(r"^- (\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ) \| ([a-z-]+) \| ?(.*)$")
 # A line that looks like an entry attempt: a bullet with at least two bars.
 SCORE = r"(\d+(?:\.\d+)?)"
+# A score side is a number or `-`: the trailer scores motion only (V/-), sound scores feel only (-/F).
+SCORE_SIDE = r"(?:" + SCORE + "|-)"
 ROW = re.compile(
-    r"^(.+?) \| turn (\d+) \| score (?:-/-|" + SCORE + "/" + SCORE + r") of target " + SCORE
-    + r" \| (kept|reverted|pending)(?: \| approach: (.*))?$"
+    r"^(.+?) \| turn (\d+) \| score " + SCORE_SIDE + "/" + SCORE_SIDE + " of target " + SCORE
+    + r" \| (kept|reverted|pending)(?: \| gate=(pass|fail))?(?: \| approach: (.*))?$"
 )
+# The row whose target includes a gate: it counts only while the gate passes.
+GATED_ROW = "sound"
 ENTRY_ATTEMPT = re.compile(r"^- .* \| .* \|")
 
 
@@ -184,6 +196,24 @@ def pending_round(entries, run_file):
     return None
 
 
+# Entries that end a round's review: the next round, a stop, or a sitting boundary.
+ENDS_ROUND_REVIEW = ("round-start", "round", "stop", "start", "resume", "done")
+
+
+def round_review_state(entries):
+    """`waiting`, `answered` or None for the latest round. Judge, row, revert and note lines the round
+    left behind do not end it; only a later round-start, stop, sitting boundary or answer does."""
+    last_round = max((index for index, entry in enumerate(entries) if entry[1] == "round"), default=None)
+    if last_round is None:
+        return None
+    later_kinds = [kind for _, kind, _ in entries[last_round + 1:]]
+    if any(kind in ENDS_ROUND_REVIEW for kind in later_kinds):
+        return None
+    if "answer" not in later_kinds:
+        return "waiting"
+    return "answered" if entries[-1][1] == "answer" else None
+
+
 def next_action(entries, run_file=None):
     entries = [entry for entry in entries if entry[1] not in NOT_RUN_STATE]
     if not entries:
@@ -194,11 +224,10 @@ def next_action(entries, run_file=None):
     if last_kind == "stop":
         return "waiting: " + last_text.split(" | ")[0].strip()
     run_entries = [entry for entry in entries if entry[1] != "answer"]
-    if configured_mode(entries) == "review" and run_entries and run_entries[-1][1] == "round":
+    review_state = round_review_state(entries) if configured_mode(entries) == "review" else None
+    if review_state:
         # A round ended and the user has not reviewed it; a missing `stop` line must not let the run carry on.
-        if last_kind == "answer":
-            return "resume: round-review | " + last_text
-        return "waiting: round-review"
+        return "resume: round-review | " + last_text if review_state == "answered" else "waiting: round-review"
     if last_kind == "answer":
         # The answer answers a stop only when the stop is the last run entry before it.
         if run_entries and run_entries[-1][1] == "stop":
@@ -223,16 +252,20 @@ def round_notes(entries):
     notes = []
     previous_run_kind = None
     review_mode = configured_mode(entries) == "review"
+    awaiting_review = False
     for _, kind, text in entries:
         if kind in NOT_RUN_STATE:
             continue
         if kind == "answer":
-            answers_round_review = review_mode and previous_run_kind == "round"
+            answers_round_review = review_mode and awaiting_review
+            awaiting_review = False
             if previous_run_kind != "stop" and not answers_round_review:
                 notes.append(text)
             continue
         if kind == "round-start":
             notes = []
+        if kind in ENDS_ROUND_REVIEW:
+            awaiting_review = kind == "round"
         previous_run_kind = kind
     return notes
 
@@ -264,10 +297,14 @@ def configured_mode(entries):
     return value
 
 
+def overnight_uncapped(entries, key):
+    """True when the run is overnight and `key=N` was not given: the hours alone bound that run."""
+    return configured_mode(entries) == "overnight" and last_setting(entries, key, r"\d+(?:\.\d+)?") is None
+
+
 def accept_limit(entries):
     """The autonomous-accept limit: the explicit autoAccepts=N, else unlimited overnight, else the default; None means unlimited."""
-    explicit = last_setting(entries, "autoAccepts", r"\d+(?:\.\d+)?")
-    if explicit is None and configured_mode(entries) == "overnight":
+    if overnight_uncapped(entries, "autoAccepts"):
         return None
     return configured_limit(entries, "autoAccepts", DEFAULT_AUTO_ACCEPTS, int)
 
@@ -281,7 +318,7 @@ def accepts_report(entries):
         elif kind == "accept":
             since_answer += 1
     limit = accept_limit(entries)
-    return "accepts-since-answer=%d of %s" % (since_answer, UNLIMITED if limit is None else limit)
+    return "accepts-since-answer=%d of %s" % (since_answer, limit_label(limit))
 
 
 def configured_process(entries):
@@ -293,7 +330,7 @@ def configured_process(entries):
 
 def round_limit(entries):
     """The polish round limit; None (unlimited) overnight unless rounds=N was given, since the hours bound that run."""
-    if last_setting(entries, "rounds", r"\d+(?:\.\d+)?") is None and configured_mode(entries) == "overnight":
+    if overnight_uncapped(entries, "rounds"):
         return None
     return configured_limit(entries, "rounds", PROCESS_ROUNDS[configured_process(entries)], int)
 
@@ -404,24 +441,89 @@ def look_state(entries):
     return "none" if stop_index is None else "pending"
 
 
+def limit_label(limit):
+    """A limit as printed: `unlimited` for None, else the number."""
+    return UNLIMITED if limit is None else limit
+
+
+class BudgetVerdict(NamedTuple):
+    kind: str  # "ok", "reserve" or "stop"
+    text: str
+
+
 def check_budget(entries, now):
     max_rounds = round_limit(entries)
     max_hours = configured_limit(entries, "hours", DEFAULT_HOURS, float)
     rounds = sum(1 for _, kind, _ in entries if kind == "round")
     if max_rounds is not None and rounds >= max_rounds:
-        return "stop: rounds spent (%d of %d)" % (rounds, max_rounds)
+        return BudgetVerdict("stop", "stop: rounds spent (%d of %d)" % (rounds, max_rounds))
     hours = active_hours(entries, now)
     if hours >= max_hours:
-        return "stop: hours spent (%.1f of %g)" % (hours, max_hours)
+        return BudgetVerdict("stop", "stop: hours spent (%.1f of %g)" % (hours, max_hours))
     reserve_minutes = configured_limit(entries, "reserve", DEFAULT_RESERVE_MINUTES, int)
     minutes_left = round((max_hours - hours) * 60, 3)
     if minutes_left <= reserve_minutes:
-        return "reserve: %s left of %gh, delivery reserve %dm" % (format_duration(minutes_left * 60), max_hours, reserve_minutes)
-    return "ok"
+        return BudgetVerdict("reserve", "reserve: %s left of %gh, delivery reserve %dm" % (format_duration(minutes_left * 60), max_hours, reserve_minutes))
+    return BudgetVerdict("ok", "ok")
 
 
-def row_report(entries):
-    """One line per row, then the rows to pick next and whether every row is at target."""
+@dataclass
+class Turn:
+    outcome: str
+    approach: str
+    gate: Optional[str]
+
+
+@dataclass
+class Row:
+    name: str
+    target: float
+    order: int
+    turns: list = field(default_factory=list)
+    visual: Optional[float] = None
+    feel: Optional[float] = None
+
+    @property
+    def counted(self):
+        """The lower of the two scores; the lone number when a side is `-` (trailer: motion only, sound: feel only)."""
+        scores = [value for value in (self.visual, self.feel) if value is not None]
+        return min(scores) if scores else None
+
+    @property
+    def gate(self):
+        return self.turns[-1].gate if self.turns else None
+
+    @property
+    def at_target(self):
+        if self.counted is None or self.counted < self.target:
+            return False
+        return self.name != GATED_ROW or self.gate == "pass"
+
+    @property
+    def lost_turns(self):
+        """The reverted turns at the end, oldest first."""
+        lost = []
+        for turn in reversed(self.turns):
+            if turn.outcome != "reverted":
+                break
+            lost.append(turn)
+        return lost[::-1]
+
+    def score_label(self):
+        if self.counted is None:
+            return "-"
+        return "/".join("-" if value is None else "%g" % value for value in (self.visual, self.feel))
+
+
+def same_approach(first, second):
+    """True when two approach texts say the same thing, ignoring case, spacing and a closing full stop."""
+    def normal(text):
+        return " ".join(text.lower().split()).rstrip(".")
+    return normal(first) == normal(second)
+
+
+def parse_rows(entries):
+    """The rows a RUN.md declares and works, in the order they were declared; a malformed row line is named on stderr."""
     rows = {}
     for _, kind, text in entries:
         if kind != "row":
@@ -430,33 +532,52 @@ def row_report(entries):
         if not match:
             print("not a valid row entry: %s" % text[:80], file=sys.stderr)
             continue
-        name, turn, visual, feel, target, outcome, _ = match.groups()
-        row = rows.setdefault(name, {"target": float(target), "turns": [], "score": None})
-        row["target"] = float(target)
+        name, turn, visual, feel, target, outcome, gate, approach = match.groups()
+        row = rows.setdefault(name, Row(name, float(target), len(rows)))
+        row.target = float(target)
         if int(turn) == 0:
             continue
-        row["turns"].append((outcome, text.split("approach:", 1)[1].strip() if "approach:" in text else ""))
-        row["score"] = (visual, feel) if visual is not None else None
+        row.turns.append(Turn(outcome, (approach or "").strip(), gate))
+        row.visual = float(visual) if visual is not None else None
+        row.feel = float(feel) if feel is not None else None
+    return list(rows.values())
+
+
+def pick_note(row):
+    """What the next turn on a lost row should do: write a new approach, shrink the scope, or both warnings."""
+    lost = row.lost_turns
+    if not lost:
+        return ""
+    if len(lost) >= 2:
+        if same_approach(lost[-1].approach, lost[-2].approach):
+            return " (same approach, write a new one)"
+        return " (shrink scope)"
+    return " (new approach)"
+
+
+def rank_candidates(rows):
+    """Rows below target in pick order: never-worked first, then fewest turns, then lowest counted score, then declared order."""
+    below_target = [row for row in rows if not row.at_target]
+    return sorted(below_target, key=lambda row: (len(row.turns), row.counted if row.counted is not None else -1, row.order))
+
+
+def row_line(row):
+    lost = len(row.lost_turns)
+    last = row.turns[-1].outcome if row.turns else "none"
+    gate = " gate=%s" % (row.gate or "none") if row.name == GATED_ROW and row.turns else ""
+    return "%s turns=%d score=%s counted=%s target=%g at-target=%s last=%s%s%s" % (
+        row.name, len(row.turns), row.score_label(), "-" if row.counted is None else "%g" % row.counted, row.target,
+        "yes" if row.at_target else "no", last, " lost=%d" % lost if lost else "", gate)
+
+
+def row_report(entries):
+    """One line per row, then the rows to pick next and whether every row is at target."""
+    rows = parse_rows(entries)
     if not rows:
         return "no rows logged"
-    lines, candidates = [], []
-    for order, (name, row) in enumerate(rows.items()):
-        counted = min(float(value) for value in row["score"]) if row["score"] else None
-        at_target = counted is not None and counted >= row["target"]
-        lost = 0
-        for outcome, _ in reversed(row["turns"]):
-            if outcome != "reverted":
-                break
-            lost += 1
-        last = row["turns"][-1][0] if row["turns"] else "none"
-        lines.append("%s turns=%d score=%s counted=%s target=%s at-target=%s last=%s%s" % (
-            name, len(row["turns"]), "/".join(row["score"]) if row["score"] else "-",
-            "%g" % counted if counted is not None else "-", "%g" % row["target"],
-            "yes" if at_target else "no", last, " lost=%d" % lost if lost else ""))
-        if not at_target:
-            note = " (shrink scope)" if lost >= 2 else " (new approach)" if lost else ""
-            candidates.append((len(row["turns"]), counted if counted is not None else -1, order, name + note))
-    lines.append("next: " + ", ".join(name for _, _, _, name in sorted(candidates)))
+    candidates = rank_candidates(rows)
+    lines = [row_line(row) for row in rows]
+    lines.append("next: " + ", ".join(row.name + pick_note(row) for row in candidates))
     lines.append("all-at-target=" + ("no" if candidates else "yes"))
     return "\n".join(lines)
 
@@ -580,8 +701,8 @@ def main():
     if args.command == "limits":
         rounds, accepts = round_limit(entries), accept_limit(entries)
         print("mode=%s process=%s rounds=%s hours=%g autoAccepts=%s" % (
-            configured_mode(entries), configured_process(entries), UNLIMITED if rounds is None else rounds,
-            configured_limit(entries, "hours", DEFAULT_HOURS, float), UNLIMITED if accepts is None else accepts))
+            configured_mode(entries), configured_process(entries), limit_label(rounds),
+            configured_limit(entries, "hours", DEFAULT_HOURS, float), limit_label(accepts)))
         return 0
     if args.command == "accepts":
         print(accepts_report(entries))
@@ -597,8 +718,8 @@ def main():
         print(row_report(entries))
         return 0
     verdict = check_budget(entries, resolve_now(args.now))
-    print(verdict)
-    return BUDGET_SPENT_EXIT if verdict.startswith("stop") else 0
+    print(verdict.text)
+    return BUDGET_SPENT_EXIT if verdict.kind == "stop" else 0
 
 
 if __name__ == "__main__":
