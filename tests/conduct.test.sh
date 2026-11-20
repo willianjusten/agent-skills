@@ -189,6 +189,38 @@ cat >"$run" <<'LOG'
 LOG
 expect_next "an answer right after a stop is an answer, not notes" "resume: look-variants | second look"
 
+# phases: time per phase from `phase` lines, summed across sittings
+cat >"$run" <<'LOG'
+- 2026-11-19T01:00:00Z | start | pitch=PITCH.md
+- 2026-11-19T01:10:00Z | phase | brief
+- 2026-11-19T01:40:00Z | phase | first-playable
+- 2026-11-19T02:40:00Z | stop | look-variants | pick one | packet.md
+- 2026-11-19T09:00:00Z | answer | the second one
+- 2026-11-19T10:00:00Z | resume | from look-variants
+- 2026-11-19T10:30:00Z | note | aside
+- 2026-11-19T10:45:00Z | phase | polish
+- 2026-11-19T11:45:00Z | phase | first-playable
+- 2026-11-19T12:00:00Z | done | delivered
+LOG
+phases() { python3 -I "$SCRIPT" phases "$run" --now "${1:-2026-11-19T13:00:00Z}"; }
+expected=$'setup 10m\nbrief 30m\nfirst-playable 2h\npolish 1h\ntotal 3h 40m'
+out=$(phases)
+[ "$out" = "$expected" ] && pass "phases prints time per phase, summed across sittings, waiting excluded" || fail "phases prints time per phase, summed across sittings, waiting excluded" "$out"
+
+cat >"$run" <<'LOG'
+- 2026-11-19T01:00:00Z | start | pitch=PITCH.md
+- 2026-11-19T01:30:00Z | phase | brief
+LOG
+out=$(phases 2026-11-19T02:00:00Z)
+[ "$out" = $'setup 30m\nbrief 30m\ntotal 1h' ] && pass "an open sitting counts to now" || fail "an open sitting counts to now" "$out"
+
+printf '%s\n' '- 2026-11-19T01:00:00Z | start | pitch=PITCH.md' >"$run"
+out=$(phases 2026-11-19T01:20:00Z)
+[ "$out" = $'setup 20m\ntotal 20m' ] && pass "a run with no phase line reports setup" || fail "a run with no phase line reports setup" "$out"
+rm -f "$run"
+out=$(phases)
+[ "$out" = "total 0m" ] && pass "no RUN.md reports zero time" || fail "no RUN.md reports zero time" "$out"
+
 # agent and skill
 [ -f "$AGENT" ] && pass "the conductor agent exists under agents/orchestration" || fail "the conductor agent exists under agents/orchestration"
 [ "$(field "$AGENT" name)" = "conductor" ] && pass "the agent name equals its file name" || fail "the agent name equals its file name"
@@ -274,6 +306,10 @@ done
 grep -q "run_in_background" "$SKILL" && grep -q "Agent tool" "$SKILL" && pass "/conduct starts the conductor as a background subagent" || fail "/conduct starts the conductor as a background subagent"
 grep -q "polish-director" "$AGENT" && grep -q "Agent tool" "$AGENT" && pass "the conductor runs the director as a nested subagent" || fail "the conductor runs the director as a nested subagent"
 grep -q "Nesting" "$AGENT" && pass "the conductor documents the nesting depth" || fail "the conductor documents the nesting depth"
+
+grep -q "phase. (text is the phase name" "$AGENT" && grep -q "run_state.py.* phases" "$AGENT" && pass "the conductor logs phases and reads their timing" || fail "the conductor logs phases and reads their timing"
+hand_off=$(awk '/^## Hand-off/{on=1;next} /^## /{on=0} on' "$AGENT")
+echo "$hand_off" | grep -qi "phase timing" && pass "the hand-off template includes phase timing" || fail "the hand-off template includes phase timing"
 
 # install check accepts the declared uses
 if output=$(cd "$REPO_ROOT" && ./install.sh check 2>&1); then
