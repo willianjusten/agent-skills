@@ -108,7 +108,7 @@ DEFAULT_RESERVE_MINUTES = 40
 MODES = ("overnight", "review")
 # What an uncapped limit prints, so a reader never mistakes it for a number.
 UNLIMITED = "unlimited"
-PHASE_NAMES = ("brief", "art-bible", "first-playable", "look-variants", "checklist", "polish", "reference-judge", "deliver")
+PHASE_NAMES = ("brief", "art-bible", "first-playable", "look-variants", "checklist", "polish", "reference-judge", "trailer", "deliver")
 # Polish rounds per process setting; minimal is a quick prototype, full adds judges rather than rounds.
 PROCESS_ROUNDS = {"minimal": 2, "standard": 6, "full": 6}
 # Written by the user or as asides: they never move the resume point or extend a sitting.

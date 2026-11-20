@@ -49,5 +49,6 @@ flowchart LR
 ## FAQ
 
 - Overnight or review? "Overnight for 6h" runs autonomously until the hours are spent (no accept cap, judge splits settled by the lower score); "call me each round" or no mode stops after every round with the packet. `mode=overnight|review`.
+- Trailer and evolution? Before delivery the conductor directs and judges the app's trailer (`pnpm verify <app> --trailer`), inside the delivery reserve; every round, reverted tries included, is recorded with `--round`, and the hand-off links `evolution.html`.
 - Default stops? Look variant (none with `look=auto`), target frames (only when the pitch asks for a target), polish plateau, split taste call, a gate failing twice, a spent budget.
 - Default budget? 6 polish rounds (fewer with `process=minimal`) and 6 hours of active run time per run, summed across stops and resumes, overridable in the request or the brief.

@@ -13,3 +13,7 @@ Run `pnpm verify <app>` and read `baseline` in `.verify/<app>/results.json` (the
 ## Features and balance
 
 From the brief's feature list, add a row per feature whose check in the game's `src/features.ts` fails (the packet's "N of M features pass" and its failing rows), with the check's `why` as the target. From the brief's balance band, run the balance report (`balance` in `results.json`, the packet's "Balance report") and add a row per measure outside its band (for example "win rate 0%, band 20-60%" or "idle survives round 1 on 4 of 24 seeds, band: yes"); lens `feel`. Without a `src/balance.ts` or a band, add no balance rows. Features and balance are reports, never gates: they become rows so polish rounds fix them like any other gap, and a row back in band or passing counts as met.
+
+## Sound
+
+When the packet has a "Sound" section (a game with `src/sounds.ts` and a bot run), add one `sound` row: lens `feel`, target "the `sound` gate passes and the feel judge names no audio problem", folder `src/sounds.ts` and any audio folder (`references/evolution-sound.md`). The `trailer` row is not part of the checklist: the trailer round declares it when it starts (`references/trailer-round.md`), so `rows` is not held open by it.
