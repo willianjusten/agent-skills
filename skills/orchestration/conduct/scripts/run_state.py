@@ -3,11 +3,13 @@
 
   run_state.py next   <RUN.md>
   run_state.py budget <RUN.md> [--now <iso8601>]
+  run_state.py limits <RUN.md>
   run_state.py lock   acquire|release|status <RUN.md> [--owner <name>] [--now <iso8601>]
 
 Entries are lines shaped `- <UTC timestamp> | <kind> | <text>`; anything else
 (headings, notes) is ignored. Defaults: 6 polish rounds, 6 hours of active run
-time. Active time is summed across sittings: a sitting runs from a `start` or
+time. `process=minimal|standard|full` (default standard) sets the round limit
+(2, 6, 6) unless an explicit `rounds=N` is given; `limits` prints the result. Active time is summed across sittings: a sitting runs from a `start` or
 `resume` entry to the next `stop` or `done`, so waiting for an answer is free.
 A sitting that ends without a stop (a crash) counts to its last entry written
 by the run; the user's `answer` and `budget` lines never extend it, and a
@@ -35,6 +37,9 @@ from datetime import datetime, timezone
 
 DEFAULT_ROUNDS = 6
 DEFAULT_HOURS = 6.0
+DEFAULT_PROCESS = "standard"
+# Polish rounds per process setting; minimal is a quick prototype, full adds judges rather than rounds.
+PROCESS_ROUNDS = {"minimal": 2, "standard": 6, "full": 6}
 # Written by the user or as asides: they never move the resume point or extend a sitting.
 NOT_RUN_STATE = ("note", "budget")
 NOT_RUN_TIME = ("note", "budget", "answer")
@@ -113,6 +118,22 @@ def configured_limit(entries, key, default, cast):
     return value
 
 
+def configured_process(entries):
+    value = DEFAULT_PROCESS
+    for _, kind, text in entries:
+        if kind in ("start", "budget"):
+            found = re.search(r"\bprocess=(\S+)", text)
+            if found:
+                value = found.group(1).rstrip(",.;")
+    if value not in PROCESS_ROUNDS:
+        raise SystemExit("process=%s is not valid; use minimal, standard or full" % value)
+    return value
+
+
+def round_limit(entries):
+    return configured_limit(entries, "rounds", PROCESS_ROUNDS[configured_process(entries)], int)
+
+
 def active_hours(entries, now):
     total_seconds = 0.0
     sitting_start = None
@@ -133,7 +154,7 @@ def active_hours(entries, now):
 
 
 def check_budget(entries, now):
-    max_rounds = configured_limit(entries, "rounds", DEFAULT_ROUNDS, int)
+    max_rounds = round_limit(entries)
     max_hours = configured_limit(entries, "hours", DEFAULT_HOURS, float)
     rounds = sum(1 for _, kind, _ in entries if kind == "round")
     if rounds >= max_rounds:
@@ -220,7 +241,7 @@ def resolve_now(text):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("command", choices=["next", "budget", "lock"])
+    parser.add_argument("command", choices=["next", "budget", "limits", "lock"])
     parser.add_argument("rest", nargs="+", help="RUN.md, or for lock: acquire|release|status then RUN.md")
     parser.add_argument("--owner", help="lock owner name, for example the conductor's run id")
     parser.add_argument("--now", help="UTC time as 2026-01-31T12:00:00Z; defaults to the clock")
@@ -236,6 +257,9 @@ def main():
         entries = []
     if args.command == "next":
         print(next_action(entries, run_file))
+        return 0
+    if args.command == "limits":
+        print("process=%s rounds=%d hours=%g" % (configured_process(entries), round_limit(entries), configured_limit(entries, "hours", DEFAULT_HOURS, float)))
         return 0
     verdict = check_budget(entries, resolve_now(args.now))
     print(verdict)

@@ -135,6 +135,30 @@ out=$(budget 2026-11-19T02:00:00Z); status=$?
 
 # a bad clock value is named, not a traceback
 printf '%s\n' '- 2026-11-19T01:00:00Z | start | pitch=PITCH.md' >"$run"
+# process setting: the round limit follows process=minimal|standard|full
+process_limits() { python3 -I "$SCRIPT" limits "$run"; }
+for case in "minimal:2" "standard:6" "full:6"; do
+  setting="${case%%:*}"; expected_rounds="${case##*:}"
+  printf -- '- 2026-11-19T01:00:00Z | start | pitch=PITCH.md process=%s\n' "$setting" >"$run"
+  out=$(process_limits); status=$?
+  [ "$status" -eq 0 ] && [ "$out" = "process=$setting rounds=$expected_rounds hours=6" ] && pass "process=$setting reports $expected_rounds rounds" || fail "process=$setting reports $expected_rounds rounds" "status $status: $out"
+done
+echo "- 2026-11-19T01:00:00Z | start | pitch=PITCH.md" >"$run"
+out=$(process_limits)
+[ "$out" = "process=standard rounds=6 hours=6" ] && pass "no process setting means standard" || fail "no process setting means standard" "$out"
+echo "- 2026-11-19T01:00:00Z | start | pitch=PITCH.md process=minimal rounds=4" >"$run"
+out=$(process_limits)
+[ "$out" = "process=minimal rounds=4 hours=6" ] && pass "an explicit rounds= beats the process default" || fail "an explicit rounds= beats the process default" "$out"
+echo "- 2026-11-19T02:00:00Z | budget | process=full" >>"$run"
+out=$(process_limits)
+[ "$out" = "process=full rounds=4 hours=6" ] && pass "a budget line can change the process" || fail "a budget line can change the process" "$out"
+printf -- '- 2026-11-19T01:00:00Z | start | pitch=PITCH.md process=minimal\n- 2026-11-19T01:30:00Z | round | 1 | a\n- 2026-11-19T01:40:00Z | round | 2 | b\n' >"$run"
+out=$(budget 2026-11-19T02:00:00Z); status=$?
+[ "$status" -eq 3 ] && [ "$out" = "stop: rounds spent (2 of 2)" ] && pass "process=minimal stops the budget after 2 rounds" || fail "process=minimal stops the budget after 2 rounds" "status $status: $out"
+echo "- 2026-11-19T01:00:00Z | start | pitch=PITCH.md process=turbo" >"$run"
+out=$(process_limits 2>&1); status=$?
+[ "$status" -eq 1 ] && echo "$out" | grep -q "minimal, standard or full" && pass "an unknown process is refused" || fail "an unknown process is refused" "status $status: $out"
+
 out=$(budget not-a-time 2>&1); status=$?
 { [ "$status" -ne 0 ] && ! echo "$out" | grep -q Traceback && echo "$out" | grep -q "not-a-time"; } && pass "a bad --now is named, not a traceback" || fail "a bad --now is named, not a traceback" "$out"
 
@@ -224,5 +248,9 @@ if output=$(cd "$REPO_ROOT" && ./install.sh check 2>&1); then
 else
   fail "install.sh check passes with the conductor's uses" "$(echo "$output" | grep '^ERROR' | head -5)"
 fi
+
+# process setting text: the skill, the conductor and the README name it
+grep -q 'process=minimal|standard|full' "$SKILL" && pass "conduct accepts process=" || fail "conduct accepts process="
+grep -q '\*\*Process setting.\*\*' "$AGENT" && grep -q 'no art bible document' "$AGENT" && grep -q 'reference discrimination judge' "$AGENT" && grep -q 'scripts/run_state.py limits' "$AGENT" && pass "the conductor describes what each process setting changes" || fail "the conductor describes what each process setting changes"
 
 [ "$failures" -eq 0 ] || exit 1

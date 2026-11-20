@@ -29,6 +29,7 @@ flowchart LR
 /conduct apps/games/tide-runner/PITCH.md
 /conduct apps/games/tide-runner
 /conduct apps/experiments/fog/PITCH.md rounds=3 hours=2, also stop before delivery
+/conduct apps/experiments/fog/PITCH.md process=minimal
 ```
 
 ## Output
@@ -44,4 +45,4 @@ flowchart LR
 ## FAQ
 
 - Default stops? Target frames, polish plateau, split taste call, a gate failing twice, a spent budget.
-- Default budget? 6 polish rounds and 6 hours of active run time per run, summed across stops and resumes, overridable in the request or the brief.
+- Default budget? 6 polish rounds (2 with `process=minimal`) and 6 hours of active run time per run, summed across stops and resumes, overridable in the request or the brief.

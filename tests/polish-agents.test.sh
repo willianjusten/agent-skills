@@ -87,6 +87,7 @@ grep -q "measurable target" "$director" && grep -q "judge lens" "$director" && g
 grep -q "only when no checklist is given" "$director" && pass "the fixed areas are the fallback without a checklist" || fail "the fixed areas are the fallback without a checklist"
 grep -q "motion-judge" "$director" && grep -q "lens its row names" "$director" && pass "the judge follows the component's lens" || fail "the judge follows the component's lens"
 grep -q "component" "$worker" && pass "the worker accepts a component" || fail "the worker accepts a component"
+grep -q "process setting" "$director" && grep -q '`minimal`: one judge lens per moment' "$director" && grep -q '`full`: as standard, plus `motion-judge`' "$director" && pass "the director describes what each process setting changes" || fail "the director describes what each process setting changes"
 
 grep -q "lean round" "$director" && grep -q "parallel round" "$director" && grep -q "touches one area" "$director" && grep -q "two or more areas" "$director" && pass "the director picks lean or parallel from the areas and logs the mode" || fail "the director picks lean or parallel from the areas and logs the mode"
 grep -q "whose captures changed" "$director" && grep -q "one fixed regression moment" "$director" && pass "judging covers changed moments plus one regression moment" || fail "judging covers changed moments plus one regression moment"
