@@ -1,6 +1,6 @@
 ---
 name: realtime-judge
-description: Judges a polish-round change blind, with before and after captures shuffled as X and Y, two fresh judges on an anchored 10-point rubric, the lower score counting and the change kept only on a win or tie. Use when a polish round needs to know if a visual or feel change is an improvement, when asked to score or compare before and after captures of a game or piece, when writing judge scores into a review packet, or when asked whether a judge can tell a render from its reference.
+description: Judges a polish-round change blind, with before and after captures shuffled as X and Y, two fresh judges on an anchored 10-point rubric, the lower score counting and the change kept only on a win or tie. Use when a polish round needs to know if a visual or feel change is an improvement, when asked to score or compare before and after captures of a game or experiment, when writing judge scores into a review packet, or when asked whether a judge can tell a render from its reference.
 metadata:
   scope: personal
 ---

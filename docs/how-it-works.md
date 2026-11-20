@@ -24,7 +24,7 @@ flowchart TD
 | ----- | ----------- | ------ |
 | Ideation | `ideation` skill, with you | `PITCH.md` with an `Approved by` line |
 | Start | `/conduct <pitch or app folder>` | the conductor in the background |
-| Brief | conductor, via `game-brief` (game) or `creative-brief` (piece) | `GDD.md` or `TREATMENT.md`, "Not this" list |
+| Brief | conductor, via `game-brief` (game) or `creative-brief` (experiment) | `GDD.md` or `TREATMENT.md`, "Not this" list |
 | Art bible | conductor, via `art-bible` | palette and asset levels (`placeholder` or `free`; `premium` stays locked) |
 | Target | conductor builds the first look with `three-build` and `three-verify`, then `target-loop` | captures and a prepared target; stop 1 |
 | Checklist | conductor | `COMPONENTS.md`: target, folder and judge lens per component |

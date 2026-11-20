@@ -1,6 +1,6 @@
 ---
 name: three-verify
-description: Runs and reads the lab monorepo's `verify` gate check and fixes failing gates. Use when an app change needs checking, when asked if a game or piece is done, when a gate fails (fps, first frame, size, console errors, backend), or before reporting a lab app finished.
+description: Runs and reads the lab monorepo's `verify` gate check and fixes failing gates. Use when an app change needs checking, when asked if a game or experiment is done, when a gate fails (fps, first frame, size, console errors, backend), or before reporting a lab app finished.
 metadata:
   scope: personal
 ---

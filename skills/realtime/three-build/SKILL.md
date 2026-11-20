@@ -1,6 +1,6 @@
 ---
 name: three-build
-description: Builds games and creative pieces in the lab monorepo on three.js WebGPURenderer. Use when adding or changing an app, example, game or piece in the lab repo, scaffolding from the game or experiment template, writing the renderer setup or loop, or sizing a perf budget.
+description: Builds games and creative experiments in the lab monorepo on three.js WebGPURenderer. Use when adding or changing a game or experiment in the lab repo, scaffolding from the game or experiment template, writing the renderer setup or loop, or sizing a perf budget.
 metadata:
   scope: personal
 ---
@@ -12,8 +12,8 @@ Apps in the lab monorepo share one renderer bootstrap, loop and template set. Bu
 ## Steps
 
 1. **Find the lab.** It is the checkout whose root `package.json` is named `lab`, with `packages/engine`, `packages/verify` and `templates/`. Work from the current directory if it is one; otherwise ask the user where it is. Read its `README.md` and `AGENTS.md` before anything else; they win over this skill where they differ. Done when you can name the commands the README lists.
-2. **Pick a template.** Run `pnpm create-app` with no arguments to list templates. A game with simulation and input uses `game`; a visual piece or a technique example uses `experiment`; `basic` is the bare minimum. Done when the template choice matches the brief's kind of work.
-3. **Scaffold, never copy.** Run `pnpm create-app <template> <name> [games|pieces|examples]`. A technique or knowledge-base example uses `examples`. A hand-copied folder skips token replacement and the gallery manifest. Commit the `pnpm-lock.yaml` change `create-app` makes. Done when `apps/<category>/<name>` exists and is not yet edited.
+2. **Pick a template.** Run `pnpm create-app` with no arguments to list templates. A game with simulation and input uses `game`; a visual experiment or a technique demo uses `experiment`. Done when the template choice matches the brief's kind of work.
+3. **Scaffold, never copy.** Run `pnpm create-app <template> <name> [games|experiments]`. A hand-copied folder skips token replacement and the gallery manifest. Commit the `pnpm-lock.yaml` change `create-app` makes. Done when `apps/<category>/<name>` exists and is not yet edited.
 4. **Read the app's docs.** `TREATMENT.md` states creative intent and a "Not this" list; `ENGINE.md` holds the file map, rules and perf budget. Fill the stubs for a new app; keep `ENGINE.md` current when the file map or rules change.
 5. **Build in vertical slices.** Rules in "Renderer and loop" below. Write shaders and materials as TSL node materials, never GLSL, using the TSL docs linked below. Done when `pnpm typecheck` passes for the app.
 6. **Add checks.** A game gets `src/playtest.ts`, a scripted playtest that calls `capture(name)`; an experiment gets `captures.json` with the seek times to capture. Format: the lab `README.md`, section "Playtests, captures and the review packet". Done when `verify` has captures to compare.
@@ -22,7 +22,7 @@ Apps in the lab monorepo share one renderer bootstrap, loop and template set. Bu
 ## Renderer and loop
 
 - Import from `three/webgpu` (and `three/tsl`), never bare `three`. Renderer is `WebGPURenderer`, which falls back to WebGL 2 by itself.
-- Use the lab packages: `startApp` from `@lab/engine` for a plain app, `startExperiment` from `@lab/experiment` for a seekable piece, `@lab/game` for a game's runtime and game feel, `@lab/audio` for sound. Pass `installDebug` from `@lab/debug` as a `plugins` entry. Read `packages/<name>/src` for the current exports; do not write your own renderer, resize handling or `requestAnimationFrame` loop. An app that skips `installDebug` never publishes `window.__lab`, and the first-frame gate fails. `@lab/engine` imports no other lab package, and `@lab/game` and `@lab/experiment` never import each other.
+- Use the lab packages: `startApp` from `@lab/engine` for a plain app, `startExperiment` from `@lab/experiment` for a seekable experiment, `@lab/game` for a game's runtime and game feel, `@lab/audio` for sound. Pass `installDebug` from `@lab/debug` as a `plugins` entry. Read `packages/<name>/src` for the current exports; do not write your own renderer, resize handling or `requestAnimationFrame` loop. An app that skips `installDebug` never publishes `window.__lab`, and the first-frame gate fails. `@lab/engine` imports no other lab package, and `@lab/game` and `@lab/experiment` never import each other.
 - Games: simulation is a pure, seeded, fixed-timestep module with no three or DOM imports and a Vitest test; rendering only reads its state. `window.__game` stays behind `import.meta.env.DEV`.
 - Experiments: a frame is a pure function of the seekable time. No clock reads, `Math.random` or frame deltas inside it.
 - Build a hard effect alone on the template's lab route first, then port it into the main app.

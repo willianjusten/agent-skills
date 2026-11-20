@@ -1,6 +1,6 @@
 ---
 name: art-bible
-description: "Writes or revises the art bible for a game or piece: palette, references, style test sheet, and the asset level and polish per asset type, then gets the user's sign-off. Use when a game or piece needs a consistent look, before generating assets, when choosing placeholder, free or premium assets, or when generated assets do not match each other."
+description: "Writes or revises the art bible for a game or experiment: palette, references, style test sheet, and the asset level and polish per asset type, then gets the user's sign-off. Use when a game or experiment needs a consistent look, before generating assets, when choosing placeholder, free or premium assets, or when generated assets do not match each other."
 metadata:
   scope: personal
 ---

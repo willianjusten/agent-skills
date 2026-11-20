@@ -5,22 +5,22 @@ Save as `PITCH.md`. One page (about 60 lines), engine-neutral. Write `n/a` in se
 ```markdown
 # <Working title>
 
-**Mode:** game | piece
+**Mode:** game | experiment
 **One sentence:** <the idea>
 **Feeling:** <target feeling>
 
-## Fantasy (game) / Feeling in motion (piece)
+## Fantasy (game) / Feeling in motion (experiment)
 <You are ___ doing ___, and the mechanics that deliver it. / the sentence>
 
 ## Core verb and input
-<verb, input, verb-test result; for a piece, the main input and `n/a` for the verb test>
+<verb, input, verb-test result; for an experiment, the main input and `n/a` for the verb test>
 
 ## Loop (game)
 - 30 seconds:
 - 5 minutes:
 - Session:
 
-## Input to motion (piece)
+## Input to motion (experiment)
 <mapping, no input, reduced motion, sound if any>
 
 ## Twist

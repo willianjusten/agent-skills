@@ -1,6 +1,6 @@
 ---
 name: asset-pipeline
-description: Sources, generates and records game and piece assets with the lab's asset scripts, honouring the app's asset level. Use when an app needs textures, images, cutouts or models, when choosing between placeholder, free and premium assets, when a license or manifest question comes up, or when `verify` flags the asset manifest.
+description: Sources, generates and records game and experiment assets with the lab's asset scripts, honouring the app's asset level. Use when an app needs textures, images, cutouts or models, when choosing between placeholder, free and premium assets, when a license or manifest question comes up, or when `verify` flags the asset manifest.
 metadata:
   scope: personal
 ---

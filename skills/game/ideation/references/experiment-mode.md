@@ -1,6 +1,6 @@
-# Piece mode
+# Experiment mode
 
-A piece has no win state, so there is no twist round or verb test; in the pitch, its "Core verb and input" is the main input and its twist is `n/a`. Ask these rounds, with a recommendation each.
+An experiment has no win state, so there is no twist round or verb test; in the pitch, its "Core verb and input" is the main input and its twist is `n/a`. Ask these rounds, with a recommendation each.
 
 1. The feeling: one sentence ("a held breath", "slow static"), not a description of visuals.
 2. Where and how: shown where, on what device, how long, with or without sound.

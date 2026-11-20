@@ -1,6 +1,6 @@
 # Three Build
 
-Builds games and creative pieces in the lab monorepo on three.js WebGPURenderer.
+Builds games and creative experiments in the lab monorepo on three.js WebGPURenderer.
 
 ## What It Does
 
@@ -18,7 +18,7 @@ flowchart LR
 ```text
 Add a new example app to the lab with a water ripple effect
 Start a new game in the lab from the game template
-Why is this piece not publishing window.__lab?
+Why is this experiment not publishing window.__lab?
 ```
 
 ## Requirements

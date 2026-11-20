@@ -4,7 +4,7 @@ Score X and Y independently on the same anchors, 1 to 10, whole numbers. Never r
 
 ## What you are given
 
-Each of `x/` and `y/` holds three sheets of the same piece over the same time window:
+Each of `x/` and `y/` holds three sheets of the same experiment over the same time window:
 
 - `strip.png`: evenly spaced moments of the window, shrunk, read left to right, then top to bottom. Use it for rhythm and how the whole frame moves.
 - `crops.png`: the same moments as a 1:1 crop of one region at full resolution, in the same order. Use it for fine detail: specks, grain, edges, how they are placed and how that placement changes over time.

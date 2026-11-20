@@ -1,6 +1,6 @@
 # Creative Brief
 
-Turns an idea for a creative piece into a treatment with a "Not this" list.
+Turns an idea for a creative experiment into a treatment with a "Not this" list.
 
 ## What It Does
 
@@ -12,11 +12,11 @@ Turns an idea for a creative piece into a treatment with a "Not this" list.
 ## Usage
 
 ```text
-Write a treatment for a slow ink-in-water piece that reacts to the pointer
+Write a treatment for a slow ink-in-water experiment that reacts to the pointer
 Make a brief for a landing page hero visual
-Agents keep making my piece look generic; write down what to avoid
+Agents keep making my experiment look generic; write down what to avoid
 ```
 
 ## Output
 
-`TREATMENT.md` and `ENGINE.md` in the piece folder.
+`TREATMENT.md` and `ENGINE.md` in the experiment folder.

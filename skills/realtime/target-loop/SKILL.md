@@ -1,6 +1,6 @@
 ---
 name: target-loop
-description: Gives a polish round a visual target, a real screenshot repainted by an image model and approved by the user before anyone chases it. Use when a game or piece needs a concrete visual goal, when asked for a target frame, dream loop or repaint prompt, when agents keep polishing without a clear look to reach, or when a round should be scored against a target.
+description: Gives a polish round a visual target, a real screenshot repainted by an image model and approved by the user before anyone chases it. Use when a game or experiment needs a concrete visual goal, when asked for a target frame, dream loop or repaint prompt, when agents keep polishing without a clear look to reach, or when a round should be scored against a target.
 metadata:
   scope: personal
 ---

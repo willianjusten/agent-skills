@@ -33,7 +33,7 @@ The captures are still frames, so judge what a frame shows about feel:
 - Hierarchy: what matters most is the most visible; UI does not fight the scene.
 - Feedback cues: impact, motion, state and effect cues visible in the frame.
 - Clarity at play size: still readable at the size and speed it is played.
-- Mood and intent: the frame conveys the experience the piece aims for.
+- Mood and intent: the frame conveys the experience the experiment aims for.
 
 ## Target gap (only with a benchmark image)
 

@@ -16,7 +16,7 @@ flowchart LR
 ## Usage
 
 ```text
-Verify the ripple-toy piece
+Verify the ripple-toy experiment
 The mobile fps gate fails on my game, fix it
 Is this app ready to hand over?
 ```

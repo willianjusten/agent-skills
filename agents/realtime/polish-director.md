@@ -1,6 +1,6 @@
 ---
 name: polish-director
-description: Coordinates one polish round on a lab game or piece. Splits the work into components from a checklist the caller gives, or into the fixed areas (lighting, VFX, props, UI, audio) when there is none, gives each worker a worktree and a declared folder, owns shared files, merges, runs the blind judges and ends with a review packet. Use when a game works and the user asks for a polish round, or when a round chasing an approved target frame is about to start.
+description: Coordinates one polish round on a lab game or experiment. Splits the work into components from a checklist the caller gives, or into the fixed areas (lighting, VFX, props, UI, audio) when there is none, gives each worker a worktree and a declared folder, owns shared files, merges, runs the blind judges and ends with a review packet. Use when a game works and the user asks for a polish round, or when a round chasing an approved target frame is about to start.
 model: fable
 tools: Agent, Read, Write, Edit, Glob, Grep, Bash
 metadata:

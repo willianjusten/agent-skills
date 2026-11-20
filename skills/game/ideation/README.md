@@ -16,13 +16,13 @@ flowchart LR
 | Mode | Rounds | Output |
 | ---- | ------ | ------ |
 | Game | concepts, player fantasy (MDA), verb test, core loop, twist, scope, optional toy | `PITCH.md` |
-| Piece | feeling, input-to-motion mapping, directions, "Not this" | `PITCH.md` |
+| Experiment | feeling, input-to-motion mapping, directions, "Not this" | `PITCH.md` |
 
 ## Usage
 
 ```text
 I have a vague idea for a game about tides, help me shape it
-Brainstorm three directions for an interactive piece about fog
+Brainstorm three directions for an interactive experiment about fog
 Is the core loop of this game any good?
 ```
 
