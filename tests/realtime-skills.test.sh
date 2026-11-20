@@ -55,4 +55,15 @@ else
   fail "asset-wrangler exists under agents/realtime"
 fi
 
+# review fixes: art bible templates stay identical, asset-pipeline steps stay short, packs are examples
+cmp -s "$REPO_ROOT/skills/game/game-brief/references/art-bible-template.md" "$REPO_ROOT/skills/realtime/art-bible/references/art-bible-template.md" && pass "the two art-bible templates are identical" || fail "the two art-bible templates are identical"
+if grep -rn 'Kenney or Quaternius' "$REPO_ROOT/skills/realtime/art-bible" "$REPO_ROOT/skills/game/game-brief" | grep -v 'for example Kenney or Quaternius' >/dev/null; then fail "art-bible and game-brief name pack families as examples"; else pass "art-bible and game-brief name pack families as examples"; fi
+grep -q 'for example Kenney, is a source, not an API' "$REPO_ROOT/skills/realtime/art-bible/SKILL.md" && pass "art-bible says a pack family is a source, not an API" || fail "art-bible says a pack family is a source, not an API"
+ASSET_SKILL="$REPO_ROOT/skills/realtime/asset-pipeline/SKILL.md"
+for step in 2 3 7; do
+  length=$(grep "^$step\. " "$ASSET_SKILL" | wc -c)
+  [ "$length" -lt 700 ] && pass "asset-pipeline step $step is a table-of-contents line" || fail "asset-pipeline step $step is a table-of-contents line" "$length bytes"
+done
+[ -f "$REPO_ROOT/skills/realtime/asset-pipeline/references/sources.md" ] && grep -q 'code-only' "$REPO_ROOT/skills/realtime/asset-pipeline/references/sources.md" && grep -q 'sources.md' "$ASSET_SKILL" && pass "asset-pipeline source order and code-only detail live in references/sources.md" || fail "asset-pipeline source order and code-only detail live in references/sources.md"
+
 [ "$failures" -eq 0 ] || exit 1
