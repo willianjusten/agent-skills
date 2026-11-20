@@ -377,4 +377,34 @@ grep -q 'src/features.ts' "$AGENT" && grep -q 'outside its band' "$AGENT" && gre
 grep -q '^## Feature list' "$GDD_TEMPLATE" && grep -q '^## Balance band' "$GDD_TEMPLATE" && pass "the GDD template has the feature list and the balance band" || fail "the GDD template has the feature list and the balance band"
 grep -q 'feature list' "$REPO_ROOT/skills/game/game-brief/SKILL.md" && grep -q 'balance band' "$REPO_ROOT/skills/game/game-brief/SKILL.md" && pass "game-brief fills the feature list and the balance band" || fail "game-brief fills the feature list and the balance band"
 
+
+# review fixes: phases, process fallbacks, stops, resume wording
+PHASES="brief art-bible first-playable look-variants checklist polish reference-judge deliver"
+listed=$(grep -o '`phase` (text is the phase name[^)]*)' "$AGENT" | grep -o '`[a-z-]*`' | tr -d '`' | grep -v '^phase$' | tr '\n' ' ')
+[ "$listed" = "$(echo $PHASES) " ] && pass "the conductor lists the phase names in run order" || fail "the conductor lists the phase names in run order" "$listed"
+for phase in $PHASES; do
+  grep -q "Append \`phase | $phase\`" "$AGENT" && grep -q "$phase" "$SCRIPT" && pass "phase $phase is appended by a step and named in run_state.py" || fail "phase $phase is appended by a step and named in run_state.py"
+done
+cat >"$run" <<'LOG'
+- 2026-11-19T01:00:00Z | start | pitch=PITCH.md
+LOG
+n=0
+for phase in $PHASES; do n=$((n + 1)); echo "- 2026-11-19T01:$(printf '%02d' $((n * 5)))00Z | phase | $phase" | sed 's/:\([0-9][0-9]\)00Z/:\1:00Z/' >>"$run"; done
+phase_names=$(python3 -I "$SCRIPT" phases "$run" --now 2026-11-19T02:00:00Z | awk '{print $1}' | grep -v '^total$' | grep -v '^setup$' | tr '\n' ' ')
+[ "$phase_names" = "$(echo $PHASES) " ] && pass "run_state.py phases reports every conductor phase name" || fail "run_state.py phases reports every conductor phase name" "$phase_names"
+grep -q 'at every round boundary' "$AGENT" && pass "the conductor re-reads next at each round boundary" || fail "the conductor re-reads next at each round boundary"
+grep -q 'phase named by the last `phase` entry' "$AGENT" && pass "continue resumes the phase of the last phase entry" || fail "continue resumes the phase of the last phase entry"
+grep -q 'step 2 also fixes what step 3 would have' "$AGENT" && grep -q 'from the brief and the pitch' "$AGENT" && pass "process=minimal chooses the asset source in the brief and writes presets from the brief" || fail "process=minimal chooses the asset source in the brief and writes presets from the brief"
+grep -q 'Only with `process=full`' "$AGENT" && pass "the reference judge runs only with process=full" || fail "the reference judge runs only with process=full"
+grep -q 'run_state.py limits RUN.md` prints' "$AGENT" && ! grep -q '6 rounds, 6 hours of active run time per run' "$AGENT" && pass "the budget stop reads the limits from run_state.py" || fail "the budget stop reads the limits from run_state.py"
+grep -q 'regression moment' "$AGENT" && grep -q 'regression moment: <name>' "$AGENT" && pass "the conductor logs and passes the regression moment" || fail "the conductor logs and passes the regression moment"
+DIRECTOR="$REPO_ROOT/agents/realtime/polish-director.md"
+grep -q 'regression moment is a named capture' "$DIRECTOR" && grep -q 'judges the regression moment alone' "$DIRECTOR" && pass "the director fixes one named regression moment and handles a round with no changed capture" || fail "the director fixes one named regression moment and handles a round with no changed capture"
+grep -q 'Under every setting, a round that changes combat' "$DIRECTOR" && pass "combat motion is judged from the recording under every process setting" || fail "combat motion is judged from the recording under every process setting"
+grep -q -- '--questions' "$DIRECTOR" && grep -q 'no new `no` answer' "$DIRECTOR" && pass "the director passes --questions for still moments and rejects any new no" || fail "the director passes --questions for still moments and rejects any new no"
+MOTION="$REPO_ROOT/skills/creative/motion-review/SKILL.md"
+grep -q -- '--motion --from-recording <from>-<to>' "$MOTION" && grep -q 'play/play-contact-sheet.png' "$MOTION" && grep -q 'motion-play/judge/' "$MOTION" && grep -q 'cannot use `--against`' "$MOTION" && pass "motion-review documents the real-play recording range" || fail "motion-review documents the real-play recording range"
+look_stops=$(sed -n '/^## Stop points/,/^At a stop/p' "$AGENT")
+echo "$look_stops" | grep -q 'With `look=ask` (default) also: look variant chosen' && ! echo "$look_stops" | grep -q '^Always: look variant' && pass "the Always stop list holds only the stops that survive look=auto" || fail "the Always stop list holds only the stops that survive look=auto"
+
 [ "$failures" -eq 0 ] || exit 1

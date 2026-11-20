@@ -17,6 +17,9 @@ A sitting that ends without a stop (a crash) counts to its last entry written
 by the run; the user's `answer` and `budget` lines never extend it, and a
 `budget` line, like a `note`, never changes where the run resumes.
 
+Phase names, in run order: brief, art-bible, first-playable, look-variants, checklist,
+polish, reference-judge, deliver.
+
 `phases` prints the active time per phase, one `<name> <duration>` line each and
 a `total`. A `phase | <name>` entry starts a phase (time before the first is
 `setup`); a resume carries on in the phase the sitting stopped in, and a phase
