@@ -14,7 +14,7 @@ work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 run="$work/RUN.md"
 
-next_state() { python3 -I "$SCRIPT" next "$run"; }
+next_state() { python3 -I "$SCRIPT" next "$run" --allow-missing; }
 expect_next() {
   local description="$1" expected="$2" actual
   actual=$(next_state 2>&1)
@@ -34,7 +34,7 @@ cat >"$run" <<'LOG'
 - 2026-11-19T01:05:00Z | step | brief written
 - 2026-11-19T01:10:00Z | assumption | art bible approved on Will's behalf
 LOG
-expect_next "an unfinished step resumes after the last step" "continue: art bible approved on Will's behalf"
+expect_next "an unfinished step resumes after the last step" "continue: phase=setup | last=assumption: art bible approved on Will's behalf"
 
 echo "- 2026-11-19T01:30:00Z | stop | target-frames | 3 target frames ready, review packet .verify/x/review-packet.html" >>"$run"
 expect_next "a stop with no answer keeps waiting" "waiting: target-frames"
@@ -50,7 +50,7 @@ echo "- 2026-11-19T07:30:30Z | budget | hours=8" >>"$run"
 expect_next "a budget line after the answer still resumes with the answer" "resume: target-frames | approved target hero"
 
 echo "- 2026-11-19T07:31:00Z | resume | from target-frames" >>"$run"
-expect_next "after resume the run continues" "continue: from target-frames"
+expect_next "after resume the run continues" "continue: phase=setup | last=resume: from target-frames"
 
 echo "- 2026-11-19T09:00:00Z | done | delivered" >>"$run"
 expect_next "a done run stays done" "done"
@@ -131,17 +131,17 @@ for case in "minimal:2" "standard:6" "full:6"; do
   setting="${case%%:*}"; expected_rounds="${case##*:}"
   printf -- '- 2026-11-19T01:00:00Z | start | pitch=PITCH.md process=%s\n' "$setting" >"$run"
   out=$(process_limits); status=$?
-  [ "$status" -eq 0 ] && [ "$out" = "process=$setting rounds=$expected_rounds hours=6" ] && pass "process=$setting reports $expected_rounds rounds" || fail "process=$setting reports $expected_rounds rounds" "status $status: $out"
+  [ "$status" -eq 0 ] && [ "$out" = "process=$setting rounds=$expected_rounds hours=6 autoAccepts=3" ] && pass "process=$setting reports $expected_rounds rounds" || fail "process=$setting reports $expected_rounds rounds" "status $status: $out"
 done
 echo "- 2026-11-19T01:00:00Z | start | pitch=PITCH.md" >"$run"
 out=$(process_limits)
-[ "$out" = "process=standard rounds=6 hours=6" ] && pass "no process setting means standard" || fail "no process setting means standard" "$out"
+[ "$out" = "process=standard rounds=6 hours=6 autoAccepts=3" ] && pass "no process setting means standard" || fail "no process setting means standard" "$out"
 echo "- 2026-11-19T01:00:00Z | start | pitch=PITCH.md process=minimal rounds=4" >"$run"
 out=$(process_limits)
-[ "$out" = "process=minimal rounds=4 hours=6" ] && pass "an explicit rounds= beats the process default" || fail "an explicit rounds= beats the process default" "$out"
+[ "$out" = "process=minimal rounds=4 hours=6 autoAccepts=3" ] && pass "an explicit rounds= beats the process default" || fail "an explicit rounds= beats the process default" "$out"
 echo "- 2026-11-19T02:00:00Z | budget | process=full" >>"$run"
 out=$(process_limits)
-[ "$out" = "process=full rounds=4 hours=6" ] && pass "a budget line can change the process" || fail "a budget line can change the process" "$out"
+[ "$out" = "process=full rounds=4 hours=6 autoAccepts=3" ] && pass "a budget line can change the process" || fail "a budget line can change the process" "$out"
 printf -- '- 2026-11-19T01:00:00Z | start | pitch=PITCH.md process=minimal\n- 2026-11-19T01:30:00Z | round | 1 | a\n- 2026-11-19T01:40:00Z | round | 2 | b\n' >"$run"
 out=$(budget 2026-11-19T02:00:00Z); status=$?
 [ "$status" -eq 3 ] && [ "$out" = "stop: rounds spent (2 of 2)" ] && pass "process=minimal stops the budget after 2 rounds" || fail "process=minimal stops the budget after 2 rounds" "status $status: $out"
@@ -160,10 +160,10 @@ cat >"$run" <<'LOG'
 - 2026-11-19T02:31:00Z | resume | from look-variants
 - 2026-11-19T03:00:00Z | wip | first slice playable
 LOG
-expect_next "an answer after a stop still resumes the stop" "continue: first slice playable"
+expect_next "an answer after a stop still resumes the stop" "continue: phase=setup | last=wip: first slice playable"
 echo "- 2026-11-19T03:10:00Z | answer | make the enemies slower" >>"$run"
 out=$(next_state 2>&1)
-[ "$out" = "$(printf 'continue: first slice playable\nnotes for the next round: make the enemies slower')" ] \
+[ "$out" = "$(printf 'continue: phase=setup | last=wip: first slice playable\nnotes for the next round: make the enemies slower')" ] \
   && pass "an answer with no pending stop is reported as notes, and the run keeps going" \
   || fail "an answer with no pending stop is reported as notes, and the run keeps going" "$out"
 echo "- 2026-11-19T03:12:00Z | answer | and louder hits" >>"$run"
@@ -175,7 +175,7 @@ cp "$work/notes.base" "$run"
 echo "- 2026-11-19T03:20:00Z | step | round 1 reads the notes" >>"$run"
 echo "- 2026-11-19T03:21:00Z | round-start | 1 | branch=none base=none" >>"$run"
 echo "- 2026-11-19T03:30:00Z | answer | during the round" >>"$run"
-expect_next "a round start consumes the notes, and an answer during the round is kept for the next" "$(printf 'redo: round 1\nnotes for the next round: during the round')"
+expect_next "a round start consumes the notes, and an answer during the round is kept for the next" "$(printf 'redo: round 1 (branch check failed, read the branch before respawning)\nnotes for the next round: during the round')"
 cat >"$run" <<'LOG'
 - 2026-11-19T01:00:00Z | start | pitch=PITCH.md
 - 2026-11-19T02:00:00Z | stop | look-variants | pick a look | p.html
@@ -211,10 +211,6 @@ out=$(phases 2026-11-19T02:00:00Z)
 printf '%s\n' '- 2026-11-19T01:00:00Z | start | pitch=PITCH.md' >"$run"
 out=$(phases 2026-11-19T01:20:00Z)
 [ "$out" = $'setup 20m\ntotal 20m' ] && pass "a run with no phase line reports setup" || fail "a run with no phase line reports setup" "$out"
-rm -f "$run"
-out=$(phases)
-[ "$out" = "total 0m" ] && pass "no RUN.md reports zero time" || fail "no RUN.md reports zero time" "$out"
-
 # agent and skill
 [ -f "$AGENT" ] && pass "the conductor agent exists under agents/orchestration" || fail "the conductor agent exists under agents/orchestration"
 [ "$(field "$AGENT" name)" = "conductor" ] && pass "the agent name equals its file name" || fail "the agent name equals its file name"
@@ -276,7 +272,7 @@ output=$(python3 -I "$SCRIPT" next "$cutoff_run" 2>&1)
 [ "$output" = "read result: round 1 branch round-1" ] && pass "a round branch with later commits is read, not redone" || fail "a round branch with later commits is read, not redone" "$output"
 echo "- 2026-11-19T02:00:00Z | round | 1 | lighting kept" >>"$cutoff_run"
 output=$(python3 -I "$SCRIPT" next "$cutoff_run" 2>&1)
-[ "$output" = "continue: 1 | lighting kept" ] && pass "a logged round is no longer pending" || fail "a logged round is no longer pending" "$output"
+[ "$output" = "continue: phase=setup | last=round: 1 | lighting kept" ] && pass "a logged round is no longer pending" || fail "a logged round is no longer pending" "$output"
 grep -q "round-start" "$AGENT" && grep -q "read result" "$AGENT" && grep -q "redo" "$AGENT" && pass "the conductor records the round branch and states the resume rule" || fail "the conductor records the round branch and states the resume rule"
 
 # notifications and the wip line
@@ -333,7 +329,7 @@ cat >"$run" <<'LOG'
 LOG
 [ "$(look)" = "look=auto target=yes
 state=auto dusk" ] && pass "an assumption for look=auto names the picked preset" || fail "an assumption for look=auto names the picked preset" "$(look)"
-expect_next "look=auto leaves no stop to wait for" "continue: look=auto dusk | fits the quiet harbour mood"
+expect_next "look=auto leaves no stop to wait for" "continue: phase=setup | last=assumption: look=auto dusk | fits the quiet harbour mood"
 cat >"$run" <<'LOG'
 - 2026-11-19T01:00:00Z | start | pitch=PITCH.md look=auto
 - 2026-11-19T01:30:00Z | assumption | look=auto dusk | fits the quiet harbour mood

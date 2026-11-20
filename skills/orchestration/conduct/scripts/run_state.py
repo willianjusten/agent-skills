@@ -1,30 +1,45 @@
 #!/usr/bin/env python3
 """Reads a conductor RUN.md: where a run resumes and whether a budget is spent.
 
-  run_state.py next   <RUN.md>   (one state line, then a `notes for the next round:` line per unread answer)
+  run_state.py next   <RUN.md> [--allow-missing]
+                      (one state line, then a `notes for the next round:` line per unread answer)
   run_state.py budget <RUN.md> [--now <iso8601>]
   run_state.py limits <RUN.md>
+  run_state.py accepts <RUN.md>
   run_state.py phases <RUN.md> [--now <iso8601>]
+  run_state.py phase-names
   run_state.py look   <RUN.md>
   run_state.py lock   acquire|release|status <RUN.md> [--owner <name>] [--now <iso8601>]
 
-Entries are lines shaped `- <UTC timestamp> | <kind> | <text>`; anything else
-(headings, notes) is ignored. Defaults: 6 polish rounds, 6 hours of active run
-time. `process=minimal|standard|full` (default standard) sets the round limit
-(2, 6, 6) unless an explicit `rounds=N` is given; `limits` prints the result. Active time is summed across sittings: a sitting runs from a `start` or
+A RUN.md that does not exist is an error (exit 2), so a mistyped path never reads
+as a fresh run; only `next --allow-missing` prints `start` for it.
+
+Entries are lines shaped `- <UTC timestamp> | <kind> | <text>`; headings and
+prose are ignored. A line that starts with `- ` and holds ` | ` but does not
+parse (capital kind, no trailing Z, impossible date) is skipped with a warning
+on stderr. Defaults: 6 polish rounds, 6 hours of active run time, 3 autonomous
+accepts. `process=minimal|standard|full` (default standard) sets the round
+limit (2, 6, 6) unless an explicit whole-number `rounds=N` is given; `limits`
+prints the result with `autoAccepts=N`. `accepts` prints `accepts-since-answer=K
+of N`: the `accept` entries since the user's last `answer`, against the limit.
+
+`next` prints `continue: phase=<name> | last=<kind>: <text>`, where the phase
+is the last `phase` entry (`setup` before the first) and the last entry is the
+last run entry (a `note` or `budget` line is not one).
+
+Active time is summed across sittings: a sitting runs from a `start` or
 `resume` entry to the next `stop` or `done`, so waiting for an answer is free.
 A sitting that ends without a stop (a crash) counts to its last entry written
 by the run; the user's `answer` and `budget` lines never extend it, and a
 `budget` line, like a `note`, never changes where the run resumes.
 
-Phase names, in run order: brief, art-bible, first-playable, look-variants, checklist,
-polish, reference-judge, deliver.
+`phase-names` prints the phase names in run order, one per line.
 
 `phases` prints the active time per phase, one `<name> <duration>` line each and
 a `total`. A `phase | <name>` entry starts a phase (time before the first is
 `setup`); a resume carries on in the phase the sitting stopped in, and a phase
-that comes back is summed. Waiting for an answer is not counted, so the total
-equals the hours `budget` spends.
+that comes back is summed. Waiting for an answer is not counted; `budget` spends
+this same total.
 
 `look` prints the look settings and the look decision. `look=auto` and
 `target=yes` in a `start` or `budget` line set the mode (default `look=ask
@@ -38,13 +53,18 @@ A `round-start | N | branch=<name> base=<sha>` entry, written before the
 polish director spawns, makes a cut-off round recoverable: when the run ends
 with that entry unanswered by a `round` entry, `next` prints `read result:
 round N branch <name>` if the branch has commits after `base` (the director
-finished, so read its result), and `redo: round N` if it has none.
+finished, so read its result), and `redo: round N` if it has none. When the
+entry lacks `branch=` or `base=`, or git cannot check the branch, the redo line
+says so in parentheses: read the branch yourself before respawning a director.
 
 The lock is the file `RUN.md.lock` next to RUN.md, holding `owner` and `since`
 lines. One conductor holds it per run: acquire is refused (exit 4) while
 another owner holds it, the holder acquiring again refreshes `since`, release
 removes it, and a lock not refreshed for 2 hours is stale and taken over. The
-conductor re-acquires at every phase end, so a live run never goes stale.
+conductor re-acquires at every phase end, so a live run never goes stale. The
+file appears whole (written aside, then linked or renamed into place) and a
+takeover is confirmed by reading it back. `lock status` exits 4 while the lock
+is held (and not stale): the code is the answer, not a failure.
 """
 
 import argparse
@@ -56,7 +76,9 @@ from datetime import datetime, timezone
 
 DEFAULT_ROUNDS = 6
 DEFAULT_HOURS = 6.0
+DEFAULT_AUTO_ACCEPTS = 3
 DEFAULT_PROCESS = "standard"
+PHASE_NAMES = ("brief", "art-bible", "first-playable", "look-variants", "checklist", "polish", "reference-judge", "deliver")
 # Polish rounds per process setting; minimal is a quick prototype, full adds judges rather than rounds.
 PROCESS_ROUNDS = {"minimal": 2, "standard": 6, "full": 6}
 # Written by the user or as asides: they never move the resume point or extend a sitting.
@@ -64,11 +86,15 @@ NOT_RUN_STATE = ("note", "budget")
 NOT_RUN_TIME = ("note", "budget", "answer")
 # Distinct from 1 (a usage error) so the conductor can tell a spent budget from a failed call.
 BUDGET_SPENT_EXIT = 3
+# A usage error the conductor must see rather than read as a fresh run: a missing RUN.md.
+MISSING_FILE_EXIT = 2
 # Exit code for a lock held by another owner.
 LOCK_HELD_EXIT = 4
 # A conductor refreshes the lock at every phase end; two hours without one means it died.
 LOCK_STALE_HOURS = 2.0
 ENTRY = re.compile(r"^- (\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ) \| ([a-z-]+) \| ?(.*)$")
+# A line that looks like an entry attempt: a bullet with at least two bars.
+ENTRY_ATTEMPT = re.compile(r"^- .* \| .* \|")
 
 
 def parse_time(text):
@@ -78,21 +104,30 @@ def parse_time(text):
 def read_entries(path):
     entries = []
     with open(path, encoding="utf-8") as handle:
-        for line in handle:
-            match = ENTRY.match(line.rstrip("\n"))
-            if match:
-                entries.append((parse_time(match.group(1)), match.group(2), match.group(3)))
+        for number, line in enumerate(handle, 1):
+            line = line.rstrip("\n")
+            match = ENTRY.match(line)
+            try:
+                if match:
+                    entries.append((parse_time(match.group(1)), match.group(2), match.group(3)))
+                    continue
+            except ValueError:
+                pass
+            if ENTRY_ATTEMPT.match(line):
+                print("%s:%d: skipped, not a valid entry: %s" % (path, number, line[:80]), file=sys.stderr)
     return entries
 
 
 def branch_has_new_commits(run_file, branch, base):
-    """True when the round branch holds commits past the base recorded at round start."""
+    """True when the round branch holds commits past the base recorded at round start; None when git cannot tell."""
     run_dir = os.path.dirname(os.path.abspath(run_file))
     result = subprocess.run(
         ["git", "-C", run_dir, "rev-list", "--count", base + ".." + branch],
         capture_output=True, text=True,
     )
-    return result.returncode == 0 and int(result.stdout.strip() or 0) > 0
+    if result.returncode != 0:
+        return None
+    return int(result.stdout.strip() or 0) > 0
 
 
 def pending_round(entries, run_file):
@@ -103,7 +138,12 @@ def pending_round(entries, run_file):
         if kind == "round-start":
             number = text.split(" | ")[0].strip()
             fields = dict(re.findall(r"(\w+)=(\S+)", text))
-            if "branch" in fields and "base" in fields and branch_has_new_commits(run_file, fields["branch"], fields["base"]):
+            if "branch" not in fields or "base" not in fields:
+                return "redo: round %s (no branch and base recorded)" % number
+            has_commits = branch_has_new_commits(run_file, fields["branch"], fields["base"])
+            if has_commits is None:
+                return "redo: round %s (branch check failed, read the branch before respawning)" % number
+            if has_commits:
                 return "read result: round %s branch %s" % (number, fields["branch"])
             return "redo: round " + number
     return None
@@ -123,9 +163,19 @@ def next_action(entries, run_file=None):
         run_entries = [entry for entry in entries if entry[1] != "answer"]
         if run_entries and run_entries[-1][1] == "stop":
             return "resume: " + run_entries[-1][2].split(" | ")[0].strip() + " | " + last_text
-        last_text = run_entries[-1][2] if run_entries else last_text
+        if run_entries:
+            _, last_kind, last_text = run_entries[-1]
     pending = pending_round(entries, run_file) if run_file else None
-    return pending or "continue: " + last_text
+    return pending or "continue: phase=%s | last=%s: %s" % (current_phase(entries), last_kind, last_text)
+
+
+def current_phase(entries):
+    """The name in the last `phase` entry, or `setup` before the first."""
+    name = "setup"
+    for _, kind, text in entries:
+        if kind == "phase":
+            name = text.split(" | ")[0].strip() or "setup"
+    return name
 
 
 def round_notes(entries):
@@ -158,7 +208,23 @@ def last_setting(entries, key, value_pattern):
 
 def configured_limit(entries, key, default, cast):
     value = last_setting(entries, key, r"\d+(?:\.\d+)?")
-    return default if value is None else cast(value)
+    if value is None:
+        return default
+    if cast is int and not value.isdigit():
+        raise SystemExit("%s=%s is not valid; use a whole number" % (key, value))
+    return cast(value)
+
+
+def accepts_report(entries):
+    """`accepts-since-answer=K of N`: accept entries after the user's last answer, against the limit."""
+    since_answer = 0
+    for _, kind, _ in entries:
+        if kind == "answer":
+            since_answer = 0
+        elif kind == "accept":
+            since_answer += 1
+    limit = configured_limit(entries, "autoAccepts", DEFAULT_AUTO_ACCEPTS, int)
+    return "accepts-since-answer=%d of %d" % (since_answer, limit)
 
 
 def configured_process(entries):
@@ -173,26 +239,11 @@ def round_limit(entries):
 
 
 def active_hours(entries, now):
-    total_seconds = 0.0
-    sitting_start = None
-    last_time = None
-    for time, kind, _ in entries:
-        if kind in ("start", "resume"):
-            if sitting_start is not None:
-                total_seconds += (last_time - sitting_start).total_seconds()
-            sitting_start = time
-        elif kind in ("stop", "done") and sitting_start is not None:
-            total_seconds += (time - sitting_start).total_seconds()
-            sitting_start = None
-        if kind not in NOT_RUN_TIME:
-            last_time = time
-    if sitting_start is not None:
-        total_seconds += (now - sitting_start).total_seconds()
-    return total_seconds / 3600
+    return sum(phase_seconds(entries, now).values()) / 3600
 
 
 def phase_seconds(entries, now):
-    """Active seconds per phase, in order of first appearance, using the sitting rules of active_hours."""
+    """Active seconds per phase, in order of first appearance. A sitting that ended without a stop counts to its last run entry."""
     seconds = {"setup": 0.0}
     current_phase = "setup"
     sitting_open = False
@@ -201,9 +252,7 @@ def phase_seconds(entries, now):
         if kind in NOT_RUN_TIME:
             continue
         if kind in ("start", "resume"):
-            if sitting_open:
-                seconds[current_phase] += (cursor - sitting_start).total_seconds()
-            sitting_start = cursor = time
+            cursor = time
             sitting_open = True
             continue
         if not sitting_open:
@@ -241,6 +290,10 @@ def configured_flag(entries, key, default):
 
 def parse_variant_answer(answer, variants):
     """The preset an answer names and its note: a variant name or its 1-based number, then an optional note."""
+    exact = re.match(r"([A-Za-z0-9_-]+)[\s,.:;-]*(.*)$", answer.strip(), flags=re.S)
+    for name in variants:
+        if exact and exact.group(1).lower() == name.lower():
+            return name, exact.group(2).strip()
     words = re.sub(r"^(?:i |let's |lets )?(?:pick|choose|take|go with|variant|look|use)\b[:= ]*", "", answer.strip(), flags=re.I)
     first = re.match(r"([A-Za-z0-9_-]+)[\s,.:;-]*(.*)$", words, flags=re.S)
     if not first:
@@ -315,11 +368,19 @@ def read_lock(path):
 
 
 def write_lock(path, owner, now, exclusive):
+    """Write the lock whole: aside first, then linked into place (exclusive) or renamed over the old one."""
     text = "owner=%s\nsince=%s\n" % (owner, now.strftime("%Y-%m-%dT%H:%M:%SZ"))
-    flags = os.O_WRONLY | os.O_CREAT | (os.O_EXCL if exclusive else os.O_TRUNC)
-    descriptor = os.open(path, flags, 0o644)
-    with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+    aside = "%s.%d.tmp" % (path, os.getpid())
+    with open(aside, "w", encoding="utf-8") as handle:
         handle.write(text)
+    try:
+        if exclusive:
+            os.link(aside, path)
+        else:
+            os.replace(aside, path)
+    finally:
+        if os.path.exists(aside):
+            os.remove(aside)
 
 
 def run_lock(action, run_file, owner, now):
@@ -359,6 +420,10 @@ def run_lock(action, run_file, owner, now):
         return 0
     if (now - held_since).total_seconds() / 3600 >= LOCK_STALE_HOURS:
         write_lock(path, owner, now, exclusive=False)
+        confirmed = read_lock(path)
+        if confirmed is None or confirmed[0] != owner:
+            print("refused: another conductor took over the stale lock first")
+            return LOCK_HELD_EXIT
         print("acquired: took over a stale lock from %s (since %s)" % (held_owner, held_since.strftime("%Y-%m-%dT%H:%M:%SZ")))
         return 0
     print("refused: held by %s since %s" % (held_owner, held_since.strftime("%Y-%m-%dT%H:%M:%SZ")))
@@ -374,8 +439,9 @@ def resolve_now(text):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("command", choices=["next", "budget", "limits", "phases", "look", "lock"])
-    parser.add_argument("rest", nargs="+", help="RUN.md, or for lock: acquire|release|status then RUN.md")
+    parser.add_argument("command", choices=["next", "budget", "limits", "accepts", "phases", "phase-names", "look", "lock"])
+    parser.add_argument("rest", nargs="*", help="RUN.md, or for lock: acquire|release|status then RUN.md")
+    parser.add_argument("--allow-missing", action="store_true", help="next only: a missing RUN.md reads as a new run")
     parser.add_argument("--owner", help="lock owner name, for example the conductor's run id")
     parser.add_argument("--now", help="UTC time as 2026-01-31T12:00:00Z; defaults to the clock")
     args = parser.parse_args()
@@ -383,10 +449,18 @@ def main():
         if len(args.rest) != 2 or args.rest[0] not in ("acquire", "release", "status"):
             raise SystemExit("usage: run_state.py lock acquire|release|status <RUN.md> [--owner <name>]")
         return run_lock(args.rest[0], args.rest[1], args.owner, resolve_now(args.now))
+    if args.command == "phase-names":
+        print("\n".join(PHASE_NAMES))
+        return 0
+    if len(args.rest) != 1:
+        raise SystemExit("usage: run_state.py %s <RUN.md>" % args.command)
     run_file = args.rest[0]
     try:
         entries = read_entries(run_file)
     except FileNotFoundError:
+        if not (args.command == "next" and args.allow_missing):
+            print("%s does not exist; check the path" % run_file, file=sys.stderr)
+            return MISSING_FILE_EXIT
         entries = []
     if args.command == "next":
         print(next_action(entries, run_file))
@@ -394,7 +468,12 @@ def main():
             print("notes for the next round: " + note)
         return 0
     if args.command == "limits":
-        print("process=%s rounds=%d hours=%g" % (configured_process(entries), round_limit(entries), configured_limit(entries, "hours", DEFAULT_HOURS, float)))
+        print("process=%s rounds=%d hours=%g autoAccepts=%d" % (
+            configured_process(entries), round_limit(entries), configured_limit(entries, "hours", DEFAULT_HOURS, float),
+            configured_limit(entries, "autoAccepts", DEFAULT_AUTO_ACCEPTS, int)))
+        return 0
+    if args.command == "accepts":
+        print(accepts_report(entries))
         return 0
     if args.command == "look":
         print("look=%s target=%s" % (configured_flag(entries, "look", "ask"), configured_flag(entries, "target", "no")))
