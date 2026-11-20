@@ -167,6 +167,9 @@ result=$(question_decision "$work/before-is-x.json" X=7,Y=7 X=7,Y=7 --questions 
 result=$(question_decision "$work/before-is-x.json" X=7,Y=7 X=7,Y=7 --questions hud_readable=no:no)
 [ "$result" = "keep " ] && pass "a question that stays no is not a regression" || fail "a question that stays no is not a regression" "$result"
 
+result=$(question_decision "$work/before-is-x.json" X=7,Y=7 X=7,Y=7 --questions hud_readable=na:no)
+[ "$result" = "reject hud_readable" ] && pass "a question turning na to no rejects: no new no answer" || fail "a question turning na to no rejects: no new no answer" "$result"
+
 result=$(question_decision "$work/before-is-x.json" X=7,Y=8 X=7,Y=8 --questions player_visible=yes:yes --questions player_visible=yes:no)
 [ "$result" = "reject player_visible" ] && pass "one judge answering no counts as no" || fail "one judge answering no counts as no" "$result"
 
