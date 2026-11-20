@@ -22,6 +22,7 @@ A game with correct rules and no feedback reads as unfinished, and silence is th
 ## Rules
 
 - Every event gets a sound. "No sound" is a decision recorded in the map with a reason, not an omission.
+- The mix follows frequency: the most frequent sound is the quietest, and rarer, more important events get louder and fuller.
 - Feedback scales with importance: frequent events get small reactions, rare events get big ones.
 - Never block input or change simulation outcomes with a reaction; feel is presentation.
 - Honour reduced-motion settings for shake and flashes.

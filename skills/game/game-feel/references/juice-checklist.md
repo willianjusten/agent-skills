@@ -28,6 +28,7 @@ Work down the list per event. Pick the lightest option that reads; stop when the
 ## Audio
 
 - One sound per event, short, distinct in pitch from its neighbours: rising for gain, falling for loss, noisy for impact.
+- Mix by frequency: the most frequent sound is the quietest; set gains so it sits under the rarer ones.
 - Vary pitch slightly on frequent events so repeats do not grate.
 - Duck or cap overlapping copies of the same sound.
 - ZzFX generates effects from a parameter array; start from its generator presets and adjust by ear. Keep parameters in a plain-data module.
