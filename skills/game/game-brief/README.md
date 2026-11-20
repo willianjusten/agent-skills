@@ -6,7 +6,7 @@ Turns a game concept into a GDD, treatment and art bible before any code.
 
 | Phase | Output |
 | ----- | ------ |
-| GDD | Pillars, core loop, controls, scope, cut list, non-goals |
+| GDD | Pillars, core loop, controls, scope, cut list, non-goals, feature list with checks, balance band |
 | Treatment | Idea, palette, camera, input mapping, "Not this" list |
 | Art bible | Palette, references, style rules, asset level and polish per asset type |
 | Engine stub | `ENGINE.md` and optional nested `AGENTS.md` |
