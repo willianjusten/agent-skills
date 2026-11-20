@@ -3,6 +3,7 @@
 
   run_state.py next   <RUN.md>
   run_state.py budget <RUN.md> [--now <iso8601>]
+  run_state.py phases <RUN.md> [--now <iso8601>]
   run_state.py lock   acquire|release|status <RUN.md> [--owner <name>] [--now <iso8601>]
 
 Entries are lines shaped `- <UTC timestamp> | <kind> | <text>`; anything else
@@ -12,6 +13,12 @@ time. Active time is summed across sittings: a sitting runs from a `start` or
 A sitting that ends without a stop (a crash) counts to its last entry written
 by the run; the user's `answer` and `budget` lines never extend it, and a
 `budget` line, like a `note`, never changes where the run resumes.
+
+`phases` prints the active time per phase, one `<name> <duration>` line each and
+a `total`. A `phase | <name>` entry starts a phase (time before the first is
+`setup`); a resume carries on in the phase the sitting stopped in, and a phase
+that comes back is summed. Waiting for an answer is not counted, so the total
+equals the hours `budget` spends.
 
 The lock is the file `RUN.md.lock` next to RUN.md, holding `owner` and `since`
 lines. One conductor holds it per run: acquire is refused (exit 4) while
@@ -98,6 +105,50 @@ def active_hours(entries, now):
     if sitting_start is not None:
         total_seconds += (now - sitting_start).total_seconds()
     return total_seconds / 3600
+
+
+def phase_seconds(entries, now):
+    """Active seconds per phase, in order of first appearance, using the sitting rules of active_hours."""
+    seconds = {"setup": 0.0}
+    current_phase = "setup"
+    sitting_open = False
+    cursor = None
+    for time, kind, text in entries:
+        if kind in NOT_RUN_TIME:
+            continue
+        if kind in ("start", "resume"):
+            if sitting_open:
+                seconds[current_phase] += (cursor - sitting_start).total_seconds()
+            sitting_start = cursor = time
+            sitting_open = True
+            continue
+        if not sitting_open:
+            continue
+        seconds[current_phase] += (time - cursor).total_seconds()
+        cursor = time
+        if kind == "phase":
+            current_phase = text.split(" | ")[0].strip() or "setup"
+            seconds.setdefault(current_phase, 0.0)
+        elif kind in ("stop", "done"):
+            sitting_open = False
+    if sitting_open:
+        seconds[current_phase] += (now - cursor).total_seconds()
+    return seconds
+
+
+def format_duration(total_seconds):
+    minutes = int(round(total_seconds / 60))
+    hours, minutes = divmod(minutes, 60)
+    if hours and minutes:
+        return "%dh %dm" % (hours, minutes)
+    return "%dh" % hours if hours else "%dm" % minutes
+
+
+def report_phases(entries, now):
+    seconds = phase_seconds(entries, now)
+    lines = ["%s %s" % (name, format_duration(value)) for name, value in seconds.items() if value > 0 or name != "setup"]
+    lines.append("total " + format_duration(sum(seconds.values())))
+    return "\n".join(lines)
 
 
 def check_budget(entries, now):
@@ -188,7 +239,7 @@ def resolve_now(text):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("command", choices=["next", "budget", "lock"])
+    parser.add_argument("command", choices=["next", "budget", "phases", "lock"])
     parser.add_argument("rest", nargs="+", help="RUN.md, or for lock: acquire|release|status then RUN.md")
     parser.add_argument("--owner", help="lock owner name, for example the conductor's run id")
     parser.add_argument("--now", help="UTC time as 2026-01-31T12:00:00Z; defaults to the clock")
@@ -204,6 +255,9 @@ def main():
         entries = []
     if args.command == "next":
         print(next_action(entries))
+        return 0
+    if args.command == "phases":
+        print(report_phases(entries, resolve_now(args.now)))
         return 0
     verdict = check_budget(entries, resolve_now(args.now))
     print(verdict)
