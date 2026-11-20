@@ -16,7 +16,7 @@ Scope is decided here, in files, before building. The output is engine-neutral: 
 3. **Write the treatment.** Use [references/treatment-template.md](references/treatment-template.md). Palette entries are hex with a role. The "Not this" list has at least five concrete items. Done when no placeholder text remains.
 4. **Write the art bible.** Use [references/art-bible-template.md](references/art-bible-template.md). Palette matches the treatment. Fill the asset-level table for every asset type the GDD needs: level (`placeholder`, `free`, `premium`) and polish (`rough`, `polished`). Default to `placeholder` and `rough`; set `premium` only if the user asks, and note it is locked until they unlock it. Leave sign-off empty. Done when every asset type in the GDD has a row.
 5. **Stub the engine doc.** Write `ENGINE.md` from [references/engine-template.md](references/engine-template.md) with the perf budget filled and the file map empty. When a folder will have its own pitfalls, write a nested `AGENTS.md` from [references/agents-template.md](references/agents-template.md), plus a `CLAUDE.md` containing `@AGENTS.md`. Done when the budget is stated.
-6. **Hand over.** Show the user the cut list, non-goals and asset levels first, then ask for approval and the art bible sign-off. Do not start building or generating assets. Done when the user has approved or listed changes.
+6. **Hand over.** Show the user the cut list, non-goals and asset levels first, then ask for approval and the art bible sign-off. Do not start building or sourcing assets. Done when the user has approved or listed changes.
 
 ## Rules
 

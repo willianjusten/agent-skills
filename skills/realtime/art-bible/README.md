@@ -1,6 +1,6 @@
 # Art Bible
 
-Fixes the look and the asset level per asset type, and gets sign-off before assets are made.
+Fixes the theme, pack family, look and the asset level per asset type, and gets sign-off before assets are made.
 
 ## What It Does
 
@@ -16,7 +16,8 @@ flowchart LR
 
 ```text
 Write the art bible for this game
-Our generated textures do not match; fix the look
+These assets do not match each other; fix the look
+Make this game code-only, no asset files
 Set the asset level for sprites to free and models to placeholder
 ```
 
