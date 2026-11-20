@@ -29,8 +29,8 @@ A line that starts with `- ` and has two ` | ` but does not parse is skipped and
 | Command | Prints |
 | ------- | ------ |
 | `next` | `start`, `done`, `waiting: <stop>` (also `waiting: round-review` in review mode right after a round), `resume: <stop> \| <answer>`, `read result: round N branch <b>`, `redo: round N` (with a reason in parentheses when the branch could not be checked: read the branch first) or `continue: phase=<phase> \| last=<kind>: <text>`; then a `notes for the next round: <text>` line per `answer` that arrived with no stop pending |
-| `budget` | `ok`; `reserve: <left> left of <H>h, delivery reserve <N>m` (exit 0) once the time left is at or below the delivery reserve (`reserve=<minutes>`, default 40); or `stop: ...` with exit 3 |
-| `rows` | one line per row: `<name> turns=N score=V/F counted=C target=T at-target=yes\|no last=kept\|reverted\|none [lost=K]`; then `next: <rows to pick, in order>` (a lost row carries `(new approach)`, one lost twice `(shrink scope)`) and `all-at-target=yes\|no` |
+| `budget` | `ok`; `reserve: <left> left of <H>h, delivery reserve <N>m` (exit 0) once the time left is at or below the delivery reserve (`reserve=<minutes>`; `run_state.py` holds the default); or `stop: ...` with exit 3 |
+| `rows` | one line per row: `<name> turns=N score=V/F counted=C target=T at-target=yes\|no last=kept\|reverted\|none [lost=K]` (a side of the score is `-` for the trailer and sound rows; the sound line adds `gate=pass\|fail\|none`); then `next: <rows to pick, in order>` (a lost row carries `(new approach)`, one lost twice `(shrink scope)`, or `(same approach, write a new one)` when both losses used the same approach) and `all-at-target=yes\|no` |
 | `limits` | `mode=<m> process=<p> rounds=N hours=H autoAccepts=N` (`unlimited` for rounds and autoAccepts in overnight mode unless given) |
 | `accepts` | `accepts-since-answer=K of N` (`of unlimited` overnight) |
 | `phases` | active time per phase, then a total |
