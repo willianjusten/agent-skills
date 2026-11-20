@@ -6,14 +6,7 @@
 # config.
 
 REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
-failures=0
-
-pass() { echo "ok   $1"; }
-fail() {
-  echo "FAIL $1"
-  [ -n "${2:-}" ] && echo "$2" | sed 's/^/       /'
-  failures=$((failures + 1))
-}
+. "$(dirname "$0")/lib.sh"
 
 write_agent() {
   local path="$1" frontmatter="$2"

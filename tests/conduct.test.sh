@@ -1,24 +1,14 @@
 #!/bin/bash
 # Tests for the conductor: RUN.md resume parsing and budget stops (run_state.py),
 # the agent and skill frontmatter, and the dependency declaration that
-# `install.sh check` validates.
+# `install.sh check` validates (that gate runs before this suite).
 
 REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 SCRIPT="$REPO_ROOT/skills/orchestration/conduct/scripts/run_state.py"
 AGENT="$REPO_ROOT/agents/orchestration/conductor.md"
 SKILL="$REPO_ROOT/skills/orchestration/conduct/SKILL.md"
-failures=0
+. "$(dirname "$0")/lib.sh"
 
-pass() { echo "ok   $1"; }
-fail() {
-  echo "FAIL $1"
-  [ -n "${2:-}" ] && echo "$2" | sed 's/^/       /'
-  failures=$((failures + 1))
-}
-
-frontmatter() { awk 'NR == 1 { next } /^---$/ { exit } { print }' "$1"; }
-field() { frontmatter "$1" | awk -v key="$2" -F': *' '$1 == key { print $2; exit }'; }
-meta() { frontmatter "$1" | awk -v key="$2" '$1 == key ":" { sub(/^[^:]*:[ \t]*/, ""); sub(/[ \t]*#.*/, ""); print; exit }'; }
 
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
@@ -314,13 +304,6 @@ grep -q "Nesting" "$AGENT" && pass "the conductor documents the nesting depth" |
 grep -q "phase. (text is the phase name" "$AGENT" && grep -q "run_state.py.* phases" "$AGENT" && pass "the conductor logs phases and reads their timing" || fail "the conductor logs phases and reads their timing"
 hand_off=$(awk '/^## Hand-off/{on=1;next} /^## /{on=0} on' "$AGENT")
 echo "$hand_off" | grep -qi "phase timing" && pass "the hand-off template includes phase timing" || fail "the hand-off template includes phase timing"
-
-# install check accepts the declared uses
-if output=$(cd "$REPO_ROOT" && ./install.sh check 2>&1); then
-  pass "install.sh check passes with the conductor's uses"
-else
-  fail "install.sh check passes with the conductor's uses" "$(echo "$output" | grep '^ERROR' | head -5)"
-fi
 
 # process setting text: the skill, the conductor and the README name it
 grep -q 'process=minimal|standard|full' "$SKILL" && pass "conduct accepts process=" || fail "conduct accepts process="

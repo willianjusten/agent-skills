@@ -6,18 +6,8 @@
 
 REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 AGENTS="$REPO_ROOT/agents/realtime"
-failures=0
+. "$(dirname "$0")/lib.sh"
 
-pass() { echo "ok   $1"; }
-fail() {
-  echo "FAIL $1"
-  [ -n "${2:-}" ] && echo "$2" | sed 's/^/       /'
-  failures=$((failures + 1))
-}
-
-frontmatter() { awk 'NR == 1 { next } /^---$/ { exit } { print }' "$1"; }
-field() { frontmatter "$1" | awk -v key="$2" -F': *' '$1 == key { print $2; exit }'; }
-scope_of() { frontmatter "$1" | awk '/^metadata:/ { in_meta = 1; next } in_meta && /scope:/ { sub(/.*scope:[ \t]*/, ""); sub(/[ \t]*#.*/, ""); print; exit }'; }
 
 expected_model() {
   case "$1" in
