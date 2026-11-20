@@ -8,7 +8,8 @@ Read at step 1b of the conductor. `limits` prints `mode=overnight` or `mode=revi
 
 | The request says | Mode and settings |
 | ---------------- | ----------------- |
-| "overnight", "while I sleep", "work on this for 6h", "run unattended" | `mode=overnight`, plus `hours=N` when it names a duration |
+| "overnight", "while I sleep", "on its own", "autonomously", "run unattended" | `mode=overnight`, plus `hours=N` when it names a duration |
+| a duration alone ("work on this for 6h") | `mode=review` with `hours=N`: a duration says how long, not who decides |
 | "call me each round", "ask me after each round", "check with me every round", "review each round" | `mode=review` |
 | nothing about it | `mode=review` |
 
@@ -19,7 +20,7 @@ Read at step 1b of the conductor. `limits` prints `mode=overnight` or `mode=revi
 Fully autonomous, bounded by the hours (default 6).
 
 - `look=auto` is implied: no look-variants stop, and you log the pick as an `assumption`.
-- No cap on autonomous reference accepts: `accepts` and `limits` print `unlimited` unless `autoAccepts=N` was given. Every accept still gets an `accept` line, after a reviewer subagent has read the old and new capture side by side, and the hand-off lists them all.
+- No cap on autonomous reference accepts: `accepts` and `limits` print `unlimited` unless `autoAccepts=N` was given. Every accept still gets an `accept` line, after a reviewer subagent has read the old and new capture side by side, and the hand-off lists them all. An accept line without that reviewer's verdict in it is refused: the side-by-side read is the user's rule, and no overnight run skips it.
 - No round limit unless `rounds=N` was given; `budget` stops on the hours.
 - It uses the whole budget: delivery comes early only when `run_state.py rows` prints `all-at-target=yes`; otherwise rounds go on until `budget` prints `reserve:`, then the trailer round and delivery. A flat round changes approach and a plateau is not a stop (`references/polish-rounds.md`, "Use the whole budget").
 - A judge split on a taste call is yours to settle: the lower counted score decides (keep the change only on a win or tie); log an `assumption | judge split resolved: <moment>, <scores>, <decision>`. It is not a stop.
