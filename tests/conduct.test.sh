@@ -178,6 +178,10 @@ out=$(next_state 2>&1)
   || fail "an answer with no pending stop is reported as notes, and the run keeps going" "$out"
 echo "- 2026-11-19T03:12:00Z | answer | and louder hits" >>"$run"
 next_state | grep -c '^notes for the next round' | grep -qx 2 && pass "every unread answer is listed as notes" || fail "every unread answer is listed as notes"
+cp "$run" "$work/notes.base"
+echo "- 2026-11-19T03:15:00Z | resume | from first slice playable" >>"$run"
+next_state | grep -c '^notes for the next round' | grep -qx 2 && pass "a resume line keeps the notes for the next round" || fail "a resume line keeps the notes for the next round"
+cp "$work/notes.base" "$run"
 echo "- 2026-11-19T03:20:00Z | step | round 1 reads the notes" >>"$run"
 echo "- 2026-11-19T03:21:00Z | round-start | 1 | branch=none base=none" >>"$run"
 echo "- 2026-11-19T03:30:00Z | answer | during the round" >>"$run"
@@ -330,7 +334,7 @@ cat >"$run" <<'LOG'
 LOG
 [ "$(look)" = "look=ask target=no
 state=pending" ] && pass "a look-variants stop with no answer is pending, look=ask and no target by default" || fail "a look-variants stop with no answer is pending" "$(look)"
-for case in "neon|chosen neon" "Noon, less bloom|chosen noon | less bloom" "pick dusk: warmer fog|chosen dusk | warmer fog" "the second, darker|chosen neon | darker" "3|chosen noon" "mauve|unclear | mauve"; do
+for case in "neon|chosen neon" "Noon, less bloom|chosen noon | less bloom" "pick dusk: warmer fog|chosen dusk | warmer fog" "the second, darker|unclear | the second, darker" "variant 2, darker|chosen neon | darker" "3|chosen noon" "mauve|unclear | mauve"; do
   answer="${case%%|*}"; expected="${case#*|}"
   cp "$run" "$work/look.base"
   echo "- 2026-11-19T02:00:00Z | answer | $answer" >>"$run"
@@ -347,6 +351,13 @@ LOG
 [ "$(look)" = "look=auto target=yes
 state=auto dusk" ] && pass "an assumption for look=auto names the picked preset" || fail "an assumption for look=auto names the picked preset" "$(look)"
 expect_next "look=auto leaves no stop to wait for" "continue: look=auto dusk | fits the quiet harbour mood"
+cat >"$run" <<'LOG'
+- 2026-11-19T01:00:00Z | start | pitch=PITCH.md look=auto
+- 2026-11-19T01:30:00Z | assumption | look=auto dusk | fits the quiet harbour mood
+- 2026-11-19T01:40:00Z | stop | look-variants | pick one of variants=dusk,neon,noon | packet.html
+- 2026-11-19T02:00:00Z | answer | neon, warmer
+LOG
+[ "$(look | tail -1)" = "state=chosen neon | warmer" ] && pass "a later answer naming a variant overrides an earlier look=auto assumption" || fail "a later answer naming a variant overrides an earlier look=auto assumption" "$(look)"
 printf '%s\n' '- 2026-11-19T01:00:00Z | start | pitch=PITCH.md' >"$run"
 [ "$(look | tail -1)" = "state=none" ] && pass "a run with no look decision reports none" || fail "a run with no look decision reports none"
 

@@ -136,29 +136,30 @@ def round_notes(entries):
             if previous_run_kind != "stop":
                 notes.append(text)
             continue
-        if kind in ("round-start", "resume"):
+        if kind == "round-start":
             notes = []
         previous_run_kind = kind
     return notes
 
 
-def configured_limit(entries, key, default, cast):
-    value = default
+def last_setting(entries, key, value_pattern):
+    """The latest `key=value` in a start or budget line, or None; value_pattern is the regex for the value."""
+    value = None
     for _, kind, text in entries:
         if kind in ("start", "budget"):
-            found = re.search(r"\b" + key + r"=(\d+(?:\.\d+)?)", text)
+            found = re.search(r"\b" + key + "=(" + value_pattern + ")", text)
             if found:
-                value = cast(found.group(1))
+                value = found.group(1)
     return value
 
 
+def configured_limit(entries, key, default, cast):
+    value = last_setting(entries, key, r"\d+(?:\.\d+)?")
+    return default if value is None else cast(value)
+
+
 def configured_process(entries):
-    value = DEFAULT_PROCESS
-    for _, kind, text in entries:
-        if kind in ("start", "budget"):
-            found = re.search(r"\bprocess=(\S+)", text)
-            if found:
-                value = found.group(1).rstrip(",.;")
+    value = last_setting(entries, "process", r"[a-z]+") or DEFAULT_PROCESS
     if value not in PROCESS_ROUNDS:
         raise SystemExit("process=%s is not valid; use minimal, standard or full" % value)
     return value
@@ -232,37 +233,28 @@ def report_phases(entries, now):
 
 
 def configured_flag(entries, key, default):
-    value = default
-    for _, kind, text in entries:
-        if kind in ("start", "budget"):
-            found = re.search(r"\b" + key + r"=([a-z]+)", text)
-            if found:
-                value = found.group(1)
-    return value
+    return last_setting(entries, key, r"[a-z]+") or default
 
 
 def parse_variant_answer(answer, variants):
-    """The preset an answer names and its note: `dusk`, `variant dusk, warmer`, `2`, `the second`."""
+    """The preset an answer names and its note: a variant name or its 1-based number, then an optional note."""
     words = re.sub(r"^(?:i |let's |lets )?(?:pick|choose|take|go with|variant|look|use)\b[:= ]*", "", answer.strip(), flags=re.I)
-    words = re.sub(r"^(?:the |option |variant )", "", words, flags=re.I)
     first = re.match(r"([A-Za-z0-9_-]+)[\s,.:;-]*(.*)$", words, flags=re.S)
     if not first:
         return None, ""
     token, note = first.group(1), first.group(2).strip()
-    ordinals = {"first": 1, "second": 2, "third": 3, "1st": 1, "2nd": 2, "3rd": 3}
-    if variants:
-        for name in variants:
-            if token.lower() == name.lower():
-                return name, note
-        index = int(token) if token.isdigit() else ordinals.get(token.lower())
-        if index and 1 <= index <= len(variants):
-            return variants[index - 1], note
-        return None, ""
-    return token, note
+    if not variants:
+        return token, note
+    for name in variants:
+        if token.lower() == name.lower():
+            return name, note
+    if token.isdigit() and 1 <= int(token) <= len(variants):
+        return variants[int(token) - 1], note
+    return None, ""
 
 
 def look_state(entries):
-    """The look decision: auto pick, the user's answer to the look-variants stop, pending, or none."""
+    """The look decision: the latest of an auto pick and the user's answer to the look-variants stop, else pending or none."""
     variants = []
     stop_index = None
     for index, (_, kind, text) in enumerate(entries):
@@ -270,19 +262,25 @@ def look_state(entries):
             stop_index = index
             found = re.search(r"\bvariants=([\w,-]+)", text)
             variants = found.group(1).split(",") if found else []
-    for _, kind, text in reversed(entries):
+    auto_index, auto_state = None, None
+    for index, (_, kind, text) in enumerate(entries):
         auto = re.match(r"look=auto\b[:, ]*(?:picked |pick |chose |chosen )?([\w-]+)", text) if kind == "assumption" else None
         if auto:
-            return "auto " + auto.group(1)
-    if stop_index is None:
-        return "none"
-    for _, kind, text in entries[stop_index + 1:]:
-        if kind == "answer":
-            preset, note = parse_variant_answer(text, variants)
-            if preset is None:
-                return "unclear | " + text
-            return "chosen " + preset + (" | " + note if note else "")
-    return "pending"
+            auto_index, auto_state = index, "auto " + auto.group(1)
+    answer_index, answer_state = None, None
+    if stop_index is not None:
+        for index in range(stop_index + 1, len(entries)):
+            _, kind, text = entries[index]
+            if kind == "answer":
+                preset, note = parse_variant_answer(text, variants)
+                answer_index = index
+                answer_state = "unclear | " + text if preset is None else "chosen " + preset + (" | " + note if note else "")
+                break
+    if auto_index is not None and (answer_index is None or auto_index > answer_index or answer_state.startswith("unclear")):
+        return auto_state
+    if answer_state:
+        return answer_state
+    return "none" if stop_index is None else "pending"
 
 
 def check_budget(entries, now):
