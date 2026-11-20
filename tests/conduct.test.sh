@@ -138,6 +138,31 @@ printf '%s\n' '- 2026-11-19T01:00:00Z | start | pitch=PITCH.md' >"$run"
 out=$(budget not-a-time 2>&1); status=$?
 { [ "$status" -ne 0 ] && ! echo "$out" | grep -q Traceback && echo "$out" | grep -q "not-a-time"; } && pass "a bad --now is named, not a traceback" || fail "a bad --now is named, not a traceback" "$out"
 
+# an answer with no stop pending is notes for the next round
+cat >"$run" <<'LOG'
+- 2026-11-19T01:00:00Z | start | pitch=PITCH.md
+- 2026-11-19T02:00:00Z | stop | look-variants | pick a look | p.html
+- 2026-11-19T02:30:00Z | answer | second look
+- 2026-11-19T02:31:00Z | resume | from look-variants
+- 2026-11-19T03:00:00Z | wip | first slice playable
+LOG
+expect_next "an answer after a stop still resumes the stop" "continue: first slice playable"
+echo "- 2026-11-19T03:10:00Z | answer | make the enemies slower" >>"$run"
+out=$(next_state 2>&1)
+[ "$out" = "$(printf 'continue: first slice playable\nnotes for the next round: make the enemies slower')" ] \
+  && pass "an answer with no pending stop is reported as notes, and the run keeps going" \
+  || fail "an answer with no pending stop is reported as notes, and the run keeps going" "$out"
+echo "- 2026-11-19T03:12:00Z | answer | and louder hits" >>"$run"
+next_state | grep -c '^notes for the next round' | grep -qx 2 && pass "every unread answer is listed as notes" || fail "every unread answer is listed as notes"
+echo "- 2026-11-19T03:20:00Z | round | 1 | started" >>"$run"
+expect_next "a round line consumes the notes" "continue: 1 | started"
+cat >"$run" <<'LOG'
+- 2026-11-19T01:00:00Z | start | pitch=PITCH.md
+- 2026-11-19T02:00:00Z | stop | look-variants | pick a look | p.html
+- 2026-11-19T02:30:00Z | answer | second look
+LOG
+expect_next "an answer right after a stop is an answer, not notes" "resume: look-variants | second look"
+
 # agent and skill
 [ -f "$AGENT" ] && pass "the conductor agent exists under agents/orchestration" || fail "the conductor agent exists under agents/orchestration"
 [ "$(field "$AGENT" name)" = "conductor" ] && pass "the agent name equals its file name" || fail "the agent name equals its file name"
@@ -180,6 +205,12 @@ lock_cmd status "$run" --now 2026-11-19T03:02:00Z 2>&1 | grep -q 'held by beta' 
 rm -f "$lock"
 grep -q "run_state.py lock acquire" "$SKILL" && pass "/conduct checks the lock" || fail "/conduct checks the lock"
 grep -q "run_state.py\` lock acquire\|run_state.py lock acquire" "$AGENT" && grep -q "lock release" "$AGENT" && pass "the conductor takes and releases the lock" || fail "the conductor takes and releases the lock"
+
+# notifications and the wip line
+grep -q "PushNotification" "$SKILL" && grep -qi "main thread" "$SKILL" && grep -q "stop line" "$SKILL" && pass "/conduct sends the notification from the main thread with the stop line" || fail "/conduct sends the notification from the main thread with the stop line"
+grep -qi "at every stop and at delivery\|every stop and at .done" "$SKILL" && pass "/conduct notifies at every stop and at delivery" || fail "/conduct notifies at every stop and at delivery"
+grep -q 'append `wip |' "$AGENT" && grep -qi "keep going\|keeps going\|do not stop" "$AGENT" && pass "the conductor writes a wip line and keeps running" || fail "the conductor writes a wip line and keeps running"
+grep -q "notes for the next round" "$AGENT" && pass "the conductor reads unprompted answers as round notes" || fail "the conductor reads unprompted answers as round notes"
 
 # nesting: main -> conductor -> polish-director -> worker or judge, three levels at most
 if grep -rEn 'claude +(--agent|-p)' "$REPO_ROOT/skills" "$REPO_ROOT/agents" "$REPO_ROOT/README.md" >/dev/null; then
