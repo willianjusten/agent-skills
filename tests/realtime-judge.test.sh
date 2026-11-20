@@ -66,7 +66,7 @@ echo '{"X":"before","Y":"after","seed":0}' > "$work/before-is-x.json"
 echo '{"X":"after","Y":"before","seed":0}' > "$work/after-is-x.json"
 
 decision() {
-  run decide --mapping "$1" --visual "$2" --feel "$3" |
+  run decide --mapping "$1" --visual "$2" --feel "$3" --no-questions |
     python3 -c "import json,sys; d=json.load(sys.stdin); print(d['decision'], d['before_counted'], d['after_counted'])"
 }
 
@@ -86,13 +86,13 @@ result=$(decision "$work/before-is-x.json" X=7,Y=7 X=7,Y=7)
 result=$(decision "$work/before-is-x.json" X=8,Y=9 X=8,Y=6)
 [ "$result" = "reject 8 6" ] && pass "one judge disliking the change drags it down" || fail "lower score counts" "$result"
 
-if run decide --mapping "$work/before-is-x.json" --visual X=6,Y=8 --feel X=6,Y=9 --markdown | grep -q 'Visual'; then
+if run decide --mapping "$work/before-is-x.json" --visual X=6,Y=8 --feel X=6,Y=9 --no-questions --markdown | grep -q 'Visual'; then
   pass "markdown packet section lists both judges"
 else
   fail "markdown packet section lists both judges"
 fi
 
-if run decide --mapping "$work/before-is-x.json" --visual X=6,Y=11 --feel X=6,Y=9 > /dev/null 2>&1; then
+if run decide --mapping "$work/before-is-x.json" --visual X=6,Y=11 --feel X=6,Y=9 --no-questions > /dev/null 2>&1; then
   fail "scores outside 1-10 are refused"
 else
   pass "scores outside 1-10 are refused"
@@ -121,7 +121,7 @@ result=$(motion_decision "$work/before-is-x.json" --motion X=4,Y=7)
 result=$(motion_decision "$work/before-is-x.json" --motion X=7,Y=5)
 [ "$result" = "reject 7 5" ] && pass "worse motion is rejected" || fail "worse motion is rejected" "$result"
 
-result=$(motion_decision "$work/before-is-x.json" --visual X=6,Y=8 --feel X=6,Y=8 --motion X=6,Y=5)
+result=$(motion_decision "$work/before-is-x.json" --visual X=6,Y=8 --feel X=6,Y=8 --motion X=6,Y=5 --no-questions)
 [ "$result" = "reject 6 5" ] && pass "with three lenses the motion score counts like the other two" || fail "with three lenses the motion score counts like the other two" "$result"
 
 if run decide --mapping "$work/before-is-x.json" --visual X=6,Y=8 --motion X=6,Y=8 > /dev/null 2>&1; then
@@ -143,44 +143,52 @@ else
 fi
 
 # yes/no questions: a yes turning to no rejects even when the score rises
+# fill: the judge's answers for the named questions, na:na for the other four (every judge answers all five)
+fill() {
+  local given="$1" name out="$1"
+  for name in player_visible threats_readable light_direction nothing_clipped hud_readable; do
+    case ",$given," in *",$name="*) ;; *) out="$out,$name=na:na" ;; esac
+  done
+  echo "$out"
+}
 question_decision() {
   run decide --mapping "$1" --visual "$2" --feel "$3" "${@:4}" |
     python3 -c "import json,sys; d=json.load(sys.stdin); print(d['decision'], ','.join(d['question_regressions']))"
 }
 
-result=$(question_decision "$work/before-is-x.json" X=6,Y=8 X=6,Y=8 --questions player_visible=yes:no)
+result=$(question_decision "$work/before-is-x.json" X=6,Y=8 X=6,Y=8 --questions "$(fill player_visible=yes:no)")
 [ "$result" = "reject player_visible" ] && pass "a question turning yes to no rejects although the score rose" || fail "a question turning yes to no rejects although the score rose" "$result"
 
-result=$(question_decision "$work/after-is-x.json" X=6,Y=8 X=6,Y=8 --questions player_visible=no:yes)
+result=$(question_decision "$work/after-is-x.json" X=6,Y=8 X=6,Y=8 --questions "$(fill player_visible=no:yes)")
 [ "$result" = "reject player_visible" ] && pass "question answers are mapped back by the shuffle" || fail "question answers are mapped back by the shuffle" "$result"
 
-result=$(question_decision "$work/before-is-x.json" X=7,Y=7 X=7,Y=7 --questions player_visible=yes:yes,hud_readable=no:yes,threats_readable=na:na)
+result=$(question_decision "$work/before-is-x.json" X=7,Y=7 X=7,Y=7 --questions "$(fill player_visible=yes:yes,hud_readable=no:yes,threats_readable=na:na)")
 [ "$result" = "keep " ] && pass "a held score with no yes-to-no is kept" || fail "a held score with no yes-to-no is kept" "$result"
 
-result=$(question_decision "$work/before-is-x.json" X=7,Y=7 X=7,Y=7 --questions hud_readable=no:no)
+result=$(question_decision "$work/before-is-x.json" X=7,Y=7 X=7,Y=7 --questions "$(fill hud_readable=no:no)")
 [ "$result" = "keep " ] && pass "a question that stays no is not a regression" || fail "a question that stays no is not a regression" "$result"
 
-result=$(question_decision "$work/before-is-x.json" X=7,Y=7 X=7,Y=7 --questions hud_readable=na:no)
+result=$(question_decision "$work/before-is-x.json" X=7,Y=7 X=7,Y=7 --questions "$(fill hud_readable=na:no)")
 [ "$result" = "reject hud_readable" ] && pass "a question turning na to no rejects: no new no answer" || fail "a question turning na to no rejects: no new no answer" "$result"
 
-result=$(question_decision "$work/before-is-x.json" X=7,Y=8 X=7,Y=8 --questions player_visible=yes:yes --questions player_visible=yes:no)
+result=$(question_decision "$work/before-is-x.json" X=7,Y=8 X=7,Y=8 --questions "$(fill player_visible=yes:yes)" --questions "$(fill player_visible=yes:no)")
 [ "$result" = "reject player_visible" ] && pass "one judge answering no counts as no" || fail "one judge answering no counts as no" "$result"
 
-result=$(question_decision "$work/before-is-x.json" X=7,Y=5 X=7,Y=5 --questions player_visible=no:yes)
+result=$(question_decision "$work/before-is-x.json" X=7,Y=5 X=7,Y=5 --questions "$(fill player_visible=no:yes)")
 [ "$result" = "reject " ] && pass "a falling score still rejects when answers improve" || fail "a falling score still rejects when answers improve" "$result"
 
-if run decide --mapping "$work/before-is-x.json" --visual X=6,Y=8 --feel X=6,Y=8 --questions flashy=yes:yes > /dev/null 2>&1; then
+if run decide --mapping "$work/before-is-x.json" --visual X=6,Y=8 --feel X=6,Y=8 --questions "$(fill flashy=yes:yes)" > /dev/null 2>&1; then
   fail "an unknown question is refused"
 else
   pass "an unknown question is refused"
 fi
-if run decide --mapping "$work/before-is-x.json" --visual X=6,Y=8 --feel X=6,Y=8 --questions player_visible=maybe:yes > /dev/null 2>&1; then
+if run decide --mapping "$work/before-is-x.json" --visual X=6,Y=8 --feel X=6,Y=8 --questions "$(fill player_visible=maybe:yes)" > /dev/null 2>&1; then
   fail "an answer other than yes, no or na is refused"
 else
   pass "an answer other than yes, no or na is refused"
 fi
 
-packet=$(run decide --mapping "$work/before-is-x.json" --visual X=6,Y=8 --feel X=6,Y=8 --questions player_visible=yes:no --markdown)
+packet=$(run decide --mapping "$work/before-is-x.json" --visual X=6,Y=8 --feel X=6,Y=8 --questions "$(fill player_visible=yes:no)" --markdown)
 if echo "$packet" | grep -q 'Counted (lowest judge)' && echo "$packet" | grep -q '| player visible | yes | no (regressed) |'; then
   pass "the packet block shows scores and answers together"
 else
@@ -268,13 +276,24 @@ else
   fail "discrimination markdown states the pass rule"
 fi
 
-out=$(run decide --mapping "$work/missing.json" --visual X=5,Y=5 --feel X=5,Y=5 2>&1); status=$?
+out=$(run decide --mapping "$work/missing.json" --visual X=5,Y=5 --feel X=5,Y=5 --no-questions 2>&1); status=$?
 { [ "$status" -ne 0 ] && ! echo "$out" | grep -q Traceback && echo "$out" | grep -q "missing.json"; } && pass "a missing mapping file is named, not a traceback" || fail "a missing mapping file is named, not a traceback" "$out"
+
+# every still moment carries the questions: leaving them out is an error, not a silent skip
+out=$(run decide --mapping "$work/before-is-x.json" --visual X=6,Y=8 --feel X=6,Y=8 2>&1); status=$?
+{ [ "$status" -ne 0 ] && echo "$out" | grep -q -- "--no-questions" && ! echo "$out" | grep -q Traceback; } && pass "a still moment with no --questions is refused unless --no-questions is given" || fail "a still moment with no --questions is refused unless --no-questions is given" "$status: $out"
+out=$(run decide --mapping "$work/before-is-x.json" --visual X=6,Y=8 --feel X=6,Y=8 --questions player_visible=yes:yes 2>&1); status=$?
+{ [ "$status" -ne 0 ] && echo "$out" | grep -q "threats_readable" && ! echo "$out" | grep -q Traceback; } && pass "a judge that leaves a question out is refused, naming it" || fail "a judge that leaves a question out is refused, naming it" "$status: $out"
+printf '{"X":"before"}' >"$work/bad-mapping.json"
+out=$(run decide --mapping "$work/bad-mapping.json" --motion X=5,Y=5 2>&1); status=$?
+{ [ "$status" -ne 0 ] && echo "$out" | grep -q "bad-mapping.json" && ! echo "$out" | grep -q Traceback; } && pass "a mapping missing a label is named, not a traceback" || fail "a mapping missing a label is named, not a traceback" "$out"
+printf '{"X":"before","Y":"after","extra":1}' >"$work/ok-mapping.json"
+run questions | tr '\n' ' ' | grep -q '^player_visible threats_readable light_direction nothing_clipped hud_readable $' && pass "questions prints the question names in order" || fail "questions prints the question names in order"
 
 # the question names stay in step across the script, the rubric and the skill
 SKILL_TEXT="$REPO_ROOT/skills/realtime/realtime-judge/SKILL.md"
 RUBRIC="$REPO_ROOT/skills/realtime/realtime-judge/references/rubric.md"
-script_questions=$(python3 -c "import re,sys; print(' '.join(re.findall(r'\"(\w+)\"', re.search(r'QUESTIONS = \((.*?)\)', open('$SCRIPT').read()).group(1))))")
+script_questions=$(run questions | tr '\n' ' ' | sed 's/ $//')
 rubric_questions=$(grep -oE '^[1-9]\. `[a-z_]+`' "$RUBRIC" | grep -oE '[a-z_]+' | grep -v '^[0-9]$' | tr '\n' ' ' | sed 's/ $//')
 [ "$script_questions" = "$rubric_questions" ] && pass "the rubric lists the script's question names in order" || fail "the rubric lists the script's question names in order" "$script_questions vs $rubric_questions"
 unknown=""
@@ -282,7 +301,7 @@ for name in $(grep -oE -- '--questions [a-z_]+|,[a-z_]+=(yes|no|na):' "$SKILL_TE
   echo " $script_questions " | grep -q " $name " || unknown="$unknown $name"
 done
 [ -z "$unknown" ] && pass "every question name in the skill is one the script accepts" || fail "every question name in the skill is one the script accepts" "$unknown"
-result=$(question_decision "$work/before-is-x.json" X=7,Y=7 X=7,Y=7 --questions hud_readable=no:no)
+result=$(question_decision "$work/before-is-x.json" X=7,Y=7 X=7,Y=7 --questions "$(fill hud_readable=no:no)")
 [ "$result" = "keep " ] && pass "no to no is kept" || fail "no to no is kept" "$result"
 
 [ "$failures" -eq 0 ] || { echo "$failures failure(s)" >&2; exit 1; }

@@ -7,6 +7,10 @@ separate file. It never prints the mapping.
 
 decide: reads the mapping and the motion judge's scores for X and Y, maps them
 back to before and after, and keeps the change only if after wins or ties.
+
+This is a standalone copy of the folder case of the still-image pair judge used elsewhere in the repo
+(a skill cannot import a sibling); tests/motion-review.test.sh checks that the
+two shuffle and decide alike, so change them together.
 """
 
 import argparse
@@ -66,8 +70,20 @@ def parse_scores(text):
     return scores
 
 
+def read_mapping(path):
+    try:
+        mapping = json.loads(Path(path).read_text())
+    except FileNotFoundError:
+        raise SystemExit(f"The mapping file {path} does not exist; pass the path prepare wrote")
+    except json.JSONDecodeError:
+        raise SystemExit(f"The mapping file {path} is not valid JSON")
+    if not isinstance(mapping, dict) or any(mapping.get(label) not in SIDES for label in LABELS):
+        raise SystemExit(f"The mapping file {path} must name before or after for both X and Y; pass the file prepare wrote")
+    return mapping
+
+
 def decide(arguments):
-    mapping = json.loads(Path(arguments.mapping).read_text())
+    mapping = read_mapping(arguments.mapping)
     scores = parse_scores(arguments.motion)
     by_side = {mapping[label]: scores[label] for label in LABELS}
     result = {

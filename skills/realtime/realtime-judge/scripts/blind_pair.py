@@ -3,13 +3,20 @@
 
 prepare: copies the two captures into a judge directory as x.png and y.png in a
 random order and records the mapping in a separate file. Given two folders (a
-motion capture's sheets), it copies them to x/ and y/ instead. It never prints the mapping.
+motion capture's sheets), it copies them to x/ and y/ instead. It never prints
+the mapping.
 
 decide: reads the mapping and each judge's scores for X and Y, maps them back to
 before and after, counts the lowest judge per capture, and keeps the change only
 if it wins or ties. A still moment takes --visual and --feel; a motion window
-takes --motion; all three together count the lowest of the three. With --questions (one per
-judge, repeatable) the fixed yes/no questions are answered per capture; a question that is newly no (after no, before not no) rejects the change even when the score rises. With --visual-gap and --feel-gap (target-gap
+takes --motion; all three together count the lowest of the three.
+
+A still moment also takes --questions, one per judge (repeatable): the fixed
+yes/no questions answered per capture, every judge answering all of them. A
+question that is newly no (after no, before not no) rejects the change even when
+the score rises. Leaving --questions out of a still moment is an error unless
+--no-questions says the moment has no questions on purpose. `questions` prints
+the question names, one per line. With --visual-gap and --feel-gap (target-gap
 scores against a benchmark), the lower gap score per capture must also win or tie.
 
 discriminate-prepare: builds 12 trials from matching reference and render crops,
@@ -48,6 +55,13 @@ def read_json(path, what):
         raise SystemExit(f"The {what} file {path} does not exist; pass the path prepare wrote")
     except json.JSONDecodeError:
         raise SystemExit(f"The {what} file {path} is not valid JSON")
+
+
+def read_mapping(path):
+    mapping = read_json(path, "mapping")
+    if not isinstance(mapping, dict) or any(mapping.get(label) not in SIDES for label in LABELS):
+        raise SystemExit(f"The mapping file {path} must name before or after for both X and Y; pass the file prepare wrote")
+    return mapping
 
 
 def require_fresh_judge_dir(judge_dir, leaked_thing):
@@ -191,7 +205,7 @@ def parse_scores(text):
 
 
 def parse_questions(text):
-    """Reads `question=<X answer>:<Y answer>,...`, each answer yes, no or na; a question left out counts as na."""
+    """Reads `question=<X answer>:<Y answer>,...`, each answer yes, no or na; every judge answers every question."""
     answers = {}
     for pair in text.split(","):
         raw_question, _, raw_answers = pair.partition("=")
@@ -202,6 +216,9 @@ def parse_questions(text):
         if len(pieces) != len(LABELS) or any(piece not in ANSWERS for piece in pieces):
             raise SystemExit(f"Answers for {question} must be X-answer:Y-answer, each yes, no or na, got '{raw_answers}'")
         answers[question] = dict(zip(LABELS, pieces))
+    left_out = [question for question in QUESTIONS if question not in answers]
+    if left_out:
+        raise SystemExit(f"A judge must answer every question; left out: {', '.join(left_out)} (answer na:na for one that does not apply)")
     return answers
 
 
@@ -235,9 +252,13 @@ def unshuffle(mapping, text_by_lens):
 
 
 def decide(arguments):
-    mapping = read_json(arguments.mapping, "mapping")
+    mapping = read_mapping(arguments.mapping)
     if (arguments.visual is None) != (arguments.feel is None):
         raise SystemExit("Give both --visual and --feel, or neither")
+    if arguments.questions and arguments.no_questions:
+        raise SystemExit("Give --questions or --no-questions, not both")
+    if arguments.visual is not None and not arguments.questions and not arguments.no_questions:
+        raise SystemExit("A still moment needs each judge's --questions answers (pass --no-questions only when the moment has none), or the no-new-no rule is silently skipped")
     lens_scores = {lens: getattr(arguments, lens) for lens in LENSES if getattr(arguments, lens) is not None}
     if not lens_scores:
         raise SystemExit("Give --visual and --feel for a still moment, --motion for a motion window, or all three")
@@ -322,8 +343,12 @@ def main():
     decide_parser.add_argument(
         "--questions", action="append", help="one judge's yes/no answers as question=X:Y, e.g. player_visible=yes:no; repeat per judge"
     )
+    decide_parser.add_argument("--no-questions", action="store_true", help="a still moment that has no yes/no questions on purpose")
     decide_parser.add_argument("--markdown", action="store_true")
     decide_parser.set_defaults(run=decide)
+
+    questions_parser = commands.add_parser("questions", help="print the yes/no question names, one per line")
+    questions_parser.set_defaults(run=lambda arguments: print("\n".join(QUESTIONS)))
 
     discriminate_prepare_parser = commands.add_parser("discriminate-prepare")
     discriminate_prepare_parser.add_argument("--reference-dir", required=True)

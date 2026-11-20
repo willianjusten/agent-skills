@@ -102,4 +102,24 @@ else
 fi
 run decide --mapping "$work/before-is-x.json" --motion X=4,Y=7 --markdown | grep -q 'Motion judge' && pass "markdown names the motion judge" || fail "markdown names the motion judge"
 
+# blind_motion.py is the standalone motion subset of blind_pair.py: same seed, same shuffle; same scores, same verdict
+PAIR="$REPO_ROOT/skills/realtime/realtime-judge/scripts/blind_pair.py"
+verdict_of() { python3 -c "import json,sys; d=json.load(sys.stdin); print(d['decision'], d.get('before_counted', d.get('before')), d.get('after_counted', d.get('after')))"; }
+parity=""
+for seed in 1 2 3 4 5 6; do
+  python3 -I "$PAIR" prepare --before "$work/before" --after "$work/after" --judge-dir "$work/pj-$seed" --mapping "$work/pm.json" --seed "$seed" >/dev/null
+  run prepare --before "$work/before" --after "$work/after" --judge-dir "$work/mj-$seed" --mapping "$work/mm.json" --seed "$seed" >/dev/null
+  [ "$(x_side "$work/pm.json")" = "$(x_side "$work/mm.json")" ] || parity="$parity shuffle:$seed"
+  cmp -s <(cd "$work/pj-$seed" && find . -type f | sort | xargs cat) <(cd "$work/mj-$seed" && find . -type f | sort | xargs cat) || parity="$parity files:$seed"
+  for scores in X=4,Y=7 X=7,Y=4 X=6,Y=6 X=1,Y=10; do
+    pair_verdict=$(python3 -I "$PAIR" decide --mapping "$work/pm.json" --motion "$scores" | verdict_of)
+    motion_verdict=$(run decide --mapping "$work/mm.json" --motion "$scores" | verdict_of)
+    [ "$pair_verdict" = "$motion_verdict" ] || parity="$parity verdict:$seed:$scores"
+  done
+done
+[ -z "$parity" ] && pass "blind_motion.py shuffles and decides exactly like blind_pair.py" || fail "blind_motion.py shuffles and decides exactly like blind_pair.py" "$parity"
+printf '{"X":"before"}' >"$work/bad-mapping.json"
+out=$(run decide --mapping "$work/bad-mapping.json" --motion X=5,Y=5 2>&1); status=$?
+{ [ "$status" -ne 0 ] && echo "$out" | grep -q "bad-mapping.json" && ! echo "$out" | grep -q Traceback; } && pass "a mapping missing a label is named, not a traceback" || fail "a mapping missing a label is named, not a traceback" "$out"
+
 [ "$failures" -eq 0 ] || { echo "$failures failure(s)" >&2; exit 1; }
