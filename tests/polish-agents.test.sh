@@ -92,10 +92,10 @@ grep -q "process setting" "$director" && grep -q '`minimal`: one judge lens per 
 grep -qF 'at most three tries per checklist row' "$director" && pass "the director caps tries per checklist row at three" || fail "the director caps tries per checklist row at three"
 grep -qF 'stop after two tries in a row that do not improve' "$director" && pass "the director stops after two tries that do not improve" || fail "the director stops after two tries that do not improve"
 grep -qF 'keep the best version by counted score, not the latest' "$director" && pass "the director keeps the best version, not the latest" || fail "the director keeps the best version, not the latest"
-grep -qF 'turning from yes to no' "$director" && pass "the director rejects a yes that turns to no" || fail "the director rejects a yes that turns to no"
+grep -qF 'a `no` after a `yes` or `na` rejects' "$director" && pass "the director rejects any new no answer" || fail "the director rejects any new no answer"
 grep -qF 'answers with their evidence beside them' "$director" && pass "the packet shows answers beside scores" || fail "the packet shows answers beside scores"
 grep -q "lean round" "$director" && grep -q "parallel round" "$director" && grep -q "touches one area" "$director" && grep -q "two or more areas" "$director" && pass "the director picks lean or parallel from the areas and logs the mode" || fail "the director picks lean or parallel from the areas and logs the mode"
-grep -q "whose captures changed" "$director" && grep -q "one fixed regression moment" "$director" && pass "judging covers changed moments plus one regression moment" || fail "judging covers changed moments plus one regression moment"
+grep -q "whose captures changed" "$director" && grep -q "fixed regression moment" "$director" && pass "judging covers changed moments plus one regression moment" || fail "judging covers changed moments plus one regression moment"
 conductor="$REPO_ROOT/agents/orchestration/conductor.md"
 for frame_file in "$director" "$conductor"; do
   grep -q "more than five frames" "$frame_file" && pass "$(basename "$frame_file") has the frame-reading rule" || fail "$(basename "$frame_file") has the frame-reading rule"

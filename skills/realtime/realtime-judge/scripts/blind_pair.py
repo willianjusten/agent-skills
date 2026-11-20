@@ -9,8 +9,7 @@ decide: reads the mapping and each judge's scores for X and Y, maps them back to
 before and after, counts the lowest judge per capture, and keeps the change only
 if it wins or ties. A still moment takes --visual and --feel; a motion window
 takes --motion; all three together count the lowest of the three. With --questions (one per
-judge, repeatable) the fixed yes/no questions are answered per capture; a question that turns from yes to
-no rejects the change even when the score rises. With --visual-gap and --feel-gap (target-gap
+judge, repeatable) the fixed yes/no questions are answered per capture; a question that is newly no (after no, before not no) rejects the change even when the score rises. With --visual-gap and --feel-gap (target-gap
 scores against a benchmark), the lower gap score per capture must also win or tie.
 
 discriminate-prepare: builds 12 trials from matching reference and render crops,
@@ -261,7 +260,7 @@ def decide(arguments):
         result["gap_after_counted"] = format_score(gap_counted[AFTER])
     if arguments.questions:
         answers = unshuffle_questions(mapping, arguments.questions)
-        regressions = [question for question, by_side in answers.items() if by_side[BEFORE] == YES and by_side[AFTER] == NO]
+        regressions = [question for question, by_side in answers.items() if by_side[AFTER] == NO and by_side[BEFORE] != NO]
         keep = keep and not regressions
         result["questions"] = answers
         result["question_regressions"] = regressions

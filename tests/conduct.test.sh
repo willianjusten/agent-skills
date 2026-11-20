@@ -178,6 +178,10 @@ out=$(next_state 2>&1)
   || fail "an answer with no pending stop is reported as notes, and the run keeps going" "$out"
 echo "- 2026-11-19T03:12:00Z | answer | and louder hits" >>"$run"
 next_state | grep -c '^notes for the next round' | grep -qx 2 && pass "every unread answer is listed as notes" || fail "every unread answer is listed as notes"
+cp "$run" "$work/notes.base"
+echo "- 2026-11-19T03:15:00Z | resume | from first slice playable" >>"$run"
+next_state | grep -c '^notes for the next round' | grep -qx 2 && pass "a resume line keeps the notes for the next round" || fail "a resume line keeps the notes for the next round"
+cp "$work/notes.base" "$run"
 echo "- 2026-11-19T03:20:00Z | step | round 1 reads the notes" >>"$run"
 echo "- 2026-11-19T03:21:00Z | round-start | 1 | branch=none base=none" >>"$run"
 echo "- 2026-11-19T03:30:00Z | answer | during the round" >>"$run"
@@ -330,7 +334,7 @@ cat >"$run" <<'LOG'
 LOG
 [ "$(look)" = "look=ask target=no
 state=pending" ] && pass "a look-variants stop with no answer is pending, look=ask and no target by default" || fail "a look-variants stop with no answer is pending" "$(look)"
-for case in "neon|chosen neon" "Noon, less bloom|chosen noon | less bloom" "pick dusk: warmer fog|chosen dusk | warmer fog" "the second, darker|chosen neon | darker" "3|chosen noon" "mauve|unclear | mauve"; do
+for case in "neon|chosen neon" "Noon, less bloom|chosen noon | less bloom" "pick dusk: warmer fog|chosen dusk | warmer fog" "the second, darker|unclear | the second, darker" "variant 2, darker|chosen neon | darker" "3|chosen noon" "mauve|unclear | mauve"; do
   answer="${case%%|*}"; expected="${case#*|}"
   cp "$run" "$work/look.base"
   echo "- 2026-11-19T02:00:00Z | answer | $answer" >>"$run"
@@ -347,6 +351,13 @@ LOG
 [ "$(look)" = "look=auto target=yes
 state=auto dusk" ] && pass "an assumption for look=auto names the picked preset" || fail "an assumption for look=auto names the picked preset" "$(look)"
 expect_next "look=auto leaves no stop to wait for" "continue: look=auto dusk | fits the quiet harbour mood"
+cat >"$run" <<'LOG'
+- 2026-11-19T01:00:00Z | start | pitch=PITCH.md look=auto
+- 2026-11-19T01:30:00Z | assumption | look=auto dusk | fits the quiet harbour mood
+- 2026-11-19T01:40:00Z | stop | look-variants | pick one of variants=dusk,neon,noon | packet.html
+- 2026-11-19T02:00:00Z | answer | neon, warmer
+LOG
+[ "$(look | tail -1)" = "state=chosen neon | warmer" ] && pass "a later answer naming a variant overrides an earlier look=auto assumption" || fail "a later answer naming a variant overrides an earlier look=auto assumption" "$(look)"
 printf '%s\n' '- 2026-11-19T01:00:00Z | start | pitch=PITCH.md' >"$run"
 [ "$(look | tail -1)" = "state=none" ] && pass "a run with no look decision reports none" || fail "a run with no look decision reports none"
 
@@ -365,5 +376,35 @@ grep -q 'No <item>: <reason>' "$AGENT" && grep -q 'DECISIONS.md' "$AGENT" && gre
 grep -q 'src/features.ts' "$AGENT" && grep -q 'outside its band' "$AGENT" && grep -q 'COMPONENTS.md\|row' "$AGENT" && pass "the conductor turns failing features and out-of-band balance into rows" || fail "the conductor turns failing features and out-of-band balance into rows"
 grep -q '^## Feature list' "$GDD_TEMPLATE" && grep -q '^## Balance band' "$GDD_TEMPLATE" && pass "the GDD template has the feature list and the balance band" || fail "the GDD template has the feature list and the balance band"
 grep -q 'feature list' "$REPO_ROOT/skills/game/game-brief/SKILL.md" && grep -q 'balance band' "$REPO_ROOT/skills/game/game-brief/SKILL.md" && pass "game-brief fills the feature list and the balance band" || fail "game-brief fills the feature list and the balance band"
+
+
+# review fixes: phases, process fallbacks, stops, resume wording
+PHASES="brief art-bible first-playable look-variants checklist polish reference-judge deliver"
+listed=$(grep -o '`phase` (text is the phase name[^)]*)' "$AGENT" | grep -o '`[a-z-]*`' | tr -d '`' | grep -v '^phase$' | tr '\n' ' ')
+[ "$listed" = "$(echo $PHASES) " ] && pass "the conductor lists the phase names in run order" || fail "the conductor lists the phase names in run order" "$listed"
+for phase in $PHASES; do
+  grep -q "Append \`phase | $phase\`" "$AGENT" && grep -q "$phase" "$SCRIPT" && pass "phase $phase is appended by a step and named in run_state.py" || fail "phase $phase is appended by a step and named in run_state.py"
+done
+cat >"$run" <<'LOG'
+- 2026-11-19T01:00:00Z | start | pitch=PITCH.md
+LOG
+n=0
+for phase in $PHASES; do n=$((n + 1)); echo "- 2026-11-19T01:$(printf '%02d' $((n * 5)))00Z | phase | $phase" | sed 's/:\([0-9][0-9]\)00Z/:\1:00Z/' >>"$run"; done
+phase_names=$(python3 -I "$SCRIPT" phases "$run" --now 2026-11-19T02:00:00Z | awk '{print $1}' | grep -v '^total$' | grep -v '^setup$' | tr '\n' ' ')
+[ "$phase_names" = "$(echo $PHASES) " ] && pass "run_state.py phases reports every conductor phase name" || fail "run_state.py phases reports every conductor phase name" "$phase_names"
+grep -q 'at every round boundary' "$AGENT" && pass "the conductor re-reads next at each round boundary" || fail "the conductor re-reads next at each round boundary"
+grep -q 'phase named by the last `phase` entry' "$AGENT" && pass "continue resumes the phase of the last phase entry" || fail "continue resumes the phase of the last phase entry"
+grep -q 'step 2 also fixes what step 3 would have' "$AGENT" && grep -q 'from the brief and the pitch' "$AGENT" && pass "process=minimal chooses the asset source in the brief and writes presets from the brief" || fail "process=minimal chooses the asset source in the brief and writes presets from the brief"
+grep -q 'Only with `process=full`' "$AGENT" && pass "the reference judge runs only with process=full" || fail "the reference judge runs only with process=full"
+grep -q 'run_state.py limits RUN.md` prints' "$AGENT" && ! grep -q '6 rounds, 6 hours of active run time per run' "$AGENT" && pass "the budget stop reads the limits from run_state.py" || fail "the budget stop reads the limits from run_state.py"
+grep -q 'regression moment' "$AGENT" && grep -q 'regression moment: <name>' "$AGENT" && pass "the conductor logs and passes the regression moment" || fail "the conductor logs and passes the regression moment"
+DIRECTOR="$REPO_ROOT/agents/realtime/polish-director.md"
+grep -q 'regression moment is a named capture' "$DIRECTOR" && grep -q 'judges the regression moment alone' "$DIRECTOR" && pass "the director fixes one named regression moment and handles a round with no changed capture" || fail "the director fixes one named regression moment and handles a round with no changed capture"
+grep -q 'Under every setting, a round that changes combat' "$DIRECTOR" && pass "combat motion is judged from the recording under every process setting" || fail "combat motion is judged from the recording under every process setting"
+grep -q -- '--questions' "$DIRECTOR" && grep -q 'no new `no` answer' "$DIRECTOR" && pass "the director passes --questions for still moments and rejects any new no" || fail "the director passes --questions for still moments and rejects any new no"
+MOTION="$REPO_ROOT/skills/creative/motion-review/SKILL.md"
+grep -q -- '--motion --from-recording <from>-<to>' "$MOTION" && grep -q 'play/play-contact-sheet.png' "$MOTION" && grep -q 'motion-play/judge/' "$MOTION" && grep -q 'cannot use `--against`' "$MOTION" && pass "motion-review documents the real-play recording range" || fail "motion-review documents the real-play recording range"
+look_stops=$(sed -n '/^## Stop points/,/^At a stop/p' "$AGENT")
+echo "$look_stops" | grep -q 'With `look=ask` (default) also: look variant chosen' && ! echo "$look_stops" | grep -q '^Always: look variant' && pass "the Always stop list holds only the stops that survive look=auto" || fail "the Always stop list holds only the stops that survive look=auto"
 
 [ "$failures" -eq 0 ] || exit 1

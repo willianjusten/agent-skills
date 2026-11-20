@@ -167,6 +167,9 @@ result=$(question_decision "$work/before-is-x.json" X=7,Y=7 X=7,Y=7 --questions 
 result=$(question_decision "$work/before-is-x.json" X=7,Y=7 X=7,Y=7 --questions hud_readable=no:no)
 [ "$result" = "keep " ] && pass "a question that stays no is not a regression" || fail "a question that stays no is not a regression" "$result"
 
+result=$(question_decision "$work/before-is-x.json" X=7,Y=7 X=7,Y=7 --questions hud_readable=na:no)
+[ "$result" = "reject hud_readable" ] && pass "a question turning na to no rejects: no new no answer" || fail "a question turning na to no rejects: no new no answer" "$result"
+
 result=$(question_decision "$work/before-is-x.json" X=7,Y=8 X=7,Y=8 --questions player_visible=yes:yes --questions player_visible=yes:no)
 [ "$result" = "reject player_visible" ] && pass "one judge answering no counts as no" || fail "one judge answering no counts as no" "$result"
 
@@ -274,5 +277,19 @@ fi
 
 out=$(run decide --mapping "$work/missing.json" --visual X=5,Y=5 --feel X=5,Y=5 2>&1); status=$?
 { [ "$status" -ne 0 ] && ! echo "$out" | grep -q Traceback && echo "$out" | grep -q "missing.json"; } && pass "a missing mapping file is named, not a traceback" || fail "a missing mapping file is named, not a traceback" "$out"
+
+# the question names stay in step across the script, the rubric and the skill
+SKILL_TEXT="$REPO_ROOT/skills/realtime/realtime-judge/SKILL.md"
+RUBRIC="$REPO_ROOT/skills/realtime/realtime-judge/references/rubric.md"
+script_questions=$(python3 -c "import re,sys; print(' '.join(re.findall(r'\"(\w+)\"', re.search(r'QUESTIONS = \((.*?)\)', open('$SCRIPT').read()).group(1))))")
+rubric_questions=$(grep -oE '^[1-9]\. `[a-z_]+`' "$RUBRIC" | grep -oE '[a-z_]+' | grep -v '^[0-9]$' | tr '\n' ' ' | sed 's/ $//')
+[ "$script_questions" = "$rubric_questions" ] && pass "the rubric lists the script's question names in order" || fail "the rubric lists the script's question names in order" "$script_questions vs $rubric_questions"
+unknown=""
+for name in $(grep -oE -- '--questions [a-z_]+|,[a-z_]+=(yes|no|na):' "$SKILL_TEXT" | grep -oE '[a-z]+_[a-z]+'); do
+  echo " $script_questions " | grep -q " $name " || unknown="$unknown $name"
+done
+[ -z "$unknown" ] && pass "every question name in the skill is one the script accepts" || fail "every question name in the skill is one the script accepts" "$unknown"
+result=$(question_decision "$work/before-is-x.json" X=7,Y=7 X=7,Y=7 --questions hud_readable=no:no)
+[ "$result" = "keep " ] && pass "no to no is kept" || fail "no to no is kept" "$result"
 
 [ "$failures" -eq 0 ] || { echo "$failures failure(s)" >&2; exit 1; }

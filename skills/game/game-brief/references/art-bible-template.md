@@ -8,7 +8,7 @@ One line (for example "pirate cove, night"). Packs are picked against it.
 
 ## Asset source
 
-One pack family (Kenney or Quaternius) for models, plus libraries for textures; or `code-only`: every asset made by code, no asset files.
+One pack family (for example Kenney or Quaternius) for models, plus libraries for textures; or `code-only`: every asset made by code, no asset files.
 
 ## Palette
 
