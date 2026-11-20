@@ -88,4 +88,10 @@ grep -q "only when no checklist is given" "$director" && pass "the fixed areas a
 grep -q "motion-judge" "$director" && grep -q "lens its row names" "$director" && pass "the judge follows the component's lens" || fail "the judge follows the component's lens"
 grep -q "component" "$worker" && pass "the worker accepts a component" || fail "the worker accepts a component"
 
+grep -qF 'at most three tries per checklist row' "$director" && pass "the director caps tries per checklist row at three" || fail "the director caps tries per checklist row at three"
+grep -qF 'stop after two tries in a row that do not improve' "$director" && pass "the director stops after two tries that do not improve" || fail "the director stops after two tries that do not improve"
+grep -qF 'keep the best version by counted score, not the latest' "$director" && pass "the director keeps the best version, not the latest" || fail "the director keeps the best version, not the latest"
+grep -qF 'turning from yes to no' "$director" && pass "the director rejects a yes that turns to no" || fail "the director rejects a yes that turns to no"
+grep -qF 'answers with their evidence beside them' "$director" && pass "the packet shows answers beside scores" || fail "the packet shows answers beside scores"
+
 [ "$failures" -eq 0 ] || exit 1
