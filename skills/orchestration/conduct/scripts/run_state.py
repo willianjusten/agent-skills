@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Reads a conductor RUN.md: where a run resumes and whether a budget is spent.
 
+  run_state.py step   <RUN.md> [--now <iso8601>]
+  run_state.py profile <RUN.md>
   run_state.py next   <RUN.md> [--allow-missing]
                       (one state line, then a `notes for the next round:` line per unread answer)
   run_state.py budget <RUN.md> [--now <iso8601>]
@@ -13,6 +15,28 @@
   run_state.py phase-names
   run_state.py look   <RUN.md>
   run_state.py lock   acquire|release|status <RUN.md> [--owner <name>] [--now <iso8601>]
+
+`step` prints the one next action of the run, then the `notes for the next round`
+lines: `start`, `done`, `wait: <stop>`, `resume: <stop> | <answer>`, `read result: ...`,
+`redo: round N`, `stop: round-review | round N` (review mode, a round with no stop line
+yet), `phase: <name> | done when <check>` (begin a phase), `work: <name> | done when
+<check>` (keep working in it) or `round: N | tier=light|checkpoint | accepts=yes|no |
+motion-every-round=yes|no | rows: <pick order>`. It walks the phases in
+run order and names the first one whose check fails, so a phase that was skipped is
+caught: the brief file and the checklist rows are always checked; the art bible, first
+playable and look also pass when a later phase was entered (runs from before these
+checks). Polish ends when every row is at target, the leg's budget is spent or at the
+delivery reserve, or the user answers a round review with `deliver` or `trailer`. The
+trailer phase runs when `app.json` declares a `trailer`, overnight or on that `trailer`
+answer; the reference judge only with `process=full`. Polish and the phases after it
+are checked within the current leg (since the last `reopen`).
+
+`profile` prints what the app's kind changes: `kind=game|experiment` (a `kind=` in a
+`start` or `budget` line, else `category` in the app's `app.json`, else game), the
+brief file, whether the art bible runs, whether every round judges
+motion (experiments and `process=full`), whether game rows (baseline, features,
+balance) apply, whether a `sound` row applies (`src/sounds.ts` exists) and whether a
+trailer is declared (`trailer` in `app.json`, or `src/trailer.ts` or `src/trailer/`).
 
 A RUN.md that does not exist is an error (exit 2), so a mistyped path never reads
 as a fresh run; only `next --allow-missing` prints `start` for it.
@@ -777,9 +801,159 @@ def resolve_now(text):
         raise SystemExit(f"--now '{text}' is not a UTC time; use 2026-01-31T12:00:00Z")
 
 
+# Answers to a round review that end polish: deliver now, or run the trailer round first.
+ENDING_ANSWERS = ("deliver", "trailer")
+
+
+@dataclass
+class Profile:
+    kind: str
+    process: str
+    has_sounds: bool
+    has_trailer: bool
+
+    @property
+    def brief_file(self):
+        return "GDD.md" if self.kind == "game" else "TREATMENT.md"
+
+    @property
+    def art_bible(self):
+        return self.process != "minimal"
+
+    @property
+    def motion_every_round(self):
+        return self.kind == "experiment" or self.process == "full"
+
+    def line(self):
+        def yes(flag):
+            return "yes" if flag else "no"
+        return "kind=%s process=%s brief=%s art-bible=%s motion-every-round=%s game-rows=%s sound-row=%s trailer=%s" % (
+            self.kind, self.process, self.brief_file, yes(self.art_bible), yes(self.motion_every_round),
+            yes(self.kind == "game"), yes(self.has_sounds), yes(self.has_trailer))
+
+
+def read_app_json(app_dir):
+    import json
+    try:
+        with open(os.path.join(app_dir, "app.json"), encoding="utf-8") as handle:
+            return json.load(handle)
+    except (OSError, ValueError):
+        return {}
+
+
+def app_profile(entries, run_file):
+    app_dir = os.path.dirname(os.path.abspath(run_file))
+    app = read_app_json(app_dir)
+    kind = last_setting(entries, "kind", r"[a-z]+")
+    if kind is None:
+        kind = "experiment" if app.get("category") == "experiments" else "game"
+    if kind not in ("game", "experiment"):
+        raise SystemExit("kind=%s is not valid; use game or experiment" % kind)
+    source = os.path.join(app_dir, "src")
+    has_trailer = bool(app.get("trailer")) or os.path.exists(os.path.join(source, "trailer.ts")) or os.path.isdir(os.path.join(source, "trailer"))
+    return Profile(kind, configured_process(entries), os.path.exists(os.path.join(source, "sounds.ts")), has_trailer)
+
+
+def phases_entered(entries):
+    return {entry_phase(kind, text) for _, kind, text in entries if entry_phase(kind, text)}
+
+
+def entered_after(entries, phase):
+    """True when a phase later than `phase` in run order was entered: the run went past it."""
+    later = PHASE_NAMES[PHASE_NAMES.index(phase) + 1:]
+    return bool(phases_entered(entries) & set(later))
+
+
+def last_review_answer(entries):
+    """The user's answer to the last round-review stop, lower case, or None."""
+    answer = None
+    for index, (_, kind, text) in enumerate(entries):
+        if kind == "stop" and text.split(" | ")[0].strip() == "round-review":
+            answer = None
+            for _, later_kind, later_text in entries[index + 1:]:
+                if later_kind == "answer":
+                    answer = later_text.strip().lower()
+                    break
+    return answer
+
+
+def polish_finished(entries, now):
+    leg = current_leg(entries)
+    rows = parse_rows(entries)
+    if rows and not rank_candidates(rows):
+        return True
+    if check_budget(entries, now).kind in ("stop", "reserve"):
+        return True
+    answer = last_review_answer(leg)
+    return bool(answer) and answer.startswith(ENDING_ANSWERS)
+
+
+def leg_has(entries, kind, prefix):
+    return any(entry_kind == kind and text.startswith(prefix) for _, entry_kind, text in current_leg(entries))
+
+
+def phase_plan(entries, run_file, now):
+    """(phase, done-when text, finished) in run order for this run's profile and mode."""
+    profile = app_profile(entries, run_file)
+    app_dir = os.path.dirname(os.path.abspath(run_file))
+    has_file = lambda name: os.path.exists(os.path.join(app_dir, name))
+    review = configured_mode(entries) == "review"
+    plan = [("brief", "%s exists" % profile.brief_file, has_file("GDD.md") or has_file("TREATMENT.md"))]
+    if profile.art_bible:
+        plan.append(("art-bible", "ART-BIBLE.md exists", has_file("ART-BIBLE.md") or entered_after(entries, "art-bible")))
+    baseline = any(kind == "checkpoint" and text.startswith("baseline") for _, kind, text in entries)
+    plan.append(("first-playable", "a checkpoint | baseline line is logged", baseline or entered_after(entries, "first-playable")))
+    look = look_state(entries)
+    plan.append(("look-variants", "the look is chosen (run_state.py look)",
+                 look.startswith(("chosen", "auto")) or entered_after(entries, "look-variants")))
+    plan.append(("checklist", "COMPONENTS.md exists and rows are declared", has_file("COMPONENTS.md") and bool(parse_rows(entries))))
+    plan.append(("polish", "every row is at target, the budget is spent or reserved, or the user answers deliver or trailer",
+                 polish_finished(entries, now)))
+    if profile.process == "full":
+        plan.append(("reference-judge", "a step | reference judge line is logged", leg_has(entries, "step", "reference judge")))
+    wants_trailer = not review or (last_review_answer(current_leg(entries)) or "").startswith("trailer")
+    if profile.has_trailer and wants_trailer:
+        trailer_done = leg_has(entries, "step", "trailer round skipped") or any(
+            row.name == "trailer" and row.turns for row in parse_rows(current_leg(entries)))
+        plan.append(("trailer", "a trailer row turn is logged or step | trailer round skipped", trailer_done))
+    plan.append(("deliver", "done is logged", False))
+    return plan, profile
+
+
+def next_round_line(entries, profile, now):
+    number = sum(1 for _, kind, _ in entries if kind == "round") + 1
+    limit = accept_limit(entries)
+    since_answer = int(re.search(r"=(\d+)", accepts_report(entries)).group(1))
+    accepts = "yes" if limit is None or since_answer < limit else "no"
+    rows = ", ".join(row.name + pick_note(row) for row in rank_candidates(parse_rows(entries)))
+    return "round: %d | tier=%s | accepts=%s | motion-every-round=%s | rows: %s" % (
+        number, "checkpoint" if checkpoint_due(entries, now) == "checkpoint-due" else "light", accepts,
+        "yes" if profile.motion_every_round else "no", rows)
+
+
+def step_action(entries, run_file, now):
+    """The one next action: the resume verdict when the run is stopped or cut off, else the first unfinished phase."""
+    verdict = next_action(entries, run_file)
+    if verdict == "waiting: round-review":
+        run_entries = [entry for entry in entries if entry[1] not in NOT_RUN_STATE]
+        if run_entries[-1][1] != "stop":
+            last_round = [text for _, kind, text in run_entries if kind == "round"][-1]
+            return "stop: round-review | round " + last_round.split(" | ")[0].strip()
+    if verdict.startswith("waiting: "):
+        return "wait: " + verdict[len("waiting: "):]
+    if not verdict.startswith("continue: "):
+        return verdict
+    plan, profile = phase_plan(entries, run_file, now)
+    phase, done_when, _ = next(item for item in plan if not item[2])
+    current = current_phase(entries)
+    if phase == "polish" and current == "polish":
+        return next_round_line(entries, profile, now)
+    return "%s: %s | done when %s" % ("work" if phase == current else "phase", phase, done_when)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("command", choices=["next", "budget", "rows", "limits", "accepts", "phases", "checks", "checkpoint", "phase-names", "look", "lock"])
+    parser.add_argument("command", choices=["step", "profile", "next", "budget", "rows", "limits", "accepts", "phases", "checks", "checkpoint", "phase-names", "look", "lock"])
     parser.add_argument("rest", nargs="*", help="RUN.md, or for lock: acquire|release|status then RUN.md")
     parser.add_argument("--allow-missing", action="store_true", help="next only: a missing RUN.md reads as a new run")
     parser.add_argument("--owner", help="lock owner name, for example the conductor's run id")
@@ -802,6 +976,14 @@ def main():
             print("%s does not exist; check the path" % run_file, file=sys.stderr)
             return MISSING_FILE_EXIT
         entries = []
+    if args.command == "step":
+        print(step_action(entries, run_file, resolve_now(args.now)) if entries else "start")
+        for note in round_notes(entries):
+            print("notes for the next round: " + note)
+        return 0
+    if args.command == "profile":
+        print(app_profile(entries, run_file).line())
+        return 0
     if args.command == "next":
         print(next_action(entries, run_file))
         for note in round_notes(entries):
