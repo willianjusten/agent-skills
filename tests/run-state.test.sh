@@ -270,4 +270,40 @@ expect "reserve=N sets the delivery reserve" "reserve: 55m left of 6h, delivery 
 status=0; out=$(state budget "$run" --now 2026-11-19T07:00:00Z 2>&1) || status=$?
 { [ "$status" -eq 3 ] && echo "$out" | grep -q "hours spent"; } && pass "a spent budget still stops" || fail "a spent budget still stops" "$status: $out"
 
+# reopen: a delivered run goes back to polish with a fresh budget leg
+cat >"$run" <<'LOG'
+- 2026-11-19T01:00:00Z | start | pitch=PITCH.md rounds=3 hours=4
+- 2026-11-19T01:10:00Z | phase | polish
+- 2026-11-19T01:20:00Z | accept | round 1 | a | x
+- 2026-11-19T01:30:00Z | round | 1 | x
+- 2026-11-19T01:40:00Z | round | 2 | x
+- 2026-11-19T01:50:00Z | accept | round 3 | a | x
+- 2026-11-19T02:00:00Z | round | 3 | x
+- 2026-11-19T04:30:00Z | phase | deliver
+- 2026-11-19T04:40:00Z | done | delivered
+LOG
+expect "a done run reads done" "done" state next "$run"
+status=0; state budget "$run" --now 2026-11-19T05:00:00Z >/dev/null 2>&1 || status=$?
+[ "$status" -eq 3 ] && pass "the delivered leg has spent its budget" || fail "the delivered leg has spent its budget" "$status"
+echo "- 2026-11-20T10:00:00Z | budget | mode=review rounds=2" >>"$run"
+echo "- 2026-11-20T10:00:01Z | reopen | after done | focus: judges' open items" >>"$run"
+expect "a reopened run continues in polish" "continue: phase=polish | last=reopen: after done | focus: judges' open items" state next "$run"
+expect "accepts restart at the reopen" "accepts-since-answer=0 of 3" state accepts "$run"
+expect "a reopen starts a fresh budget leg" "ok" state budget "$run" --now 2026-11-20T10:30:00Z
+echo "- 2026-11-20T10:05:00Z | answer | the falls look flat" >>"$run"
+out=$(state next "$run" | tail -1)
+[ "$out" = "notes for the next round: the falls look flat" ] && pass "an answer after the reopen is a note for the first reopened round" || fail "an answer after the reopen is a note for the first reopened round" "$out"
+expect "limits read the reopen's budget" "mode=review process=standard rounds=2 hours=4 autoAccepts=3" state limits "$run"
+out=$(state phases "$run" --now 2026-11-20T10:30:00Z)
+echo "$out" | grep -q '^polish 3h 50m$' && pass "reopened time counts toward polish, and the wait before it is free" || fail "reopened time counts toward polish, and the wait before it is free" "$out"
+echo "- 2026-11-20T10:20:00Z | round-start | 4 | branch=r4 base=abc" >>"$run"
+echo "- 2026-11-20T10:50:00Z | round | 4 | x" >>"$run"
+expect "review mode waits after a reopened round" "waiting: round-review" state next "$run"
+echo "- 2026-11-20T10:51:00Z | round | 5 | x" >>"$run"
+status=0; out=$(state budget "$run" --now 2026-11-20T11:00:00Z 2>&1) || status=$?
+{ [ "$status" -eq 3 ] && [ "$out" = "stop: rounds spent (2 of 2)" ]; } && pass "the reopened leg counts only its own rounds" || fail "the reopened leg counts only its own rounds" "$status: $out"
+echo "- 2026-11-20T12:00:00Z | budget | rounds=6" >>"$run"
+expect "the reopened leg counts only its own hours" "ok" state budget "$run" --now 2026-11-20T12:00:00Z
+expect "a run never reopened keeps one leg" "ok" state budget "$work/norows.md" --now 2026-11-19T02:00:00Z
+
 [ "$failures" -eq 0 ] || exit 1

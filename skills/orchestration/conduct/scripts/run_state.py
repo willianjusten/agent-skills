@@ -65,6 +65,13 @@ A sitting that ends without a stop (a crash) counts to its last entry written
 by the run; the user's `answer` and `budget` lines never extend it, and a
 `budget` line, like a `note`, never changes where the run resumes.
 
+A `reopen` entry, written by the conductor when the user asks for more work on a
+`done` run, starts a new leg: it opens a sitting like `resume`, puts the run back in
+the `polish` phase, and `budget`, `checkpoint` and `accepts` count only the rounds,
+active hours and accepts after the last `reopen`, against the limits in force (a
+`budget` line written just before it sets the leg's limits). `phases` and `checks`
+still report the whole run.
+
 `phase-names` prints the phase names in run order, one per line.
 
 `checks` reads `checks | <round label> | <minutes>` entries (wall minutes a round
@@ -211,8 +218,12 @@ def pending_round(entries, run_file):
     return None
 
 
+# Entries that open a sitting: the waiting time before one is free.
+OPENS_SITTING = ("start", "resume", "reopen")
 # Entries that end a round's review: the next round, a stop, or a sitting boundary.
-ENDS_ROUND_REVIEW = ("round-start", "round", "stop", "start", "resume", "done")
+ENDS_ROUND_REVIEW = ("round-start", "round", "stop", "done") + OPENS_SITTING
+# The phase a reopened run goes back to.
+REOPEN_PHASE = "polish"
 
 
 def round_review_state(entries):
@@ -253,13 +264,27 @@ def next_action(entries, run_file=None):
     return pending or "continue: phase=%s | last=%s: %s" % (current_phase(entries), last_kind, last_text)
 
 
+def entry_phase(kind, text):
+    """The phase an entry moves the run into, or None: a `phase` entry names it, a `reopen` goes back to polish."""
+    if kind == "phase":
+        return text.split(" | ")[0].strip() or "setup"
+    if kind == "reopen":
+        return REOPEN_PHASE
+    return None
+
+
 def current_phase(entries):
-    """The name in the last `phase` entry, or `setup` before the first."""
+    """The phase of the last `phase` or `reopen` entry, or `setup` before the first."""
     name = "setup"
     for _, kind, text in entries:
-        if kind == "phase":
-            name = text.split(" | ")[0].strip() or "setup"
+        name = entry_phase(kind, text) or name
     return name
+
+
+def current_leg(entries):
+    """The entries from the last `reopen` on (the whole run when it was never reopened): what a budget counts."""
+    last_reopen = max((index for index, entry in enumerate(entries) if entry[1] == "reopen"), default=0)
+    return entries[last_reopen:]
 
 
 def round_notes(entries):
@@ -328,7 +353,7 @@ def accepts_report(entries):
     """`accepts-since-answer=K of N`: accept entries after the user's last answer, against the limit."""
     since_answer = 0
     for _, kind, _ in entries:
-        if kind == "answer":
+        if kind in ("answer", "reopen"):
             since_answer = 0
         elif kind == "accept":
             since_answer += 1
@@ -363,16 +388,19 @@ def phase_seconds(entries, now):
     for time, kind, text in entries:
         if kind in NOT_RUN_TIME:
             continue
-        if kind in ("start", "resume"):
+        if kind in OPENS_SITTING:
             cursor = time
             sitting_open = True
+            if kind == "reopen":
+                current_phase = REOPEN_PHASE
+                seconds.setdefault(current_phase, 0.0)
             continue
         if not sitting_open:
             continue
         seconds[current_phase] += (time - cursor).total_seconds()
         cursor = time
         if kind == "phase":
-            current_phase = text.split(" | ")[0].strip() or "setup"
+            current_phase = entry_phase(kind, text)
             seconds.setdefault(current_phase, 0.0)
         elif kind in ("stop", "done"):
             sitting_open = False
@@ -467,12 +495,14 @@ class BudgetVerdict(NamedTuple):
 
 
 def check_budget(entries, now):
+    """The budget of the current leg: limits from the whole log, rounds and hours since the last reopen."""
     max_rounds = round_limit(entries)
     max_hours = configured_limit(entries, "hours", DEFAULT_HOURS, float)
-    rounds = sum(1 for _, kind, _ in entries if kind == "round")
+    leg = current_leg(entries)
+    rounds = sum(1 for _, kind, _ in leg if kind == "round")
     if max_rounds is not None and rounds >= max_rounds:
         return BudgetVerdict("stop", "stop: rounds spent (%d of %d)" % (rounds, max_rounds))
-    hours = active_hours(entries, now)
+    hours = active_hours(leg, now)
     if hours >= max_hours:
         return BudgetVerdict("stop", "stop: hours spent (%.1f of %g)" % (hours, max_hours))
     reserve_minutes = configured_limit(entries, "reserve", DEFAULT_RESERVE_MINUTES, int)
@@ -540,7 +570,7 @@ def checkpoint_due(entries, now):
     if check_budget(entries, now).kind == "reserve":
         return "checkpoint-due"
     max_rounds = round_limit(entries)
-    rounds = sum(1 for _, kind, _ in entries if kind == "round")
+    rounds = sum(1 for _, kind, _ in current_leg(entries) if kind == "round")
     if max_rounds is not None and rounds + 1 >= max_rounds:
         return "checkpoint-due"
     return "light"
