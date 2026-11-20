@@ -171,4 +171,52 @@ for case in "look|chosen look" "use, darker|chosen use | darker" "1|chosen 1" "p
   [ "$actual" = "state=$expected" ] && pass "variant answer '$answer'" || fail "variant answer '$answer'" "expected 'state=$expected', got '$actual'"
 done
 
+
+expect_last() {
+  local description="$1" expected="$2" actual
+  shift 2
+  actual=$("$@" 2>&1 | grep -E "^(next|all-at-target)" | grep -F "${expected%%[:=]*}" | head -1)
+  [ "$actual" = "$expected" ] && pass "$description" || fail "$description" "expected '$expected', got '$actual'"
+}
+
+# rows: turns, counted score, target and the pick order
+cat >"$run" <<'LOG'
+- 2026-11-19T01:00:00Z | start | pitch=PITCH.md mode=overnight
+- 2026-11-19T01:05:00Z | row | water | turn 0 | score -/- of target 8 | pending | approach: none
+- 2026-11-19T01:05:01Z | row | creatures | turn 0 | score -/- of target 8 | pending | approach: none
+- 2026-11-19T01:05:02Z | row | sound | turn 0 | score -/- of target 7 | pending | approach: none
+- 2026-11-19T01:05:03Z | row | sky | turn 0 | score -/- of target 8 | pending | approach: none
+- 2026-11-19T01:20:00Z | row | sky | turn 1 | score 7/6 of target 8 | kept | approach: warmer gradient
+- 2026-11-19T01:30:00Z | row | water | turn 1 | score 6/7 of target 8 | reverted | approach: foam sprites
+LOG
+out=$(state rows "$run")
+echo "$out" | grep -q '^sky turns=1 score=7/6 counted=6 target=8 at-target=no last=kept$' && pass "rows prints a worked row" || fail "rows prints a worked row" "$out"
+echo "$out" | grep -q '^creatures turns=0 score=- counted=- target=8 at-target=no last=none$' && pass "rows prints a never-worked row" || fail "rows prints a never-worked row" "$out"
+expect_last "never-worked rows go first, then a lost row with a new approach" "next: creatures, sound, water (new approach), sky" state rows "$run"
+printf '%s\n' '- 2026-11-19T01:40:00Z | row | creatures | turn 1 | score 8/9 of target 8 | kept | approach: rig' '- 2026-11-19T01:50:00Z | row | sound | turn 1 | score 7/7 of target 7 | kept | approach: synth' >>"$run"
+out=$(state rows "$run")
+echo "$out" | grep -q '^creatures .* counted=8 target=8 at-target=yes' && pass "a counted score at target is at target" || fail "a counted score at target is at target" "$out"
+expect_last "rows at target leave the pick list" "next: water (new approach), sky" state rows "$run"
+printf '%s\n' '- 2026-11-19T02:00:00Z | row | water | turn 2 | score 6/7 of target 8 | reverted | approach: mist mesh' >>"$run"
+out=$(state rows "$run")
+echo "$out" | grep -q '^water turns=2 .* last=reverted lost=2$' && pass "two losses show as lost=2" || fail "two losses show as lost=2" "$out"
+expect_last "a row lost twice is shrunk, after the row with fewer turns" "next: sky, water (shrink scope)" state rows "$run"
+printf '%s\n' '- 2026-11-19T02:10:00Z | row | sky | turn 2 | score 8/8 of target 8 | kept | approach: sun shafts' '- 2026-11-19T02:20:00Z | row | water | turn 3 | score 8/8 of target 8 | kept | approach: small pond only' >>"$run"
+expect_last "every row at target" "all-at-target=yes" state rows "$run"
+echo "- 2026-11-19T02:30:00Z | row | oops | turn x" >>"$run"
+out=$(state rows "$run" 2>&1)
+echo "$out" | grep -q 'oops' && echo "$out" | grep -q 'not a valid row' && pass "a malformed row line is named, not silently dropped" || fail "a malformed row line is named" "$out"
+printf '%s\n' '- 2026-11-19T01:00:00Z | start | pitch=PITCH.md' >"$work/norows.md"
+expect "no rows logged" "no rows logged" state rows "$work/norows.md"
+
+# budget reserve
+printf '%s\n' '- 2026-11-19T01:00:00Z | start | pitch=PITCH.md mode=overnight hours=6' >"$run"
+expect "budget is ok before the reserve" "ok" state budget "$run" --now 2026-11-19T06:00:00Z
+status=0; out=$(state budget "$run" --now 2026-11-19T06:20:00Z 2>&1) || status=$?
+{ [ "$status" -eq 0 ] && [ "$out" = "reserve: 40m left of 6h, delivery reserve 40m" ]; } && pass "budget reports reserve at the default 40 minutes" || fail "budget reports reserve at the default" "$status: $out"
+echo "- 2026-11-19T01:00:01Z | budget | reserve=60" >>"$run"
+expect "reserve=N sets the delivery reserve" "reserve: 55m left of 6h, delivery reserve 60m" state budget "$run" --now 2026-11-19T06:05:00Z
+status=0; out=$(state budget "$run" --now 2026-11-19T07:00:00Z 2>&1) || status=$?
+{ [ "$status" -eq 3 ] && echo "$out" | grep -q "hours spent"; } && pass "a spent budget still stops" || fail "a spent budget still stops" "$status: $out"
+
 [ "$failures" -eq 0 ] || exit 1
