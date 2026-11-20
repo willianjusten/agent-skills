@@ -358,4 +358,12 @@ grep -q 'look=auto' "$SKILL" && pass "conduct accepts look=auto" || fail "conduc
 grep -qi 'without a target' "$REPO_ROOT/skills/realtime/target-loop/SKILL.md" && grep -qi 'chose' "$REPO_ROOT/skills/realtime/target-loop/SKILL.md" && pass "target-loop uses the chosen look as the benchmark with no target" || fail "target-loop uses the chosen look as the benchmark with no target"
 grep -qi 'no target, the capture of the look the user chose' "$REPO_ROOT/skills/realtime/realtime-judge/SKILL.md" && pass "realtime-judge benchmarks against the chosen look with no target" || fail "realtime-judge benchmarks against the chosen look with no target"
 
+# baseline, feature list and balance band
+GDD_TEMPLATE="$REPO_ROOT/skills/game/game-brief/references/gdd-template.md"
+grep -q '"Baseline" component' "$AGENT" && grep -q 'without asking' "$AGENT" && grep -q 'results.json' "$AGENT" && pass "the conductor adds a Baseline component from the baseline check" || fail "the conductor adds a Baseline component from the baseline check"
+grep -q 'No <item>: <reason>' "$AGENT" && grep -q 'DECISIONS.md' "$AGENT" && grep -q 'assumption | baseline: no <item>' "$AGENT" && pass "a ruled-out baseline item is skipped with a DECISIONS.md reason" || fail "a ruled-out baseline item is skipped with a DECISIONS.md reason"
+grep -q 'src/features.ts' "$AGENT" && grep -q 'outside its band' "$AGENT" && grep -q 'COMPONENTS.md\|row' "$AGENT" && pass "the conductor turns failing features and out-of-band balance into rows" || fail "the conductor turns failing features and out-of-band balance into rows"
+grep -q '^## Feature list' "$GDD_TEMPLATE" && grep -q '^## Balance band' "$GDD_TEMPLATE" && pass "the GDD template has the feature list and the balance band" || fail "the GDD template has the feature list and the balance band"
+grep -q 'feature list' "$REPO_ROOT/skills/game/game-brief/SKILL.md" && grep -q 'balance band' "$REPO_ROOT/skills/game/game-brief/SKILL.md" && pass "game-brief fills the feature list and the balance band" || fail "game-brief fills the feature list and the balance band"
+
 [ "$failures" -eq 0 ] || exit 1
