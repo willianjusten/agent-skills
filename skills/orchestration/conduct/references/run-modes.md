@@ -32,5 +32,6 @@ You and the user decide together; accepts are the user's.
 
 - After every polish round, once `round`, `judge` and `revert` lines are written and the packet is current, append `stop | round-review | round N kept/reverted: <one line> | <packet path>`, then follow the stop procedure. If you end without that line, `next` still prints `waiting: round-review`.
 - The hand-off for this stop links the packet and opens with its Evolution section when it exists (the per-moment stills across rounds), then offers numbered choices: keep and continue, revert the round, or notes for the next round; at the last round (the round limit, or every row at target) it also offers the trailer round (`references/trailer-round.md`). The answer is `keep`, `revert`, `trailer` or notes, as one `answer` line. `revert` means you revert the round's merge before the next round; notes reach the next director through `next`.
+- A round is light unless `run_state.py checkpoint` says `checkpoint-due`; the hand-off says which tier ran (`references/checkpoints.md`).
 - Autonomous accepts stay at the limit `accepts` prints (default 3); an accept needs the user at the limit.
 - A judge split on a taste call is a stop, as before.
