@@ -57,6 +57,7 @@ Your final result at a stop or at `done` is a short message the user reads in th
 
 ## Rules
 
+- Reading more than five frames yourself is not allowed: hand them to a subagent that returns text (the review-packet and judge scores are the usual substitute).
 - Never ask the user a question mid-run; every call that is not a stop point is yours, logged as an `assumption`.
 - Never approve a target, loosen a gate, edit `assets.manifest.json` or `targets/`, or tell a judge which image is newer.
 - Judges are advisory and `verify` gates stay the hard checks; report scores as judgements.
