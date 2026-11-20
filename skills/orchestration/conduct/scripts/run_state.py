@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Reads a conductor RUN.md: where a run resumes and whether a budget is spent.
 
-  run_state.py next   <RUN.md>
+  run_state.py next   <RUN.md>   (one state line, then a `notes for the next round:` line per unread answer)
   run_state.py budget <RUN.md> [--now <iso8601>]
   run_state.py limits <RUN.md>
   run_state.py lock   acquire|release|status <RUN.md> [--owner <name>] [--now <iso8601>]
@@ -100,12 +100,30 @@ def next_action(entries, run_file=None):
     if last_kind == "stop":
         return "waiting: " + last_text.split(" | ")[0].strip()
     if last_kind == "answer":
-        for _, kind, text in reversed(entries):
-            if kind == "stop":
-                return "resume: " + text.split(" | ")[0].strip() + " | " + last_text
-        return "continue: " + last_text
+        # The answer answers a stop only when the stop is the last run entry before it.
+        run_entries = [entry for entry in entries if entry[1] != "answer"]
+        if run_entries and run_entries[-1][1] == "stop":
+            return "resume: " + run_entries[-1][2].split(" | ")[0].strip() + " | " + last_text
+        last_text = run_entries[-1][2] if run_entries else last_text
     pending = pending_round(entries, run_file) if run_file else None
     return pending or "continue: " + last_text
+
+
+def round_notes(entries):
+    """Answers that arrived with no stop pending and no round begun since: notes for the next round."""
+    notes = []
+    previous_run_kind = None
+    for _, kind, text in entries:
+        if kind in NOT_RUN_STATE:
+            continue
+        if kind == "answer":
+            if previous_run_kind != "stop":
+                notes.append(text)
+            continue
+        if kind in ("round-start", "resume"):
+            notes = []
+        previous_run_kind = kind
+    return notes
 
 
 def configured_limit(entries, key, default, cast):
@@ -257,6 +275,8 @@ def main():
         entries = []
     if args.command == "next":
         print(next_action(entries, run_file))
+        for note in round_notes(entries):
+            print("notes for the next round: " + note)
         return 0
     if args.command == "limits":
         print("process=%s rounds=%d hours=%g" % (configured_process(entries), round_limit(entries), configured_limit(entries, "hours", DEFAULT_HOURS, float)))

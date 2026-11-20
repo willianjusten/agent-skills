@@ -162,6 +162,33 @@ out=$(process_limits 2>&1); status=$?
 out=$(budget not-a-time 2>&1); status=$?
 { [ "$status" -ne 0 ] && ! echo "$out" | grep -q Traceback && echo "$out" | grep -q "not-a-time"; } && pass "a bad --now is named, not a traceback" || fail "a bad --now is named, not a traceback" "$out"
 
+# an answer with no stop pending is notes for the next round
+cat >"$run" <<'LOG'
+- 2026-11-19T01:00:00Z | start | pitch=PITCH.md
+- 2026-11-19T02:00:00Z | stop | look-variants | pick a look | p.html
+- 2026-11-19T02:30:00Z | answer | second look
+- 2026-11-19T02:31:00Z | resume | from look-variants
+- 2026-11-19T03:00:00Z | wip | first slice playable
+LOG
+expect_next "an answer after a stop still resumes the stop" "continue: first slice playable"
+echo "- 2026-11-19T03:10:00Z | answer | make the enemies slower" >>"$run"
+out=$(next_state 2>&1)
+[ "$out" = "$(printf 'continue: first slice playable\nnotes for the next round: make the enemies slower')" ] \
+  && pass "an answer with no pending stop is reported as notes, and the run keeps going" \
+  || fail "an answer with no pending stop is reported as notes, and the run keeps going" "$out"
+echo "- 2026-11-19T03:12:00Z | answer | and louder hits" >>"$run"
+next_state | grep -c '^notes for the next round' | grep -qx 2 && pass "every unread answer is listed as notes" || fail "every unread answer is listed as notes"
+echo "- 2026-11-19T03:20:00Z | step | round 1 reads the notes" >>"$run"
+echo "- 2026-11-19T03:21:00Z | round-start | 1 | branch=none base=none" >>"$run"
+echo "- 2026-11-19T03:30:00Z | answer | during the round" >>"$run"
+expect_next "a round start consumes the notes, and an answer during the round is kept for the next" "$(printf 'redo: round 1\nnotes for the next round: during the round')"
+cat >"$run" <<'LOG'
+- 2026-11-19T01:00:00Z | start | pitch=PITCH.md
+- 2026-11-19T02:00:00Z | stop | look-variants | pick a look | p.html
+- 2026-11-19T02:30:00Z | answer | second look
+LOG
+expect_next "an answer right after a stop is an answer, not notes" "resume: look-variants | second look"
+
 # agent and skill
 [ -f "$AGENT" ] && pass "the conductor agent exists under agents/orchestration" || fail "the conductor agent exists under agents/orchestration"
 [ "$(field "$AGENT" name)" = "conductor" ] && pass "the agent name equals its file name" || fail "the agent name equals its file name"
@@ -225,6 +252,12 @@ echo "- 2026-11-19T02:00:00Z | round | 1 | lighting kept" >>"$cutoff_run"
 output=$(python3 -I "$SCRIPT" next "$cutoff_run" 2>&1)
 [ "$output" = "continue: 1 | lighting kept" ] && pass "a logged round is no longer pending" || fail "a logged round is no longer pending" "$output"
 grep -q "round-start" "$AGENT" && grep -q "read result" "$AGENT" && grep -q "redo" "$AGENT" && pass "the conductor records the round branch and states the resume rule" || fail "the conductor records the round branch and states the resume rule"
+
+# notifications and the wip line
+grep -q "PushNotification" "$SKILL" && grep -qi "main thread" "$SKILL" && grep -q "stop line" "$SKILL" && pass "/conduct sends the notification from the main thread with the stop line" || fail "/conduct sends the notification from the main thread with the stop line"
+grep -qi "at every stop and at delivery\|every stop and at .done" "$SKILL" && pass "/conduct notifies at every stop and at delivery" || fail "/conduct notifies at every stop and at delivery"
+grep -q 'append `wip |' "$AGENT" && grep -qi "keep going\|keeps going\|do not stop" "$AGENT" && pass "the conductor writes a wip line and keeps running" || fail "the conductor writes a wip line and keeps running"
+grep -q "notes for the next round" "$AGENT" && pass "the conductor reads unprompted answers as round notes" || fail "the conductor reads unprompted answers as round notes"
 
 # nesting: main -> conductor -> polish-director -> worker or judge, three levels at most
 if grep -rEn 'claude +(--agent|-p)' "$REPO_ROOT/skills" "$REPO_ROOT/agents" "$REPO_ROOT/README.md" >/dev/null; then

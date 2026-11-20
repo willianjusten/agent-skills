@@ -40,7 +40,7 @@ flowchart LR
 
 - The lab repo with `pnpm verify` and `pnpm asset target`.
 - Subagents nest three levels (conductor, director, worker or judge); no extra launch or permission mode is needed.
-- Stops are announced with a push notification; without the tool, the line is in `RUN.md`.
+- `/conduct` sends a push notification from the main thread at every stop and at delivery; the conductor also sends one with play links after the first finished slice (a `wip` line) and keeps going. An `answer` line written while no stop is pending is read at the next round as notes. Without the tool, the line is in `RUN.md`.
 
 ## FAQ
 
