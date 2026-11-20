@@ -47,7 +47,7 @@ Besides the score, answer these five for X and for Y, each `yes` or `no` (`na` o
 
 ## Target gap (only with a benchmark image)
 
-When a benchmark is given, score each image a second time on closeness to it, 1 to 10: 10 is indistinguishable in look, 5 has the right idea with major layers missing, 1 shares only the layout. This is separate from the lens score; do not let one image's distance from the other soften it.
+The benchmark is an approved target frame or an art-bible reference image, never a capture of the app itself (that rewards sameness); with none, report no gap score. When a benchmark is given, score each image a second time on closeness to it, 1 to 10: 10 is indistinguishable in look, 5 has the right idea with major layers missing, 1 shares only the layout. This is separate from the lens score; do not let one image's distance from the other soften it.
 
 Then compare each image to the benchmark under every heading below and list what differs. Write `matches` only when it truly does.
 

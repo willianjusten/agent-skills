@@ -6,7 +6,7 @@ Read at step 1 of the conductor. `RUN.md` is in the app folder, committed and ap
 
 One entry per line, `- <UTC timestamp> | <kind> | <text>`. Kinds:
 
-- `start`: text carries `pitch=<path>` and optional `mode=overnight|review process=minimal|standard|full rounds=N hours=H autoAccepts=N look=auto target=yes`.
+- `start`: text carries `pitch=<path>` and optional `mode=overnight|review process=minimal|standard|full rounds=N hours=H reserve=M autoAccepts=N look=auto target=yes`.
 - `step`, `assumption`, `judge`, `revert`.
 - `phase`: text is the phase name, logged when a phase begins: `brief`, `art-bible`, `first-playable`, `look-variants`, `checklist`, `polish`, `reference-judge`, `deliver`.
 - `round-start`: `<N> | branch=<round branch> base=<sha>`, written before the director spawns.
@@ -16,6 +16,7 @@ One entry per line, `- <UTC timestamp> | <kind> | <text>`. Kinds:
 - `resume`, `done`.
 - `wip`: the first finished slice is playable: play links.
 - `budget`: a limit the user raised.
+- `row`: `<name> | turn <N> | score <V>/<F> of target <T> | kept|reverted|pending | approach: <text>`, one per row per turn: V and F are the visual and feel scores of the row's moment as it stands after the turn (a reverted turn carries the kept version's scores). The checklist phase declares each row once as `<name> | turn 0 | score -/- of target <T> | pending | approach: none`.
 - `accept`: references accepted without the user: round, capture names and why.
 - `note`: ignored when resuming.
 
@@ -28,7 +29,8 @@ A line that starts with `- ` and has two ` | ` but does not parse is skipped and
 | Command | Prints |
 | ------- | ------ |
 | `next` | `start`, `done`, `waiting: <stop>` (also `waiting: round-review` in review mode right after a round), `resume: <stop> \| <answer>`, `read result: round N branch <b>`, `redo: round N` (with a reason in parentheses when the branch could not be checked: read the branch first) or `continue: phase=<phase> \| last=<kind>: <text>`; then a `notes for the next round: <text>` line per `answer` that arrived with no stop pending |
-| `budget` | `ok`, or `stop: ...` with exit 3 |
+| `budget` | `ok`; `reserve: <left> left of <H>h, delivery reserve <N>m` (exit 0) once the time left is at or below the delivery reserve (`reserve=<minutes>`, default 40); or `stop: ...` with exit 3 |
+| `rows` | one line per row: `<name> turns=N score=V/F counted=C target=T at-target=yes\|no last=kept\|reverted\|none [lost=K]`; then `next: <rows to pick, in order>` (a lost row carries `(new approach)`, one lost twice `(shrink scope)`) and `all-at-target=yes\|no` |
 | `limits` | `mode=<m> process=<p> rounds=N hours=H autoAccepts=N` (`unlimited` for rounds and autoAccepts in overnight mode unless given) |
 | `accepts` | `accepts-since-answer=K of N` (`of unlimited` overnight) |
 | `phases` | active time per phase, then a total |

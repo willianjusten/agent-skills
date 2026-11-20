@@ -4,6 +4,7 @@
   run_state.py next   <RUN.md> [--allow-missing]
                       (one state line, then a `notes for the next round:` line per unread answer)
   run_state.py budget <RUN.md> [--now <iso8601>]
+  run_state.py rows   <RUN.md>
   run_state.py limits <RUN.md>
   run_state.py accepts <RUN.md>
   run_state.py phases <RUN.md> [--now <iso8601>]
@@ -30,6 +31,21 @@ unless `autoAccepts=N` or `rounds=N` was given, and `look` defaults to `auto`;
 the hours still bound the run. In review mode `next` prints `waiting: round-review`
 when the last run entry is a `round` (the conductor normally writes `stop |
 round-review` itself, and the answer to it reads like any stop's answer).
+
+`budget` prints `reserve: <left> left of <hours>h, delivery reserve <N>m` (exit 0)
+when the remaining hours are at or below the delivery reserve, the time kept for the
+trailer round and delivery: the conductor then stops polishing and moves on. The
+reserve is `reserve=<minutes>` in a `start` or `budget` line (default 40).
+
+`rows` reads `row` entries, `row | <name> | turn <N> | score <V>/<F> of target <T> |
+kept|reverted|pending | approach: <text>`: one per row per turn, with the row's
+state after the turn (a reverted turn carries the score of the version it kept).
+`turn 0 | score -/- | pending` declares a row before it is worked. It prints one
+line per row (`turns`, `score` as V/F, `counted` as the lower of the two, `target`,
+`at-target`, `last`, and `lost=K` after K losses in a row), then `next:` with the
+rows to pick, never-worked first, then fewest turns, then lowest counted score,
+then checklist order; a row whose last turn was reverted carries `(new approach)`,
+and one lost twice in a row `(shrink scope)`. The last line is `all-at-target=yes|no`.
 
 `next` prints `continue: phase=<name> | last=<kind>: <text>`, where the phase
 is the last `phase` entry (`setup` before the first) and the last entry is the
@@ -87,6 +103,8 @@ DEFAULT_HOURS = 6.0
 DEFAULT_AUTO_ACCEPTS = 3
 DEFAULT_PROCESS = "standard"
 DEFAULT_MODE = "review"
+# Minutes kept at the end of the budget for the trailer round and delivery.
+DEFAULT_RESERVE_MINUTES = 40
 MODES = ("overnight", "review")
 # What an uncapped limit prints, so a reader never mistakes it for a number.
 UNLIMITED = "unlimited"
@@ -106,6 +124,11 @@ LOCK_HELD_EXIT = 4
 LOCK_STALE_HOURS = 2.0
 ENTRY = re.compile(r"^- (\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ) \| ([a-z-]+) \| ?(.*)$")
 # A line that looks like an entry attempt: a bullet with at least two bars.
+SCORE = r"(\d+(?:\.\d+)?)"
+ROW = re.compile(
+    r"^(.+?) \| turn (\d+) \| score (?:-/-|" + SCORE + "/" + SCORE + r") of target " + SCORE
+    + r" \| (kept|reverted|pending)(?: \| approach: (.*))?$"
+)
 ENTRY_ATTEMPT = re.compile(r"^- .* \| .* \|")
 
 
@@ -390,7 +413,52 @@ def check_budget(entries, now):
     hours = active_hours(entries, now)
     if hours >= max_hours:
         return "stop: hours spent (%.1f of %g)" % (hours, max_hours)
+    reserve_minutes = configured_limit(entries, "reserve", DEFAULT_RESERVE_MINUTES, int)
+    minutes_left = round((max_hours - hours) * 60, 3)
+    if minutes_left <= reserve_minutes:
+        return "reserve: %s left of %gh, delivery reserve %dm" % (format_duration(minutes_left * 60), max_hours, reserve_minutes)
     return "ok"
+
+
+def row_report(entries):
+    """One line per row, then the rows to pick next and whether every row is at target."""
+    rows = {}
+    for _, kind, text in entries:
+        if kind != "row":
+            continue
+        match = ROW.match(text.strip())
+        if not match:
+            print("not a valid row entry: %s" % text[:80], file=sys.stderr)
+            continue
+        name, turn, visual, feel, target, outcome, _ = match.groups()
+        row = rows.setdefault(name, {"target": float(target), "turns": [], "score": None})
+        row["target"] = float(target)
+        if int(turn) == 0:
+            continue
+        row["turns"].append((outcome, text.split("approach:", 1)[1].strip() if "approach:" in text else ""))
+        row["score"] = (visual, feel) if visual is not None else None
+    if not rows:
+        return "no rows logged"
+    lines, candidates = [], []
+    for order, (name, row) in enumerate(rows.items()):
+        counted = min(float(value) for value in row["score"]) if row["score"] else None
+        at_target = counted is not None and counted >= row["target"]
+        lost = 0
+        for outcome, _ in reversed(row["turns"]):
+            if outcome != "reverted":
+                break
+            lost += 1
+        last = row["turns"][-1][0] if row["turns"] else "none"
+        lines.append("%s turns=%d score=%s counted=%s target=%s at-target=%s last=%s%s" % (
+            name, len(row["turns"]), "/".join(row["score"]) if row["score"] else "-",
+            "%g" % counted if counted is not None else "-", "%g" % row["target"],
+            "yes" if at_target else "no", last, " lost=%d" % lost if lost else ""))
+        if not at_target:
+            note = " (shrink scope)" if lost >= 2 else " (new approach)" if lost else ""
+            candidates.append((len(row["turns"]), counted if counted is not None else -1, order, name + note))
+    lines.append("next: " + ", ".join(name for _, _, _, name in sorted(candidates)))
+    lines.append("all-at-target=" + ("no" if candidates else "yes"))
+    return "\n".join(lines)
 
 
 def lock_path(run_file):
@@ -481,7 +549,7 @@ def resolve_now(text):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("command", choices=["next", "budget", "limits", "accepts", "phases", "phase-names", "look", "lock"])
+    parser.add_argument("command", choices=["next", "budget", "rows", "limits", "accepts", "phases", "phase-names", "look", "lock"])
     parser.add_argument("rest", nargs="*", help="RUN.md, or for lock: acquire|release|status then RUN.md")
     parser.add_argument("--allow-missing", action="store_true", help="next only: a missing RUN.md reads as a new run")
     parser.add_argument("--owner", help="lock owner name, for example the conductor's run id")
@@ -525,9 +593,12 @@ def main():
     if args.command == "phases":
         print(report_phases(entries, resolve_now(args.now)))
         return 0
+    if args.command == "rows":
+        print(row_report(entries))
+        return 0
     verdict = check_budget(entries, resolve_now(args.now))
     print(verdict)
-    return 0 if verdict == "ok" else BUDGET_SPENT_EXIT
+    return BUDGET_SPENT_EXIT if verdict.startswith("stop") else 0
 
 
 if __name__ == "__main__":
