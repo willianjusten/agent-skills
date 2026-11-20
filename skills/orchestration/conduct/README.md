@@ -9,7 +9,8 @@ flowchart LR
   A[Pitch] --> B[Brief]
   B --> C[Art bible]
   C --> D[Scaffold and first playable]
-  D --> E{{Stop 1: target frames}}
+  D --> L{{Stop 1: pick a look variant}}
+  L --> E[Target frame, only if the pitch asks]
   E --> F[Component checklist]
   F --> G[Polish rounds]
   G --> H[Reference judge]
@@ -19,7 +20,7 @@ flowchart LR
 | Phase | Output |
 | ----- | ------ |
 | Brief, art bible | `GDD.md` or `TREATMENT.md`, `ART-BIBLE.md` (signed on your behalf, logged) |
-| Target frames | stop 1: you approve a target |
+| Look variants | stop 1: three looks from the first playable, you answer with one line naming one (`look=auto` picks for you and logs it); a target frame stop follows only when the pitch asks for a target |
 | Checklist | `COMPONENTS.md`: target, folder and lens per component |
 | Polish, judge, delivery | review packet, `DECISIONS.md`, `RUN.md` |
 
@@ -30,6 +31,7 @@ flowchart LR
 /conduct apps/games/tide-runner
 /conduct apps/experiments/fog/PITCH.md rounds=3 hours=2, also stop before delivery
 /conduct apps/experiments/fog/PITCH.md process=minimal
+/conduct apps/games/tide-runner/PITCH.md look=auto
 ```
 
 ## Output
@@ -44,5 +46,5 @@ flowchart LR
 
 ## FAQ
 
-- Default stops? Target frames, polish plateau, split taste call, a gate failing twice, a spent budget.
+- Default stops? Look variant (none with `look=auto`), target frames (only when the pitch asks for a target), polish plateau, split taste call, a gate failing twice, a spent budget.
 - Default budget? 6 polish rounds (2 with `process=minimal`) and 6 hours of active run time per run, summed across stops and resumes, overridable in the request or the brief.
