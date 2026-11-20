@@ -8,8 +8,8 @@ flowchart TD
   P --> C["/conduct (starts the conductor)"]
   C --> B[brief: game-brief or creative-brief]
   B --> A[art-bible, signed on your behalf]
-  A --> T[first playable, then target-loop]
-  T --> S1{{Stop 1: you approve a target}}
+  A --> T[first playable, three look variants]
+  T --> S1{{Stop 1: you pick a look variant}}
   S1 --> K[COMPONENTS.md checklist]
   K --> R[polish round: polish-director]
   R --> J[blind judges]
@@ -26,7 +26,8 @@ flowchart TD
 | Start | `/conduct <pitch or app folder>` | the conductor in the background |
 | Brief | conductor, via `game-brief` (game) or `creative-brief` (experiment) | `GDD.md` or `TREATMENT.md`, "Not this" list |
 | Art bible | conductor, via `art-bible` | palette and asset levels (`placeholder` or `free`; `premium` stays locked) |
-| Target | conductor builds the first look with `three-build` and `three-verify`, then `target-loop` | captures and a prepared target; stop 1 |
+| Look | conductor builds the first playable with `three-build` and `three-verify`, writes three look presets and captures them with `verify --variants` | stop 1: answer with one line naming a variant (`look=auto` picks and logs it); the chosen look is the judges' benchmark |
+| Target | only when the pitch asks for a target: `target-loop` | captures and a prepared target; a second stop |
 | Checklist | conductor | `COMPONENTS.md`: target, folder and judge lens per component |
 | Polish rounds | `polish-director` per round | workers change components in worktrees, `pnpm verify <app> --layer-cost`, blind judges, review packet |
 | Reference judge | conductor, `realtime-judge` | 12 trials against the target; 7 or fewer correct passes |
@@ -51,7 +52,8 @@ Three levels is the limit. A level-3 agent never spawns. The conductor runs the 
 
 The conductor never asks a question mid-run. Every call it makes instead is logged as an `assumption`. It stops, notifies you and ends at:
 
-- target frames chosen (always)
+- a look variant chosen (skipped with `look=auto`)
+- target frames chosen (only when the pitch asks for a target)
 - polish plateau (judges flat two rounds, or every component at target)
 - a judge split on a taste call
 - a gate still failing after two fix attempts
