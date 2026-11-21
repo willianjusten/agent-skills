@@ -1,7 +1,6 @@
 #!/bin/bash
-# Game UI guidance: the brief asks for a Screens section and where each feature is shown; the game skills keep menus
-# and HUD to one primary action with detail behind a button or submenu; the loop's review removes as well as adds;
-# music guidance asks for a musical idea with sections and dynamics.
+# Game UI guidance: the brief asks for a Screens section and where each feature is shown; menu, HUD, feel and music
+# rules live in game-design and the build skills point there; the loop's review removes as well as adds.
 
 REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 . "$(dirname "$0")/lib.sh"
@@ -30,15 +29,19 @@ assert_text "UI pass checks phones only when asked" 'only when the user asked fo
 assert_text "hand-off sends the screens sheet" 'screens.png' "$LOOP/references/hand-off.md"
 
 THREE="$REPO_ROOT/skills/realtime/three-build/SKILL.md"
-assert_text "three-build: one primary action per screen" 'one primary action per screen' "$THREE"
+assert_text "three-build: menus and HUD point to game-design ui-ux" 'game-design.*ui-ux.md' "$THREE"
 assert_text "three-build: one spacing scale" 'one spacing scale' "$THREE"
 assert_text "three-build: reads ui layout lines and check ui shots" 'ui layout.*check/ui/' "$THREE"
 
-FEEL="$REPO_ROOT/skills/game/game-feel/SKILL.md"
-assert_text "game-feel: UI feedback stays calm" 'UI feedback .* stays calm' "$FEEL"
-assert_text "game-feel: detail behind a button or submenu" 'behind a button or submenu' "$FEEL"
-assert_text "game-feel music: a musical idea, not a texture" 'musical idea, not a texture' "$REPO_ROOT/skills/game/game-feel/references/audio.md"
-assert_text "game-feel music: sections against repetition" 'sections \(intro' "$REPO_ROOT/skills/game/game-feel/references/audio.md"
-assert_text "game-feel music: intensity changes which layers play" 'changes which layers play' "$REPO_ROOT/skills/game/game-feel/references/audio.md"
+DESIGN="$REPO_ROOT/skills/game/game-design/references"
+assert_text "game-design ui-ux: one decision per screen" 'One decision per screen' "$DESIGN/ui-ux.md"
+assert_text "game-design ui-ux: settings and stats behind a button" 'behind a button' "$DESIGN/ui-ux.md"
+assert_text "game-design ui-ux: HUD in two tiers" 'HUD in two tiers' "$DESIGN/ui-ux.md"
+assert_text "game-design feel: static menus stay calm" 'Static menus get calm presses' "$DESIGN/feel.md"
+assert_text "game-design sound: music is a composition with sections" 'composition with sections' "$DESIGN/sound.md"
+assert_text "game-design sound: nothing repeats exactly for 30 to 60 s" 'Nothing repeats exactly' "$DESIGN/sound.md"
+assert_text "game-design sound: layers carry dynamics" 'Layers carry dynamics' "$DESIGN/sound.md"
+assert_text "UI pass holds screens to game-design ui-ux" 'game-design.*ui-ux.md' "$LOOP/references/ui-pass.md"
+assert_text "game-feel points feedback at game-design feel" 'game-design.*feel.md' "$REPO_ROOT/skills/game/game-feel/SKILL.md"
 
 [ "$failures" -eq 0 ] || exit 1

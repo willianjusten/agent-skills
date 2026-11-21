@@ -1,6 +1,6 @@
 ---
 name: game-design
-description: Game design handbook by topic, read on demand - core loop, difficulty and pacing, the first minute, play-field readability, menus and HUD, in-game copy, juice and feel, music and sound effects, and accessibility - each a short rules file with numbers and checks, plus a detail file with examples and sources. Use when designing, building or reviewing a game or a game screen, when a game feels flat, unfair, confusing, noisy or boring, when choosing telegraph times, wave pacing, HUD layout, button labels, captions, hit-stop, screen shake or music structure, when planning a tutorial or first minute, when listing accessibility options, or when a build review needs design checks.
+description: Game design handbook by topic, read on demand - core loop, difficulty and pacing, the first minute, play-field readability, menus and HUD, in-game copy, juice and feel, music and sound effects, and accessibility - each a short rules file with numbers and checks, plus a detail file with examples and sources. Use when designing, building or reviewing a game or a game screen, when a game feels flat, unfair, confusing, noisy or boring, when players quit early or a HUD or menu looks busy, when tuning a wave table or difficulty curve, when choosing telegraph times, wave pacing, HUD layout, button labels, captions, hit-stop, screen shake or music structure, when planning a tutorial or first minute, when listing accessibility options, or when a build review needs design checks.
 metadata:
   scope: personal
 ---

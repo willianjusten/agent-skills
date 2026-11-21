@@ -6,7 +6,7 @@ Rules are defaults: break one when its "Break when" applies and say so in the lo
 
 1. **Respond on the same frame.** The first visible or audible change from an input lands on the frame it is read, or the next. Precise, short-deadline actions (dodge, parry, jump) get the tightest budget; menus may take about 6 frames. Break when: a charged or heavy action; the wind-up itself still reacts at once. Check: frames from input read to first change is 0 or 1. [3][4][5][house]
 
-2. **Scale feedback by importance, in layers.** Frequent events get small feedback, rare ones big, with a ceiling on the biggest. Important events get motion, a mark and a sound, cheapest first. Break when: a rare event is meant to be quiet. Check: order events by frequency; reaction size runs the opposite way, and one channel alone still reads. [1][2][4]
+2. **Scale feedback by importance, in layers.** Frequent events get small feedback, rare ones big, with a ceiling on the biggest. Important events get motion, a mark and a sound, cheapest first (flash, count-up, particles, squash, nudge, shake, hit-stop). Break when: a rare event is meant to be quiet. Check: order events by frequency; reaction size runs the opposite way, and one channel alone still reads. [1][2][4]
 
 3. **Hit-stop freezes both sides, capped.** Freeze attacker and target for the same short time, longer for stronger hits: 1-2 ticks light, 2-6 heavy, a hard cap above. Hit and hurt boxes keep their positions. Break when: hits land many times a second; freeze kills only, or skip. Check: count frozen frames per hit class; stacked freezes never pass the cap. [2][house]
 

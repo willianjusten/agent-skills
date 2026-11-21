@@ -3,6 +3,7 @@ name: three-build
 description: Builds games and creative experiments in the lab monorepo on three.js WebGPURenderer. Use when adding or changing a game or experiment in the lab repo, scaffolding from the game or experiment template, wiring the lab packages, looking at a build with shot, check or record, running the verify delivery step, or sizing a perf budget.
 metadata:
   scope: personal
+  uses: game-design
 ---
 
 # Three Build
@@ -26,7 +27,7 @@ Apps in the lab monorepo are slim: a template that starts green, plus packages u
 - The packages are a library: `@lab/engine` (`startApp`, parameters, tuning), `@lab/experiment` (`startExperiment`, seekable clock), `@lab/game` (fixed-step loop, `createFlow`, `installHandle`, game feel), `@lab/look` (`declareLook`, `createLook`: lights, fog, tone, emissive, finishing layers), `@lab/effects` (post layers, each its own subpath), `@lab/input` (action map, `describeControls`), `@lab/ui` (headless menu, away guard, volume model), `@lab/audio` (mixer, recipes, sequencer), `@lab/debug` (`?tune` panel, `window.__lab`). Read each package's `AGENTS.md` for its rules and `src/index.ts` for the exports; never write your own renderer, resize handling or `requestAnimationFrame` loop. Respect the import boundaries between packages.
 - Games: the simulation is a pure, seeded, fixed-timestep module with no three or DOM imports; it appends gameplay events to its state and rendering only reads it. Wire the flow (title, playing, paused, game-over), screens, input, audio and `?demo=1` the way the template's `main.ts` does, and keep its baseline working. The check presses no key to start: the handle's `advance()` leads from the title (through any pick screens) into a run with the defaults and from game over into a new one, so Start may open a character select.
 - Install the game handle (`installHandle` from `@lab/game/handle`) in every build, production included, never behind `import.meta.env.DEV`, and only after the app has started: `check` reads `window.__handle` and treats it as ready.
-- Menus and HUD: one primary action per screen, detail behind a button, tab or submenu, and one spacing scale for padding, gaps and type. Keep the always-visible HUD to what the player needs this second. `pnpm check <app>` prints `ui layout` lines (overlap, clipping, minimum font, target size and gap, words per screen) and saves shots under `.verify/<app>/check/ui/`: read the shots and fix every FAIL.
+- Menus and HUD: design rules are in `game-design` `references/ui-ux.md`; build them with one spacing scale for padding, gaps and type. `pnpm check <app>` prints `ui layout` lines (overlap, clipping, minimum font, target size and gap, words per screen) and saves shots under `.verify/<app>/check/ui/`: read the shots and fix every FAIL.
 - Experiments: a frame is a pure function of the seekable time. No clock reads, `Math.random` or frame deltas inside it.
 - A look value (light, fog, tone, emissive, palette colour) is declared in the app's `look.ts` and applied with `createLook`; do not add a light, fog or hard-coded colour in `main.ts`. A tunable number is a parameter declared with the engine's parameter API.
 - A full-screen effect uses `createFullscreenEffect` from `@lab/engine`, which covers the canvas at any camera and aspect.

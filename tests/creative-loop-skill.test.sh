@@ -17,7 +17,7 @@ trap '[ -z "$lab_cleanup" ] || $lab_cleanup; rm -rf "$work"' EXIT
 # Shape
 [ "$(field "$SKILL" name)" = creative-loop ] && pass "name is creative-loop" || fail "name is creative-loop" "$(field "$SKILL" name)"
 [ "$(field "$SKILL" disable-model-invocation)" = true ] && pass "run by name only" || fail "run by name only" "disable-model-invocation: $(field "$SKILL" disable-model-invocation)"
-[ "$(meta "$SKILL" uses)" = "ideation brief three-build game-feel ui-polish" ] && pass "uses the five skills" || fail "uses the five skills" "$(meta "$SKILL" uses)"
+[ "$(meta "$SKILL" uses)" = "ideation brief three-build game-feel game-design ui-polish" ] && pass "uses the six skills" || fail "uses the six skills" "$(meta "$SKILL" uses)"
 [ -f "$SKILL_DIR/README.md" ] && pass "has a README" || fail "has a README"
 
 # Text assertions: overnight safety and unattended behaviour
@@ -49,17 +49,18 @@ assert_text "hand-off forbids merge, push, deploy, delete" 'not merge, push, dep
 assert_text "review cycle runs the UI pass" 'run the UI pass'
 assert_text "UI pass reads the check ui shots" 'check/ui/' "$SKILL_DIR/references/ui-pass.md"
 assert_text "UI pass fixes ui layout FAILs" 'ui layout. FAIL' "$SKILL_DIR/references/ui-pass.md"
-assert_text "UI pass: progressive disclosure" 'progressive disclosure' "$SKILL_DIR/references/ui-pass.md"
-assert_text "UI pass: one primary action per screen" 'one primary action per screen' "$SKILL_DIR/references/ui-pass.md"
+assert_text "UI pass holds screens to game-design ui-ux" 'game-design.*ui-ux.md' "$SKILL_DIR/references/ui-pass.md"
+UIUX="$REPO_ROOT/skills/game/game-design/references/ui-ux.md"
+assert_text "ui-ux: one strongest action per screen" 'one strongest action' "$UIUX"
 assert_text "UI pass: one spacing scale" 'one spacing scale' "$SKILL_DIR/references/ui-pass.md"
 assert_text "UI pass: ui-polish only if installed" 'ui-polish. is installed' "$SKILL_DIR/references/ui-pass.md"
 UIPASS="$SKILL_DIR/references/ui-pass.md"
-assert_text "UI pass: one decision per screen" 'one decision per screen' "$UIPASS"
-assert_text "UI pass: icons in the grid, detail on focus" 'icons.*detail on focus' "$UIPASS"
-assert_text "UI pass: say each fact once" 'say each fact once' "$UIPASS"
-assert_text "UI pass: hide locked items" 'hide what is locked' "$UIPASS"
-assert_text "UI pass: no controls legend" 'no controls legend' "$UIPASS"
-assert_text "UI pass: HUD in two tiers, at most 5 groups" 'two tiers.*at most 5 groups' "$UIPASS"
+assert_text "ui-ux: one decision per screen" 'one decision per screen' "$UIUX"
+assert_text "ui-ux: icons in the grid, detail on focus" 'icons.*only the focused item shows detail' "$UIUX"
+assert_text "ui-ux: detail shown once" 'shows detail, once' "$UIUX"
+assert_text "ui-ux: hide locked items" 'hide locked items' "$UIUX"
+assert_text "ui-ux: no permanent controls legend" 'no permanent legend' "$UIUX"
+assert_text "ui-ux: HUD in two tiers, at most 5 groups" 'two tiers.*at most 5 groups' "$UIUX"
 assert_text "UI pass: acts on new ui layout INFO lines" 'duplicate phrases.*font-size count' "$UIPASS"
 assert_text "the list, not the clock, decides the end" 'the list, not the clock, decides the end'
 assert_text "review cycles list new ideas" 'list new ideas'
