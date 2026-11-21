@@ -27,27 +27,28 @@ done
 [ -d "$app_dir" ] || { echo "--app-dir must be an existing folder" >&2; exit 2; }
 case "$mode" in review | overnight) ;; *) echo "--mode must be review or overnight" >&2; exit 2 ;; esac
 [ -n "$title" ] || title="$(basename "$app_dir")"
-if [ -z "$budget" ]; then [ "$mode" = overnight ] && budget="8h" || budget="45m"; fi
+if [ -z "$budget" ]; then
+  if [ "$mode" = overnight ]; then budget="$DEFAULT_OVERNIGHT_BUDGET"; else budget="$DEFAULT_REVIEW_BUDGET"; fi
+fi
 
 app_dir="$(cd "$app_dir" && pwd)"
 log_path="$app_dir/LOOP.md"
-if [ -s "$log_path" ] && grep -q '^- [0-9]' "$log_path" && [ "$force" -eq 0 ]; then
+if [ -s "$log_path" ] && awk '/^## / { in_cycles = ($0 == "## Cycles"); next } in_cycles && /^- /' "$log_path" | grep -q . && [ "$force" -eq 0 ]; then
   echo "refusing to overwrite a log that already has cycles (use --force)" >&2
   exit 1
 fi
 
-utc() { format_utc "$1" %Y-%m-%dT%H:%M:%SZ; }
+utc_timestamp() { format_utc "$1" %Y-%m-%dT%H:%M:%SZ; }
 now_epoch="$(date -u +%s)"
-compact="$(echo "$budget" | tr -d ' ' | tr 'A-Z' 'a-z')"
-case "$compact" in
+normalized_budget="$(echo "$budget" | tr -d ' ' | tr 'A-Z' 'a-z')"
+budget_amount="$(echo "$normalized_budget" | sed 's/[^0-9].*//')"
+case "$normalized_budget" in
   *cycles | *cycle)
-    budget_line="$(echo "$compact" | sed 's/[^0-9].*//') cycles" ;;
+    budget_line="$budget_amount cycles" ;;
   *h | *hours | *hour)
-    number="$(echo "$compact" | sed 's/[^0-9].*//')"
-    budget_line="$number hours, ends $(utc $((now_epoch + number * SECONDS_PER_HOUR)))" ;;
+    budget_line="$budget_amount hours, ends $(utc_timestamp $((now_epoch + budget_amount * SECONDS_PER_HOUR)))" ;;
   *m | *min | *mins | *minutes | *minute)
-    number="$(echo "$compact" | sed 's/[^0-9].*//')"
-    budget_line="$number minutes, ends $(utc $((now_epoch + number * SECONDS_PER_MINUTE)))" ;;
+    budget_line="$budget_amount minutes, ends $(utc_timestamp $((now_epoch + budget_amount * SECONDS_PER_MINUTE)))" ;;
   *) echo "budget must look like 45m, 8h or 20cycles" >&2; exit 2 ;;
 esac
 
@@ -64,7 +65,7 @@ fi
 {
   echo "# Loop: $title"
   echo "Brief: BRIEF.md"
-  echo "Started: $(utc "$now_epoch")"
+  echo "Started: $(utc_timestamp "$now_epoch")"
   echo "Budget: $budget_line"
   echo "Mode: $mode"
   echo "Attempts: $attempts"
@@ -83,9 +84,8 @@ fi
 
 run_folder="$(pwd)"
 session_id="${session_id:-${CLAUDE_SESSION_ID:-}}"
-if [ "$no_marker" -eq 1 ]; then
-  : # attempts mode: the orchestrator is the outer loop, the Stop hook must not block it
-else
+# With --no-marker (attempts mode) the orchestrator is the outer loop and the Stop hook must not block it.
+if [ "$no_marker" -eq 0 ]; then
   jq -n --arg log "$log_path" --arg sid "$session_id" \
     'if $sid == "" then {log: $log} else {log: $log, session_id: $sid} end' >"$run_folder/.loop-active"
 fi

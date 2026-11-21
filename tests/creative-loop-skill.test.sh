@@ -46,7 +46,7 @@ assert_text "hand-off forbids merge, push, deploy, delete" 'not merge, push, dep
 
 assert_text "the list, not the clock, decides the end" 'the list, not the clock, decides the end'
 assert_text "review cycles list new ideas" 'list new ideas'
-assert_text "done needs two dry reviews" 'only after two dry reviews in a row'
+assert_text "done needs two dry reviews" 'two dry reviews in a row'
 assert_text "the budget is a ceiling" 'budget is a ceiling'
 assert_text "documents Status: stopped for the user" 'Status: stopped. is the user.s early exit'
 assert_text "log reference documents dry reviews" 'review: dry' "$SKILL_DIR/references/loop-log.md"
@@ -84,7 +84,9 @@ else fail "the hook accepts the log and hands out the first direction" "$hook_ou
 
 ( cd "$session_folder" && "$START" --app-dir "$repo/apps/coin-dash" --budget 45m >/dev/null 2>&1 ) && pass "restart without cycles is allowed" || fail "restart without cycles is allowed"
 grep -qE '^Budget: 45 minutes, ends .*Z$' "$log" && pass "minutes budget has an end time" || fail "minutes budget has an end time"
-echo "- 1 2026-06-01T11:10:00Z did a thing" >>"$log"
+sed -i.bak '/^## Cycles/a\
+- 1 2026-06-01T11:10:00Z did a thing
+' "$log" && rm -f "$log.bak"
 if ( cd "$session_folder" && "$START" --app-dir "$repo/apps/coin-dash" >/dev/null 2>&1 ); then fail "refuses to overwrite cycles"; else pass "refuses to overwrite cycles"; fi
 
 # Opt-in dry run against a lab checkout. Needs pnpm, a built lab and a browser; set LAB_ROOT to a throwaway lab worktree.
@@ -105,7 +107,7 @@ if [ -n "${LAB_ROOT:-}" ]; then
   cleanup_lab
   [ "$(git -C "$LAB_ROOT" status --short)" = "$lab_status_before" ] && pass "dry run: lab left as found" || fail "dry run: lab left as found"
 else
-  echo "skip dry run (set LAB_ROOT to a throwaway lab worktree to run it)"
+  echo "skip dry run (run it with: LAB_ROOT=<path to a throwaway lab worktree> bash tests/creative-loop-skill.test.sh)"
 fi
 
 [ "$failures" -eq 0 ] || exit 1

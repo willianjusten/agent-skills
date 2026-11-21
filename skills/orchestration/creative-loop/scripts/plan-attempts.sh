@@ -17,8 +17,7 @@ while [ $# -gt 0 ]; do
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
 done
-case "$attempts" in [1-9]) [ "$attempts" -le "$MAX_ATTEMPTS" ] || attempts="" ;; *) attempts="" ;; esac
-[ -n "$attempts" ] || { echo "--attempts must be between 1 and $MAX_ATTEMPTS" >&2; exit 2; }
+[[ "$attempts" =~ ^[1-$MAX_ATTEMPTS]$ ]] || { echo "--attempts must be between 1 and $MAX_ATTEMPTS" >&2; exit 2; }
 [ -n "$app" ] || { echo "--app is required" >&2; exit 2; }
 git -C "$lab" rev-parse --show-toplevel >/dev/null 2>&1 || { echo "--lab must be a git checkout" >&2; exit 2; }
 lab_root="$(cd "$lab" && git rev-parse --show-toplevel)"

@@ -4,6 +4,8 @@
 SECONDS_PER_MINUTE=60
 SECONDS_PER_HOUR=3600
 MAX_ATTEMPTS=3
+DEFAULT_REVIEW_BUDGET="45m"
+DEFAULT_OVERNIGHT_BUDGET="8h"
 
 # format_utc <epoch seconds> <date format>: BSD date (-r) first, GNU date (-d) as the fallback.
 format_utc() {
