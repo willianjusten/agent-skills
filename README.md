@@ -163,7 +163,6 @@ metadata:
 agent-skills/
 ├── skills/                         own skills: SKILL.md, README.md, references/, scripts/
 │   ├── engineering/
-│   ├── productivity/
 │   ├── product/
 │   ├── realtime/
 │   ├── game/

@@ -19,7 +19,7 @@ Conventions for working in this repository. This file is for agents editing the 
 ## Creating or changing a skill
 
 1. Use the `skill-creator-plus` skill: NEW mode for a new skill, AUDIT then REFINE for an existing one. It writes test prompts first and follows Anthropic's authoring rules.
-2. Put the folder at `skills/<category>/<name>/`. Categories: `engineering`, `productivity`, `product`, `realtime` (shared web-3D procedure), `game` (game-only) and `orchestration` (orchestrators, below); add `creative` only for a skill that serves creative experiments alone. The folder name equals the frontmatter `name`.
+2. Put the folder at `skills/<category>/<name>/`. Categories: `engineering`, `product`, `realtime` (shared web-3D procedure), `game` (game-only) and `orchestration` (orchestrators, below); add `creative` only for a skill that serves creative experiments alone. The folder name equals the frontmatter `name`.
 3. Add the scope under `metadata` (the only place extra fields are portable across harnesses):
 
    ```yaml

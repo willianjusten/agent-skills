@@ -4,7 +4,7 @@ Use the `skill-creator-plus` skill: it writes test prompts first and follows Ant
 
 ## Checklist
 
-1. Folder `skills/<category>/<name>/`, equal to the frontmatter `name`. Categories: `engineering`, `productivity`, `product`, `realtime`, `game`, `creative`, `orchestration`.
+1. Folder `skills/<category>/<name>/`, equal to the frontmatter `name`. Categories: `engineering`, `product`, `realtime`, `game`, `creative`, `orchestration`.
 2. Frontmatter: only `name`, `description`, `disable-model-invocation`, `paths`, `license`, `metadata`. Put the scope under `metadata`:
 
    ```yaml
