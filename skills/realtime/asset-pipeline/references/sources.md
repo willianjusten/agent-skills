@@ -6,7 +6,7 @@ In `code-only` mode (`"assetMode": "code-only"` in `app.json`) run no asset scri
 
 ## Source order
 
-1. Models: a pack first (`pnpm asset pack`, Kenney and Quaternius as GLB), one family per game where it covers the roles, the family the art bible names. Pick against the game's theme and setting first: run `pack sheet` with the theme as the query and choose from the thumbnails, not the names, and only then check triangles and size.
+1. Models: a pack first (`pnpm asset pack`, Kenney and Quaternius as GLB), one family per game where it covers the roles. Pick against the game's theme and setting first: run `pack sheet` with the theme as the query and choose from the thumbnails, not the names, and only then check triangles and size.
 2. Poly Haven or ambientCG for textures, HDRIs and realistic props.
 3. Code-made assets (procedural geometry, canvas or shader textures, synthesized sound) cover only what no pack or library has, such as a pattern, a particle sprite or a simple prop.
 

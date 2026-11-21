@@ -6,11 +6,11 @@ Gives every gameplay event a sound and a visible reaction, and checks the list w
 
 ```mermaid
 flowchart LR
-  A[List events] --> B[Event map]
+  A[Diagnose: response, clarity, satisfaction] --> B[List events and event map]
   B --> C[Pick feedback]
-  C --> D[ZzFX sounds and manifest]
+  C --> D[Mixer rows and music]
   D --> E[Wire once]
-  E --> F[Test the map]
+  E --> F[pnpm check]
 ```
 
 ## Usage
@@ -24,10 +24,10 @@ The playtest says an event has no sound wired, fix it
 
 ## Output
 
-- An audio event map in the game's treatment document and in code.
-- A sounds module of ZzFX parameters, manifest entries with licenses, and a test and playtest check for unwired events.
+- An event map in code and a `sounds.ts` of mixer rows, recipes and a music pattern; `pnpm check` verifies them.
 
 ## FAQ
 
-- Where do sound effects come from? ZzFX, generated from parameter arrays; music and recordings may come from any source, with the license recorded.
+- Where do sounds come from? Synth recipes in `@lab/audio`, no sample files.
+- Where do I start? Diagnose first: response, then clarity, then satisfaction.
 - Can an event have no sound? Only as a recorded decision in the map.
