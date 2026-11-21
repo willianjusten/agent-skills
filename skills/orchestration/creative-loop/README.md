@@ -1,4 +1,4 @@
-# Loop
+# Creative Loop
 
 Runs one game or experiment from a pitch or brief to a checked, recorded build, in your own session.
 
@@ -24,9 +24,9 @@ flowchart LR
 ## Usage
 
 ```text
-/loop a one-button arcade game about a lighthouse keeper --budget 45m
-/loop apps/fog/BRIEF.md --mode overnight --budget 8h
-/loop a game about tides --budget 20cycles
+/creative-loop a one-button arcade game about a lighthouse keeper --budget 45m
+/creative-loop apps/fog/BRIEF.md --mode overnight --budget 8h
+/creative-loop a game about tides --budget 20cycles
 ```
 
 ## Output

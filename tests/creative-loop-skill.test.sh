@@ -1,9 +1,9 @@
 #!/bin/bash
-# Tests for the loop skill: orchestrator shape, safety text, start-run.sh (hermetic),
+# Tests for the creative-loop skill: orchestrator shape, safety text, start-run.sh (hermetic),
 # and an opt-in dry run against a lab checkout (LAB_ROOT=<worktree>, slow, skipped otherwise).
 
 REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
-SKILL_DIR="$REPO_ROOT/skills/orchestration/loop"
+SKILL_DIR="$REPO_ROOT/skills/orchestration/creative-loop"
 SKILL="$SKILL_DIR/SKILL.md"
 START="$SKILL_DIR/scripts/start-run.sh"
 HOOK="$REPO_ROOT/harness/claude/hooks/loop-stop.sh"
@@ -14,7 +14,7 @@ work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 
 # Shape
-[ "$(field "$SKILL" name)" = loop ] && pass "name is loop" || fail "name is loop"
+[ "$(field "$SKILL" name)" = creative-loop ] && pass "name is creative-loop" || fail "name is loop"
 [ "$(field "$SKILL" disable-model-invocation)" = true ] && pass "run by name only" || fail "run by name only"
 [ "$(meta "$SKILL" uses)" = "ideation brief three-build game-feel" ] && pass "uses the four skills" || fail "uses the four skills" "$(meta "$SKILL" uses)"
 [ -f "$SKILL_DIR/README.md" ] && pass "has a README" || fail "has a README"

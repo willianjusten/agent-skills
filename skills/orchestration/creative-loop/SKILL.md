@@ -1,19 +1,19 @@
 ---
-name: loop
-description: Runs one lab game or experiment from a pitch or brief to a checked, recorded build in the user's own session, with a time or cycle budget, in review or overnight mode. Run by name as /loop.
+name: creative-loop
+description: Runs one lab game or experiment from a pitch or brief to a checked, recorded build in the user's own session, with a time or cycle budget, in review or overnight mode. Run by name as /creative-loop.
 disable-model-invocation: true
 metadata:
   scope: personal
   uses: ideation brief three-build game-feel
 ---
 
-# Loop
+# Creative Loop
 
 One run, one attempt, one branch. The inner loop is edit, shot, look, check, commit. The Stop hook is the outer loop: it hands you the next direction when you try to stop early. Format of the log and hook: `docs/loop-log.md` in the agent-skills repo.
 
 ## Arguments
 
-`/loop <pitch, brief path or idea> [--budget 45m | 8h | 20cycles] [--mode review|overnight] [--lab <path>] [--app <name>]`
+`/creative-loop <pitch, brief path or idea> [--budget 45m | 8h | 20cycles] [--mode review|overnight] [--lab <path>] [--app <name>]`
 
 Defaults when an argument or an answer is missing (take them, never wait, log each under `## Notes` as `Default: ...`): mode `review`; budget 45 minutes (review) or 8 hours (overnight); lab is the current directory if its root `package.json` is named `lab`, else the `lab` checkout next to it; app name is a kebab-case name taken from the pitch.
 
