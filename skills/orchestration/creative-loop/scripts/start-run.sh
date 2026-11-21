@@ -3,7 +3,7 @@
 # writes .loop-active in the current folder and ignores .loop-active* in git.
 # Usage: start-run.sh --app-dir <dir> --budget <45m|8h|20cycles> --mode <review|overnight>
 #        --title <title> [--session-id <id>] [--attempts <n>] [--no-marker] [--force]
-# Log format: docs/loop-log.md in the agent-skills repo.
+# Log format: ../references/loop-log.md.
 set -euo pipefail
 
 app_dir="" budget="" mode="review" title="" session_id="" attempts=1 no_marker=0 force=0

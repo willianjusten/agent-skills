@@ -35,7 +35,8 @@ assert_text "keeps the best version" 'keep the best, not the latest'
 assert_text "re-reads pillars and logs a verdict" 'pillars.*On track'
 assert_text "blocked stops need tool calls" '8 consecutive blocked stops'
 assert_text "defaults are logged when unattended" 'Default: '
-assert_text "refers to the log format doc" 'docs/loop-log.md'
+[ -f "$SKILL_DIR/references/loop-log.md" ] && pass "ships the loop log reference" || fail "ships the loop log reference"
+assert_text "links the log format reference" 'references/loop-log.md'
 assert_text "hand-off runs verify" 'pnpm verify' "$SKILL_DIR/references/hand-off.md"
 assert_text "hand-off runs record" 'pnpm record' "$SKILL_DIR/references/hand-off.md"
 assert_text "hand-off sends files" 'SendUserFile' "$SKILL_DIR/references/hand-off.md"

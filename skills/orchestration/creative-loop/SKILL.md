@@ -9,7 +9,7 @@ metadata:
 
 # Creative Loop
 
-One run, one attempt, one branch. The inner loop is edit, shot, look, check, commit. The Stop hook is the outer loop: it hands you the next direction when you try to stop early. Format of the log and hook: `docs/loop-log.md` in the agent-skills repo.
+One run, one attempt, one branch. The inner loop is edit, shot, look, check, commit. The Stop hook is the outer loop: it hands you the next direction when you try to stop early. Format of the log and hook: [references/loop-log.md](references/loop-log.md).
 
 ## Arguments
 
@@ -22,7 +22,7 @@ Defaults when an argument or an answer is missing (take them, never wait, log ea
 1. **Settle the input.** A `PITCH.md` or `BRIEF.md` path is used as given. A bare idea goes through `ideation`, then `brief`; unattended (overnight, or nobody answering), run them with every recommended answer, no approval stop, and log each as a default. Done when a `BRIEF.md` with a Next directions list exists.
 2. **Make the run branch.** Never work on the default branch. `git worktree add -b loop/<app> <lab-parent>/<lab-dirname>-<app> HEAD` from the lab, then `pnpm install --frozen-lockfile --offline` there (without `--offline` if it fails). Done when `git branch --show-current` in the worktree prints `loop/<app>`.
 3. **Scaffold.** `pnpm create-app game|experiment <app>` in the worktree (`three-build` has the rules), copy the brief to `apps/<app>/BRIEF.md`, commit the scaffold. Done when `pnpm check <app>` passes on the untouched template.
-4. **Start the log.** Run `scripts/start-run.sh --app-dir <worktree>/apps/<app> --budget <budget> --mode <mode> --title <title>` from the folder your session started in. It fills `LOOP.md` (header, directions from the brief), writes `.loop-active` there (pass `--session-id` when you know the session id) and ignores `.loop-active*`. Commit `LOOP.md` and `.gitignore`. Done when the script prints the log path and `Status: running`.
+4. **Start the log.** Run `scripts/start-run.sh --app-dir <worktree>/apps/<app> --budget <budget> --mode <mode> --title <title>` from the folder your session started in. It fills `LOOP.md` (header, directions from the brief), writes `.loop-active` there (it takes the session id from `--session-id` or `$CLAUDE_SESSION_ID`; with neither, the hook binds the marker to your session at the first stop) and ignores `.loop-active*`. Commit `LOOP.md` and `.gitignore`. Done when the script prints the log path and `Status: running`.
 5. **Run a direction.** Before each one: read the unchecked `## Notes` lines (the user steers there), re-read the brief's pillars and Not this list, and add a Notes line `On track`, `Drifted: ...` or `Brief is wrong: ...`. Then loop until the direction is met:
    - edit; `pnpm shot <app> <seconds...>`, then read the images (a change you have not looked at is not done);
    - `pnpm check <app>`; fix every FAIL;
