@@ -83,11 +83,11 @@ else
   fail "install.sh points core.hooksPath at .githooks in a git checkout" "$(git -C "$git_fixture" config --get core.hooksPath)"
 fi
 
-hook_link="$home/.claude/hooks/write-scope.sh"
-if [ -L "$hook_link" ] && [ "$(readlink "$hook_link")" = "$fixture/harness/claude/hooks/write-scope.sh" ]; then
-  pass "the write-scope hook is linked into ~/.claude/hooks"
+loop_hook_link="$home/.claude/hooks/loop-stop.sh"
+if [ -L "$loop_hook_link" ] && [ "$(readlink "$loop_hook_link")" = "$fixture/harness/claude/hooks/loop-stop.sh" ]; then
+  pass "the loop-stop hook is linked into ~/.claude/hooks"
 else
-  fail "the write-scope hook is linked into ~/.claude/hooks" "$(ls -la "$home/.claude/hooks" 2>&1)"
+  fail "the loop-stop hook is linked into ~/.claude/hooks" "$(ls -la "$home/.claude/hooks" 2>&1)"
 fi
 
 linked_agent="$home/.claude/agents/sample-builder.md"

@@ -7,7 +7,7 @@ Conventions for working in this repository. This file is for agents editing the 
 | Path | Owner | Edit it? |
 | ---- | ----- | -------- |
 | `skills/<category>/<name>/` | this repo | yes: own skills |
-| `agents/<category>/<name>.md` | this repo | yes: role-scoped subagents. Frontmatter needs `name` (equal to the file name), `description`, `model` and `metadata.scope` (`personal`, `both` or `off`); `install.sh` links them into `~/.claude/agents/` |
+| `agents/<category>/<name>.md` | this repo | yes, when a role-scoped subagent is worth having. The folder does not exist today; `install.sh` still links any file there into `~/.claude/agents/`. Frontmatter needs `name` (equal to the file name), `description`, `model` and `metadata.scope` (`personal`, `both` or `off`) |
 | `vendor/<owner>/<repo>/skills-lock.json` | `./install.sh --update` | no: rewritten on update; review the printed upstream diff, then commit it. Pins the source to an upstream commit |
 | `vendor/<owner>/<repo>/.agents/` | `install.sh` (fetched from the lock) | no: gitignored and refetched. The only local patch is the `code-review` rename in `apply_renames`; policy goes in `harness/` files the skills already read |
 | `scopes.json` | this repo | yes: one line per vendored skill |
@@ -19,7 +19,7 @@ Conventions for working in this repository. This file is for agents editing the 
 ## Creating or changing a skill
 
 1. Use the `skill-creator-plus` skill: NEW mode for a new skill, AUDIT then REFINE for an existing one. It writes test prompts first and follows Anthropic's authoring rules.
-2. Put the folder at `skills/<category>/<name>/`. Categories: `engineering`, `productivity`, `product`, `realtime` (shared web-3D procedure), `game` (game-only), `creative` (creative-experiment-only) and `orchestration` (orchestrators, below). The folder name equals the frontmatter `name`.
+2. Put the folder at `skills/<category>/<name>/`. Categories: `engineering`, `productivity`, `product`, `realtime` (shared web-3D procedure), `game` (game-only) and `orchestration` (orchestrators, below); add `creative` only for a skill that serves creative experiments alone. The folder name equals the frontmatter `name`.
 3. Add the scope under `metadata` (the only place extra fields are portable across harnesses):
 
    ```yaml
@@ -29,7 +29,7 @@ Conventions for working in this repository. This file is for agents editing the 
 
 4. Add a `README.md` next to `SKILL.md` (shape below).
 5. Run `./install.sh check`, fix every error, then `./install.sh`.
-6. If the skill joins the flow, add it to "Skills at a Glance" in the root `README.md`, and to `docs/images/flow.svg` or `routes.svg` if it changes the path.
+6. If the skill joins the flow, add it to "Skills at a Glance" in the root `README.md`, and to `docs/images/flow.svg` (the plan-build-review path) or `routes.svg`; the creative path (ideation, brief, creative-loop) is `docs/images/creative-loop.svg` if it changes the path.
 
 ## Skill conventions
 
@@ -37,7 +37,7 @@ Conventions for working in this repository. This file is for agents editing the 
 - Model-invoked skills get a trigger-rich `description` ("Use when ..."). Skills only run by name set `disable-model-invocation: true` and get a short, human-facing description.
 - Use only open-standard frontmatter: `name`, `description`, `disable-model-invocation`, `paths`, `license`, `metadata`. Anything else is ignored by some harness.
 - Leaf skills name no sibling skill or agent in this repo; each one must work alone. Naming an upstream (vendored or third-party) skill is allowed when phrased "if installed" with a one-line fallback.
-- Orchestrators run siblings: agents in `agents/` and skills in `skills/orchestration/`. Each lists the skills and agents it runs in `metadata.uses` (space-separated). `./install.sh check` fails when one is missing, scoped `off`, or scoped narrower than the orchestrator (a `both` orchestrator needs `both` dependencies); a leaf skill that declares `uses` also fails. Decision: `docs/adr/0001-leaf-and-orchestrator-skills.md`.
+- Orchestrators run siblings: skills in `skills/orchestration/` (today `creative-loop`) and agents in `agents/`. Each lists the skills and agents it runs in `metadata.uses` (space-separated). `./install.sh check` fails when one is missing, scoped `off`, or scoped narrower than the orchestrator (a `both` orchestrator needs `both` dependencies); a leaf skill that declares `uses` also fails. Decisions: `docs/adr/0001-leaf-and-orchestrator-skills.md`, and `docs/adr/0002-thin-loop.md` for the creative loop.
 - No secrets, no machine paths (`/Users/<name>`), no dates or version pins in skill text.
 
 ## Skill README shape
@@ -61,13 +61,15 @@ Sections in this order, nothing else:
 ## Harness files
 
 - `harness/shared/instructions.md` is `~/.claude/CLAUDE.md`.
+- `harness/claude/hooks/loop-stop.sh` is the Stop hook that drives the creative loop; format in `skills/orchestration/creative-loop/references/loop-log.md`.
+- `tests/old-harness-removed.test.sh` fails when a doc names a removed skill, agent, hook or file; add a name there when you remove a piece.
 - Claude Code writes `/config` changes through the `settings.json` symlink. Review those diffs and strip machine-specific values before committing.
 
 ## Tests
 
 - `./install.sh check` validates every skill, agent and scope (about 2 s). Run it before `./install.sh`.
 - `tests/run.sh` runs every `tests/*.test.sh` in parallel and exits non-zero if any fails (about 3 s).
-- Run one file with `bash tests/<name>.test.sh`, for example `bash tests/conduct.test.sh`.
+- Run one file with `bash tests/<name>.test.sh`, for example `bash tests/creative-loop-skill.test.sh`.
 - A test uses its own `mktemp` directory and a temp `HOME` for installer runs, which is what keeps the parallel run safe; keep new tests that way.
 
 ## Commits

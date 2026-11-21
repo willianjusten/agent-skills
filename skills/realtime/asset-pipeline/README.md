@@ -4,24 +4,13 @@ Sources game assets from packs and libraries, or makes them in code, and records
 
 ## What It Does
 
-| Level | Allowed |
-| ----- | ------- |
-| `placeholder` | Primitives and grey boxes; no script runs |
-| `free` | Kenney and Quaternius packs, Poly Haven, ambientCG, gltf-transform |
-| code-only mode | No asset files; everything is made by code |
-| `premium` | Refused while locked |
-
-| Polish | Steps |
-| ------ | ----- |
-| `rough` | Fetch, clean up, record |
-| `polished` | Style test sheet, optimization, record, user approval |
-
 ```mermaid
 flowchart LR
-  A[Read level and polish] --> B[Packs, then libraries, then code-made]
+  A[List assets and roles] --> B[Packs, then libraries, then code-made]
   B --> C[pnpm asset command]
   C --> D[Manifest entry]
-  D --> E[pnpm verify]
+  D --> E[Check models and clips]
+  E --> F[pnpm verify]
 ```
 
 ## Usage
@@ -35,7 +24,7 @@ verify says the asset manifest fails, fix it
 
 ## Output
 
-- `assets.manifest.json` and `public/assets/` in the app; style test sheets in `art/style-test/`.
+- `assets.manifest.json` and `public/assets/` in the app.
 
 ## Requirements
 
@@ -43,5 +32,5 @@ verify says the asset manifest fails, fix it
 
 ## FAQ
 
-- Can it use paid providers? No, `premium` is locked.
+- Can it use paid providers? No.
 - Can I drop a file in by hand? No; without a manifest entry `verify` fails it.

@@ -6,7 +6,7 @@ Save as `PITCH.md`. One page (about 60 lines), engine-neutral. Write `n/a` in se
 # <Working title>
 
 **Mode:** game | experiment
-**One sentence:** <the idea>
+**Promise:** <one sentence, passed the restate and too-generic tests>
 **Feeling:** <target feeling>
 
 ## Fantasy (game) / Feeling in motion (experiment)
@@ -23,8 +23,11 @@ Save as `PITCH.md`. One page (about 60 lines), engine-neutral. Write `n/a` in se
 ## Input to motion (experiment)
 <mapping, no input, reduced motion, sound if any>
 
+## Prior art
+<closest comparables, one take and one leave line each>
+
 ## Twist
-<Like X, but ___.>
+<Like X, but ___. Still worth making with the hook removed: yes or no, one line>
 
 ## Scope
 <who plays and the first minute, the smallest version, ordered cut list of three (first cut first)>

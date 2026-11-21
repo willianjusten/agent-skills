@@ -10,10 +10,10 @@ Two checks guard every commit; the `pre-commit` hook runs both (about 6 s).
 ## One test file
 
 ```bash
-bash tests/conduct.test.sh
+bash tests/creative-loop-skill.test.sh
 ```
 
-Each file works in its own `mktemp` directory and prints `ok` or `FAIL` per assertion; it exits 1 when any assertion failed. Files by area: `conduct`, `orchestrators`, `polish-agents`, `realtime-judge`, `realtime-skills`, `motion-review`, `agents-install`, `settings-hooks`, `vendoring`, `write-scope-hook`.
+Each file works in its own `mktemp` directory and prints `ok` or `FAIL` per assertion; it exits 1 when any assertion failed. Files by area: `creative-loop-skill`, `creative-loop-attempts`, `loop-stop-hook`, `orchestrators`, `realtime-skills`, `agents-install`, `settings-hooks`, `vendoring`, `old-harness-removed` (removed pieces stay removed, docs included).
 
 ## Adding a test
 

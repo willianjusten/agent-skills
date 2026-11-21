@@ -129,7 +129,17 @@ link_harness() {
   link_path "$ROOT/harness/shared/CODING_STANDARDS.md" "$CLAUDE_HOME/CODING_STANDARDS.md"
   link_path "$ROOT/harness/claude/settings.json" "$CLAUDE_HOME/settings.json"
   link_path "$ROOT/harness/claude/statusline-command.sh" "$CLAUDE_HOME/statusline-command.sh"
-  link_path "$ROOT/harness/claude/hooks/write-scope.sh" "$CLAUDE_HOME/hooks/write-scope.sh"
+  link_path "$ROOT/harness/claude/hooks/loop-stop.sh" "$CLAUDE_HOME/hooks/loop-stop.sh"
+  remove_retired_hook_link "$CLAUDE_HOME/hooks/write-scope.sh"
+}
+
+# The write-scope hook was removed from the repo; drop the link an older install left behind.
+remove_retired_hook_link() {
+  local link="$1"
+  [ -L "$link" ] || return 0
+  case "$(readlink "$link")" in "$ROOT"/*) ;; *) return 0 ;; esac
+  rm "$link"
+  log_change "removed retired hook link $link"
 }
 
 # Vendored sources are the top-level keys of scopes.json, e.g. "mattpocock/skills".

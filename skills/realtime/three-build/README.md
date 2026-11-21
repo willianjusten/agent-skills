@@ -8,9 +8,11 @@ Builds games and creative experiments in the lab monorepo on three.js WebGPURend
 flowchart LR
   A[Find the lab repo] --> B[Pick a template]
   B --> C[pnpm create-app]
-  C --> D[Read TREATMENT and ENGINE]
-  D --> E[Build in slices on core]
-  E --> F[pnpm verify]
+  C --> D[Read BRIEF and ENGINE]
+  D --> E[Build in slices on the packages]
+  E --> F[shot and record]
+  F --> G[pnpm check]
+  G --> H[pnpm verify]
 ```
 
 ## Usage
@@ -18,7 +20,7 @@ flowchart LR
 ```text
 Add a new example app to the lab with a water ripple effect
 Start a new game in the lab from the game template
-Why is this experiment not publishing window.__lab?
+Check the game and fix what fails before we call it done
 ```
 
 ## Requirements
