@@ -11,7 +11,7 @@ for skill in $removed_skills; do
   if find "$REPO_ROOT/skills" -type d -name "$skill" | grep -q .; then fail "skill $skill is removed"; else pass "skill $skill is removed"; fi
 done
 for agent in $removed_agents; do
-  if find "$REPO_ROOT/agents" -name "$agent.md" | grep -q .; then fail "agent $agent is removed"; else pass "agent $agent is removed"; fi
+  if [ -d "$REPO_ROOT/agents" ] && find "$REPO_ROOT/agents" -name "$agent.md" | grep -q .; then fail "agent $agent is removed"; else pass "agent $agent is removed"; fi
 done
 [ ! -e "$REPO_ROOT/harness/claude/hooks/write-scope.sh" ] && pass "the write-scope hook is removed" || fail "the write-scope hook is removed"
 if find "$REPO_ROOT/skills" -name 'run_state*' | grep -q .; then fail "the run-state scripts are removed"; else pass "the run-state scripts are removed"; fi
