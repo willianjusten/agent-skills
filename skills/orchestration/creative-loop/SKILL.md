@@ -13,7 +13,7 @@ One run, one attempt, one branch. The inner loop is edit, shot, look, check, com
 
 ## Arguments
 
-`/creative-loop <pitch, brief path or idea> [--budget 45m | 8h | 20cycles] [--mode review|overnight] [--lab <path>] [--app <name>]`
+`/creative-loop <pitch, brief path or idea> [--budget 45m | 8h | 20cycles] [--mode review|overnight] [--attempts 1..3] [--lab <path>] [--app <name>]`
 
 Defaults when an argument or an answer is missing (take them, never wait, log each under `## Notes` as `Default: ...`): mode `review`; budget 45 minutes (review) or 8 hours (overnight); lab is the current directory if its root `package.json` is named `lab`, else the `lab` checkout next to it; app name is a kebab-case name taken from the pitch.
 
@@ -31,6 +31,17 @@ Defaults when an argument or an answer is missing (take them, never wait, log ea
 6. **Cut and keep.** Two failed tries at one problem: stop, log it under `## Open items` with the symptom, cut the feature or direction and move on. If a later try scores worse than an earlier one (check lines, shot, frame time), `git revert` or restore the earlier version: keep the best, not the latest. Done when no direction is retried a third time.
 7. **Let the hook drive.** Each time you stop, the hook may block with the next direction or, when the list is done, a review cycle: take fresh shots, name the three weakest things a player would notice, fix them. Every blocked stop must be followed by tool calls (Claude Code ends the session after 8 consecutive blocked stops with none); never answer a block with prose only. The hook drives only the session this skill runs in. Done when the hook lets you stop: the budget is spent or the log says `Status: done`.
 8. **Hand off.** Follow [references/hand-off.md](references/hand-off.md): set `Status: done`, delete `.loop-active` and `.loop-active.state`, run `pnpm verify <app>` and `pnpm record <app>`, write the summary, send the files with SendUserFile and a PushNotification. Done when the notification is sent and the worktree is clean.
+
+## Attempts mode
+
+`--attempts 2` or `--attempts 3` runs that many parallel attempts of the same brief and lets the user pick one; the default and `--attempts 1` is the single run above. Any other value is refused. Steps 1 and 3 run once (one `BRIEF.md`); everything else is per attempt. Follow [references/attempts.md](references/attempts.md) for the procedure. In short:
+
+- `scripts/plan-attempts.sh --lab <lab> --app <app> --attempts <n>` prints one line per attempt with its branch `loop/<app>-<run-id>-<letter>` and worktree `<lab-dir>-<app>-<run-id>-<letter>`. The run id and the letter keep names unique across attempts and across runs; the script refuses a name that exists. Create worktrees only from its output.
+- One background subagent per attempt, same brief, own worktree. This session is the outer loop for each attempt: the Stop hook does not drive subagents, so no `.loop-active` marker is written (`start-run.sh --attempts <n> --no-marker`), and when an attempt reports early you send it the next direction from its own `LOOP.md` until its budget is spent.
+- One status line per report: `attempt <letter>: <direction or cycle>, check <PASS|FAIL counts>, <minutes used> of <budget>`.
+- When every attempt is done, `pnpm record <path-a> <path-b> [<path-c>]` writes the stacked video; send it and wait for the pick.
+- Review mode: the user picks in the conversation. Overnight mode: every attempt runs to its full budget and the pick waits for morning; send the stacked video and the summaries, then stop. Never pick for the user, never merge, never delete the other attempts' worktrees or branches.
+- After the pick, continue from the picked attempt alone: steps 5 to 8 in its worktree with the Stop hook driving as in a single run (step 4 again, with the marker). The other attempts stay as they are.
 
 ## Overnight rules
 

@@ -27,6 +27,7 @@ flowchart LR
 /creative-loop a one-button arcade game about a lighthouse keeper --budget 45m
 /creative-loop apps/fog/BRIEF.md --mode overnight --budget 8h
 /creative-loop a game about tides --budget 20cycles
+/creative-loop a game about tides --attempts 3 --mode overnight --budget 8h
 ```
 
 ## Output
@@ -42,4 +43,4 @@ The lab monorepo, the Stop hook installed, and the `ideation`, `brief`, `three-b
 - Does overnight merge or push? Never; it also never deploys, deletes branches or spends money.
 - What if nobody answers? Defaults are taken and logged under Notes.
 - Where do I steer a running loop? Add a line under `## Notes` in `LOOP.md`.
-- Does it run several attempts? No, one; attempts mode is separate.
+- Does it run several attempts? With `--attempts 2` or `3`: one worktree and subagent per attempt, a stacked video, and you pick.

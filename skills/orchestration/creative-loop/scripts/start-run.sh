@@ -2,11 +2,11 @@
 # Starts a loop run: fills the app's LOOP.md (header and directions from BRIEF.md),
 # writes .loop-active in the current folder and ignores .loop-active* in git.
 # Usage: start-run.sh --app-dir <dir> --budget <45m|8h|20cycles> --mode <review|overnight>
-#        --title <title> [--session-id <id>] [--force]
+#        --title <title> [--session-id <id>] [--attempts <n>] [--no-marker] [--force]
 # Log format: docs/loop-log.md in the agent-skills repo.
 set -euo pipefail
 
-app_dir="" budget="" mode="review" title="" session_id="" force=0
+app_dir="" budget="" mode="review" title="" session_id="" attempts=1 no_marker=0 force=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --app-dir) app_dir="$2"; shift 2 ;;
@@ -14,6 +14,8 @@ while [ $# -gt 0 ]; do
     --mode) mode="$2"; shift 2 ;;
     --title) title="$2"; shift 2 ;;
     --session-id) session_id="$2"; shift 2 ;;
+    --attempts) attempts="$2"; shift 2 ;;
+    --no-marker) no_marker=1; shift ;;
     --force) force=1; shift ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
@@ -61,7 +63,7 @@ fi
   echo "Started: $(utc "$now_epoch")"
   echo "Budget: $budget_line"
   echo "Mode: $mode"
-  echo "Attempts: 1"
+  echo "Attempts: $attempts"
   echo "Status: running"
   echo
   echo "## Directions"
@@ -76,7 +78,9 @@ fi
 } >"$log_path"
 
 run_folder="$(pwd)"
-if command -v jq >/dev/null 2>&1; then
+if [ "$no_marker" -eq 1 ]; then
+  : # attempts mode: the orchestrator is the outer loop, the Stop hook must not block it
+elif command -v jq >/dev/null 2>&1; then
   jq -n --arg log "$log_path" --arg sid "$session_id" \
     'if $sid == "" then {log: $log} else {log: $log, session_id: $sid} end' >"$run_folder/.loop-active"
 else
@@ -96,5 +100,5 @@ if exclude_file="$(git -C "$run_folder" rev-parse --git-path info/exclude 2>/dev
 fi
 
 echo "log: $log_path"
-echo "marker: $run_folder/.loop-active"
+[ "$no_marker" -eq 1 ] || echo "marker: $run_folder/.loop-active"
 echo "Status: running"
