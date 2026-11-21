@@ -7,7 +7,7 @@ Run in order after the hook lets you stop.
 3. **Summary.** Write `apps/<app>/.verify/<app>/summary.md` (not committed), at most 40 lines, in this order:
    - **Headline:** one or two sentences on what is ready to play, and whether `check` and `verify` pass.
    - **Play it:** the dev command (`pnpm --dir <worktree>/apps/<app> dev`), then links relative to the port it prints (`http://localhost:<port>/...`). Give the start, `?demo=1`, `?tune`, and one link per moment worth checking, built from the app's own URL parameters and debug controls (read them from its source, for example `?wave=10` for a boss). Mark which ones are test aids.
-   - **Controls:** the control lines the title shows.
+   - **Controls:** every key, pointer and gamepad action, from the action map (the game itself teaches them in play or on a Controls screen).
    - **Changes:** one line per direction met, from the log, grouped by area when there are many. Say how to reach each one the player can see or hear.
    - **Open items:** copied from `## Open items`, each with its reason. Add what nobody has seen or heard yet, such as audio that was never listened to.
    - **Checks:** the PASS, FAIL and INFO counts from `.verify/<app>/check/results.json`, and the `pnpm verify` verdict with the fps lines.
