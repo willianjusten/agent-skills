@@ -26,3 +26,4 @@ A game with correct rules and no feedback reads as unfinished, and silence is th
 - Feedback scales with importance: frequent events small, rare events big.
 - Never block input or change simulation outcomes with a reaction; feel is presentation.
 - Honour reduced-motion settings for shake and flashes.
+- UI feedback (menus, HUD, buttons) stays calm: a press, hover and focus reaction per control, a count-up or pulse on a changed number, never a flash or shake on a static menu. Show only what the player needs this second; detail sits behind a button or submenu, so juice never piles onto a crowded screen.
