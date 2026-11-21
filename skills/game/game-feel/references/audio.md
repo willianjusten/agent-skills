@@ -34,4 +34,4 @@ A recipe is layers of tones (sine, triangle, square, sawtooth; `fromHz` sliding 
 - Keep the layer stack under -18 dBFS before the music bus. Chiptune 100 to 140 BPM, ambient 50 to 80.
 - Stings (victory) play on the effects bus and duck the music.
 - Under `pnpm check`'s virtual clock the audio clock barely moves: drive the sequencer's `now` and `tick()` from game time as the game template does, and stamp notes with game time (`gameTimeAt`).
-- Scene target: short-term loudness about -18 LUFS (plus or minus 3 LU), sample peak at or below -1 dBFS, no DC offset, a loop wraps without a click. `check` measures all of these.
+- `check` catches bugs only: sample peak above -1 dBFS or clipping, DC offset, a loop that clicks at its wrap, an event that never fires. Loudness and mix balance are taste: music sits under the effects, set by listening, not by a number.
