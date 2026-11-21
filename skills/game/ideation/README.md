@@ -32,5 +32,5 @@ Is the core loop of this game any good?
 
 ## FAQ
 
-- Does it write the GDD? No; it hands a pitch to a brief step.
+- Does it write the brief? No; it hands a pitch to a brief step.
 - Is a grilling skill required? No; it follows the same pattern itself.
