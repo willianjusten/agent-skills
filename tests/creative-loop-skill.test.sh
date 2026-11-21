@@ -42,6 +42,8 @@ assert_text "hand-off runs verify" 'pnpm verify' "$SKILL_DIR/references/hand-off
 assert_text "hand-off runs record" 'pnpm record' "$SKILL_DIR/references/hand-off.md"
 assert_text "hand-off sends files" 'SendUserFile' "$SKILL_DIR/references/hand-off.md"
 assert_text "hand-off notifies" 'PushNotification' "$SKILL_DIR/references/hand-off.md"
+assert_text "hand-off gives play links" 'Play it' "$SKILL_DIR/references/hand-off.md"
+assert_text "hand-off links demo and tune" '\?demo=1., .\?tune' "$SKILL_DIR/references/hand-off.md"
 assert_text "hand-off forbids merge, push, deploy, delete" 'not merge, push, deploy or delete' "$SKILL_DIR/references/hand-off.md"
 
 assert_text "the list, not the clock, decides the end" 'the list, not the clock, decides the end'
