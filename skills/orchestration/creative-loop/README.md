@@ -36,7 +36,7 @@ The run branch with the app, `LOOP.md`, `.verify/<app>/` (record, check, packet,
 
 ## Requirements
 
-The lab monorepo, the Stop hook installed, and the `ideation`, `brief`, `three-build` and `game-feel` skills.
+The lab monorepo, the Stop hook installed, and the `ideation`, `brief`, `three-build`, `game-feel` and `ui-polish` skills.
 
 ## FAQ
 

@@ -17,7 +17,7 @@ trap '[ -z "$lab_cleanup" ] || $lab_cleanup; rm -rf "$work"' EXIT
 # Shape
 [ "$(field "$SKILL" name)" = creative-loop ] && pass "name is creative-loop" || fail "name is creative-loop" "$(field "$SKILL" name)"
 [ "$(field "$SKILL" disable-model-invocation)" = true ] && pass "run by name only" || fail "run by name only" "disable-model-invocation: $(field "$SKILL" disable-model-invocation)"
-[ "$(meta "$SKILL" uses)" = "ideation brief three-build game-feel" ] && pass "uses the four skills" || fail "uses the four skills" "$(meta "$SKILL" uses)"
+[ "$(meta "$SKILL" uses)" = "ideation brief three-build game-feel ui-polish" ] && pass "uses the five skills" || fail "uses the five skills" "$(meta "$SKILL" uses)"
 [ -f "$SKILL_DIR/README.md" ] && pass "has a README" || fail "has a README"
 
 # Text assertions: overnight safety and unattended behaviour
@@ -46,6 +46,13 @@ assert_text "hand-off gives play links" 'Play it' "$SKILL_DIR/references/hand-of
 assert_text "hand-off links demo and tune" '\?demo=1., .\?tune' "$SKILL_DIR/references/hand-off.md"
 assert_text "hand-off forbids merge, push, deploy, delete" 'not merge, push, deploy or delete' "$SKILL_DIR/references/hand-off.md"
 
+assert_text "review cycle runs the UI pass" 'run the UI pass'
+assert_text "UI pass reads the check ui shots" 'check/ui/' "$SKILL_DIR/references/ui-pass.md"
+assert_text "UI pass fixes ui layout FAILs" 'ui layout. FAIL' "$SKILL_DIR/references/ui-pass.md"
+assert_text "UI pass: progressive disclosure" 'progressive disclosure' "$SKILL_DIR/references/ui-pass.md"
+assert_text "UI pass: one primary action per screen" 'one primary action per screen' "$SKILL_DIR/references/ui-pass.md"
+assert_text "UI pass: one spacing scale" 'one spacing scale' "$SKILL_DIR/references/ui-pass.md"
+assert_text "UI pass: ui-polish only if installed" 'ui-polish. is installed' "$SKILL_DIR/references/ui-pass.md"
 assert_text "the list, not the clock, decides the end" 'the list, not the clock, decides the end'
 assert_text "review cycles list new ideas" 'list new ideas'
 assert_text "done needs two dry reviews" 'two dry reviews in a row'
