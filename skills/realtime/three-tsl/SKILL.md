@@ -31,4 +31,4 @@ If installed, the `threejs-procedural-materials` and `threejs-visual-validation`
 - Node API names change between three.js releases; check the installed version before trusting a snippet from memory or a blog.
 - Compute and storage-buffer features need WebGPU and do not run on the WebGL 2 fallback; keep a fallback path or leave them out.
 - Type errors on node chains usually mean a missing conversion (`float()`, `vec3()`); fix the type, do not cast to `any`.
-- Many extra texture samples or loop iterations show up first on the mobile profile; check the numbers with `pnpm verify <app>`.
+- Many extra texture samples or loop iterations show up first on the mobile profile; when the piece targets phones, check the numbers with `pnpm verify <app> --mobile`.
