@@ -19,7 +19,7 @@ One page that tells every agent what to build, what not to build and how to know
    - Not this: five or more concrete items, each checkable by looking at a frame.
    - Done condition: a statement a script or a screenshot can confirm, not "feels good".
    - Cut list: ordered, first cut first.
-   - Feature list: every promised feature has a check, written as a lab `pnpm check <app>` line or a sentence a scripted run can assert from a fresh start. A feature with no check is not a feature yet.
+   - Feature list: every promised feature has a check, written as a lab `pnpm check <app>` line or a sentence a scripted run can assert from a fresh start, and names the screen it is shown on and what it displaces there. A feature with no check is not a feature yet; one that only adds to a full screen is cut or moved.
    - Demo mode: what the app does with no input, so a recorder sees a full loop.
    - Next directions: a plain ordered markdown list (`1. ...`), one direction per line, most valuable first, no nested bullets. A loop reads this list line by line.
    Done when each item passes.

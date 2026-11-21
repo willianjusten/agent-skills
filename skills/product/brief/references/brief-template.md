@@ -35,9 +35,9 @@ Save as `BRIEF.md`. One page, engine-neutral.
 3.
 
 ## Features
-| Feature | Check |
-| ------- | ----- |
-| <feature> | `pnpm check <app> --<assertion>` or a scripted-run sentence |
+| Feature | Check | Shown on |
+| ------- | ----- | -------- |
+| <feature> | `pnpm check <app> --<assertion>` or a scripted-run sentence | <screen or HUD it appears on, and what it pushes behind a button there; "none" when it is felt, not shown> |
 
 ## Demo mode
 <what runs with no input, and how long one full loop takes>
