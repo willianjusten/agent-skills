@@ -71,7 +71,7 @@
     "creative-development": "personal"
   },
   "MengTo/Skills": {
-    "workflow-score-to-target": "personal",
+    "workflow-score-to-target": "off",
     "test-playable-web-games": "personal",
     "optimize-threejs-games": "personal",
     "3d-cloth-material": "off",
