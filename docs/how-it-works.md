@@ -56,7 +56,7 @@ Arguments: `<pitch, brief path or idea> [--budget 45m | 8h | 20cycles] [--mode r
 
 The skill never works on the default branch. It runs `git worktree add -b loop/<app> <lab-parent>/<lab-dirname>-<app> HEAD` from the lab, `pnpm install --frozen-lockfile --offline`, then `pnpm create-app game|experiment <app>`, copies the brief to `apps/<app>/BRIEF.md` and commits the scaffold. `pnpm check <app>` must pass on the untouched template.
 
-`scripts/start-run.sh --app-dir <worktree>/apps/<app> --budget <budget> --mode <mode> --title <title>` then fills `LOOP.md` (header and directions from the brief), writes `.loop-active` in the folder the session started in and ignores `.loop-active*` in git. Format of the log: [loop-log.md](loop-log.md).
+`scripts/start-run.sh --app-dir <worktree>/apps/<app> --budget <budget> --mode <mode> --title <title>` then fills `LOOP.md` (header and directions from the brief), writes `.loop-active` in the folder the session started in and ignores `.loop-active*` in git. Format of the log: [loop-log.md](../skills/orchestration/creative-loop/references/loop-log.md).
 
 ## 4. Inner loop
 

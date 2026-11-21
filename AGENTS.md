@@ -61,7 +61,7 @@ Sections in this order, nothing else:
 ## Harness files
 
 - `harness/shared/instructions.md` is `~/.claude/CLAUDE.md`.
-- `harness/claude/hooks/loop-stop.sh` is the Stop hook that drives the creative loop; format in `docs/loop-log.md`.
+- `harness/claude/hooks/loop-stop.sh` is the Stop hook that drives the creative loop; format in `skills/orchestration/creative-loop/references/loop-log.md`.
 - `tests/old-harness-removed.test.sh` fails when a doc names a removed skill, agent, hook or file; add a name there when you remove a piece.
 - Claude Code writes `/config` changes through the `settings.json` symlink. Review those diffs and strip machine-specific values before committing.
 

@@ -14,5 +14,5 @@ Terms used across the skills and harness in this repo.
 - **Check**: a script that passes or fails (`pnpm check <app>`); the only guardrail inside the loop. No model judges taste.
 - **Demo mode**: what an app does with no input (`?demo=1`), so a recorder sees a full loop.
 - **Hand-off**: the end of a run: log closed, `pnpm check`, `pnpm record`, `pnpm verify`, `summary.md`, files and a notification sent. Nothing is merged or pushed.
-- **Loop log**: the app's `LOOP.md`: header, `## Directions`, `## Cycles`, `## Notes` and `## Open items`. Read by the Stop hook. Format in `docs/loop-log.md`.
+- **Loop log**: the app's `LOOP.md`: header, `## Directions`, `## Cycles`, `## Notes` and `## Open items`. Read by the Stop hook. Format in `skills/orchestration/creative-loop/references/loop-log.md`.
 - **Budget**: the limit of a run, in minutes, hours or cycles. The hook lets the agent stop when it is spent.
