@@ -53,6 +53,14 @@ assert_text "UI pass: progressive disclosure" 'progressive disclosure' "$SKILL_D
 assert_text "UI pass: one primary action per screen" 'one primary action per screen' "$SKILL_DIR/references/ui-pass.md"
 assert_text "UI pass: one spacing scale" 'one spacing scale' "$SKILL_DIR/references/ui-pass.md"
 assert_text "UI pass: ui-polish only if installed" 'ui-polish. is installed' "$SKILL_DIR/references/ui-pass.md"
+UIPASS="$SKILL_DIR/references/ui-pass.md"
+assert_text "UI pass: one decision per screen" 'one decision per screen' "$UIPASS"
+assert_text "UI pass: icons in the grid, detail on focus" 'icons.*detail on focus' "$UIPASS"
+assert_text "UI pass: say each fact once" 'say each fact once' "$UIPASS"
+assert_text "UI pass: hide locked items" 'hide what is locked' "$UIPASS"
+assert_text "UI pass: no controls legend" 'no controls legend' "$UIPASS"
+assert_text "UI pass: HUD in two tiers, at most 5 groups" 'two tiers.*at most 5 groups' "$UIPASS"
+assert_text "UI pass: acts on new ui layout INFO lines" 'duplicate phrases.*font-size count' "$UIPASS"
 assert_text "the list, not the clock, decides the end" 'the list, not the clock, decides the end'
 assert_text "review cycles list new ideas" 'list new ideas'
 assert_text "done needs two dry reviews" 'two dry reviews in a row'
