@@ -34,7 +34,7 @@ For games and animated experiments in the lab repo: `ideation`, `brief`, then `/
 | [Install and scopes](docs/install-and-scopes.md) | `install.sh`, what it links, where each scope shows up |
 | [Writing a skill](docs/writing-a-skill.md) | the checklist for a new or changed skill or agent |
 | [Testing](docs/testing.md) | `./install.sh check`, `tests/run.sh`, one test file |
-| [AGENTS.md](AGENTS.md), [GLOSSARY.md](GLOSSARY.md), [ADR 0003](docs/adr/0003-skills-name-siblings-through-uses.md), [ADR 0002](docs/adr/0002-thin-loop.md), [Loop log](skills/orchestration/creative-loop/references/loop-log.md) | repo conventions, terms, leaf versus orchestrator, why the loop is thin, log format |
+| [AGENTS.md](AGENTS.md), [GLOSSARY.md](GLOSSARY.md), [ADR 0003](docs/adr/0003-skills-name-siblings-through-uses.md), [ADR 0002](docs/adr/0002-thin-loop.md), [Loop log](skills/orchestration/creative-loop/references/loop-log.md) | repo conventions, terms, naming siblings through `uses`, why the loop is thin, log format |
 
 ## Quick Start
 
@@ -84,7 +84,8 @@ For a bug: `/diagnosing-bugs` reproduces it and finds the cause, then the fix go
 | **Realtime 3D** (lab repo) | `three-build` (apps on WebGPURenderer; the inner-loop commands `pnpm shot`, `pnpm check <app>`, `pnpm record`), `three-tsl` (shaders as TSL), `asset-pipeline` (packs-first, licensed or code-made assets) |
 | **Brief** (before building) | `ideation` (interview to a one-page pitch), `brief` (one-page BRIEF.md: promise, Not this, features with checks, demo mode, next directions) |
 | **Loop** (lab repo) | `creative-loop` (one run from a pitch or brief to a checked, recorded build in your session: run branch, loop log, inner loop, Stop hook as outer loop, `--attempts`, hand-off; review or overnight mode) |
-| **Game feel** (lab repo) | `game-feel` (juice checklist, audio event map, sound for every gameplay event) |
+| **Game design** | `game-design` (handbook by topic: loop, difficulty, first minute, play field, menus and HUD, copy, feel, sound, accessibility; rules with numbers and checks) |
+| **Game feel** (lab repo) | `game-feel` (event map, audio wiring, a sound and a reaction for every gameplay event) |
 | **Ship and learn** | `pr`, `retro` |
 | **Fix and tidy** | `diagnosing-bugs`, `triage`, `improve-codebase-architecture`, `codebase-design`, `domain-modeling` |
 | **Any time** | `ask-matt` (which skill?), `handoff` (pass work to a new session), `wait-what` (re-explain that), `teach`, `to-questionnaire`, `wizard`, `frontend-design`, `writing-for-agents`, `skill-creator-plus` |
