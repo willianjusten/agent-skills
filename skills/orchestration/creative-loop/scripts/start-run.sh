@@ -3,18 +3,22 @@
 # writes .loop-active in the current folder and ignores .loop-active* in git.
 # Usage: start-run.sh --app-dir <dir> --budget <45m|8h|20cycles> --mode <review|overnight>
 #        --title <title> [--session-id <id>] [--attempts <n>] [--no-marker] [--force]
+# The marker takes the session id from --session-id, else $CLAUDE_SESSION_ID; with neither, the
+# Stop hook binds the marker to the first session that stops under it.
 # Log format: ../references/loop-log.md.
 set -euo pipefail
+. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+command -v jq >/dev/null 2>&1 || { echo "jq is required (brew install jq)" >&2; exit 1; }
 
 app_dir="" budget="" mode="review" title="" session_id="" attempts=1 no_marker=0 force=0
 while [ $# -gt 0 ]; do
   case "$1" in
-    --app-dir) app_dir="$2"; shift 2 ;;
-    --budget) budget="$2"; shift 2 ;;
-    --mode) mode="$2"; shift 2 ;;
-    --title) title="$2"; shift 2 ;;
-    --session-id) session_id="$2"; shift 2 ;;
-    --attempts) attempts="$2"; shift 2 ;;
+    --app-dir) option_value --app-dir $#; app_dir="$2"; shift 2 ;;
+    --budget) option_value --budget $#; budget="$2"; shift 2 ;;
+    --mode) option_value --mode $#; mode="$2"; shift 2 ;;
+    --title) option_value --title $#; title="$2"; shift 2 ;;
+    --session-id) option_value --session-id $#; session_id="$2"; shift 2 ;;
+    --attempts) option_value --attempts $#; attempts="$2"; shift 2 ;;
     --no-marker) no_marker=1; shift ;;
     --force) force=1; shift ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
@@ -32,7 +36,7 @@ if [ -s "$log_path" ] && grep -q '^- [0-9]' "$log_path" && [ "$force" -eq 0 ]; t
   exit 1
 fi
 
-utc() { date -u -r "$1" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -d "@$1" +%Y-%m-%dT%H:%M:%SZ; }
+utc() { format_utc "$1" %Y-%m-%dT%H:%M:%SZ; }
 now_epoch="$(date -u +%s)"
 compact="$(echo "$budget" | tr -d ' ' | tr 'A-Z' 'a-z')"
 case "$compact" in
@@ -40,10 +44,10 @@ case "$compact" in
     budget_line="$(echo "$compact" | sed 's/[^0-9].*//') cycles" ;;
   *h | *hours | *hour)
     number="$(echo "$compact" | sed 's/[^0-9].*//')"
-    budget_line="$number hours, ends $(utc $((now_epoch + number * 3600)))" ;;
+    budget_line="$number hours, ends $(utc $((now_epoch + number * SECONDS_PER_HOUR)))" ;;
   *m | *min | *mins | *minutes | *minute)
     number="$(echo "$compact" | sed 's/[^0-9].*//')"
-    budget_line="$number minutes, ends $(utc $((now_epoch + number * 60)))" ;;
+    budget_line="$number minutes, ends $(utc $((now_epoch + number * SECONDS_PER_MINUTE)))" ;;
   *) echo "budget must look like 45m, 8h or 20cycles" >&2; exit 2 ;;
 esac
 
@@ -78,14 +82,12 @@ fi
 } >"$log_path"
 
 run_folder="$(pwd)"
+session_id="${session_id:-${CLAUDE_SESSION_ID:-}}"
 if [ "$no_marker" -eq 1 ]; then
   : # attempts mode: the orchestrator is the outer loop, the Stop hook must not block it
-elif command -v jq >/dev/null 2>&1; then
+else
   jq -n --arg log "$log_path" --arg sid "$session_id" \
     'if $sid == "" then {log: $log} else {log: $log, session_id: $sid} end' >"$run_folder/.loop-active"
-else
-  if [ -n "$session_id" ]; then printf '{"log": "%s", "session_id": "%s"}\n' "$log_path" "$session_id"
-  else printf '{"log": "%s"}\n' "$log_path"; fi >"$run_folder/.loop-active"
 fi
 rm -f "$run_folder/.loop-active.state"
 
