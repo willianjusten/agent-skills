@@ -18,15 +18,23 @@ My agent harness in one repo: skills, global instructions and Claude Code settin
 
 Throughout, deny rules block `rm -rf` and reading `.env` files, and the global instructions forbid force-push, deleting remote branches and merging PRs.
 
+## The Creative Loop
+
+<p align="center">
+  <img src="docs/images/creative-loop.svg" alt="Ideation and brief, approved by you; then creative-loop runs the inner loop edit, shot, look, check, commit, the Stop hook is the outer loop, then hand-off." width="100%">
+</p>
+
+For games and animated experiments in the lab repo: `ideation`, `brief`, then `/creative-loop`. Walkthrough in [How the creative flow works](docs/how-it-works.md).
+
 ## Guides
 
 | Read | For |
 | ---- | --- |
-| [How the creative flow works](docs/how-it-works.md) | idea to judged build: `ideation`, `/conduct`, polish rounds, stop points, `RUN.md` |
+| [How the creative flow works](docs/how-it-works.md) | idea to delivered build: `ideation`, `brief`, `/creative-loop`, inner and outer loop, overnight, attempts, hand-off |
 | [Install and scopes](docs/install-and-scopes.md) | `install.sh`, what it links, where each scope shows up |
 | [Writing a skill](docs/writing-a-skill.md) | the checklist for a new or changed skill or agent |
 | [Testing](docs/testing.md) | `./install.sh check`, `tests/run.sh`, one test file |
-| [AGENTS.md](AGENTS.md), [GLOSSARY.md](GLOSSARY.md), [ADR 0001](docs/adr/0001-leaf-and-orchestrator-skills.md) | repo conventions, terms, leaf versus orchestrator |
+| [AGENTS.md](AGENTS.md), [GLOSSARY.md](GLOSSARY.md), [ADR 0001](docs/adr/0001-leaf-and-orchestrator-skills.md), [ADR 0002](docs/adr/0002-thin-loop.md), [Loop log](docs/loop-log.md) | repo conventions, terms, leaf versus orchestrator, why the loop is thin, log format |
 
 ## Quick Start
 
@@ -73,11 +81,10 @@ For a bug: `/diagnosing-bugs` reproduces it and finds the cause, then the fix go
 | ---- | ------ |
 | **Plan** | `grill-with-docs` (in a repo), `grill-me` (no repo), `prototype`, `research`, `to-spec`, `to-tickets`, `wayfinder` |
 | **Build** | `implement` (one ticket), `implement-spec` (whole spec, parallel), `tdd`, `ui-polish` (look at a UI change and fix it, before you review), `matt-code-review` |
-| **Realtime 3D** (lab repo) | `three-build` (apps on WebGPURenderer), `three-tsl` (shaders as TSL), `three-verify` (run and fix the gates; flags `--layer-cost`, `--uncapped`, `--preset`, `--record-seconds`; `pnpm shot` for the inner loop), `asset-pipeline` (packs-first, licensed or code-made assets; with the `asset-wrangler` agent), `realtime-judge` (blind before/after scoring; with the `visual-judge` and `feel-judge` agents), `motion-review` (blind motion scoring from frame strips, 1:1 crops and a burst; with the `motion-judge` agent), `target-loop` (repainted, user-approved target frames that rounds chase); agents `polish-director` (Fable, runs a round and passes `--layer-cost` to `verify` for the packet; run it directly, or nested under the `conductor`, whose depth is main, conductor, director, worker or judge) and `polish-worker` (Opus, one area per worker, bound by the write-scope hook) |
-| **Brief** (before building) | `ideation` (interview to a one-page pitch), `brief` (one-page BRIEF.md: promise, Not this, features with checks, next directions), `art-bible` (palette, references, asset levels, sign-off) |
-| **Autonomous build** (lab repo) | `conduct` (starts the `conductor` agent on an approved pitch: brief, art bible, target frames, polish rounds, judging, delivery, logged to `RUN.md`) |
-| **Loop** (lab repo) | `creative-loop` (one run from a pitch or brief to a checked, recorded build in your session: run branch, loop log, inner loop, Stop hook as outer loop, hand-off; review or overnight mode)  |
-| **Game feel** (lab repo) | `game-feel` (juice checklist, audio event map, ZzFX sounds) |
+| **Realtime 3D** (lab repo) | `three-build` (apps on WebGPURenderer; the inner-loop commands `pnpm shot`, `pnpm check <app>`, `pnpm record`), `three-tsl` (shaders as TSL), `asset-pipeline` (packs-first, licensed or code-made assets) |
+| **Brief** (before building) | `ideation` (interview to a one-page pitch), `brief` (one-page BRIEF.md: promise, Not this, features with checks, demo mode, next directions) |
+| **Loop** (lab repo) | `creative-loop` (one run from a pitch or brief to a checked, recorded build in your session: run branch, loop log, inner loop, Stop hook as outer loop, `--attempts`, hand-off; review or overnight mode) |
+| **Game feel** (lab repo) | `game-feel` (juice checklist, audio event map, sound for every gameplay event) |
 | **Ship and learn** | `pr`, `retro` |
 | **Fix and tidy** | `diagnosing-bugs`, `triage`, `improve-codebase-architecture`, `codebase-design`, `domain-modeling` |
 | **Any time** | `ask-matt` (which skill?), `handoff` (pass work to a new session), `wait-what` (re-explain that), `teach`, `to-questionnaire`, `wizard`, `frontend-design`, `writing-for-agents`, `skill-creator-plus` |
@@ -103,7 +110,7 @@ Matt's skills run untouched. Everything this repo layers on top lives in a few f
 | [`harness/shared/instructions.md`](harness/shared/instructions.md) | every session and subagent, as `~/.claude/CLAUDE.md` | Precedence, safety, style, environment, tracker defaults |
 | [`harness/shared/CODING_STANDARDS.md`](harness/shared/CODING_STANDARDS.md) | sessions, as `~/.claude/CODING_STANDARDS.md` | Cross-repo coding standards; a repo's own standards win |
 | [`harness/claude/settings.json`](harness/claude/settings.json) | Claude Code | Deny rules, auto mode, notification sounds, statusline |
-| [`harness/claude/hooks/write-scope.sh`](harness/claude/hooks/write-scope.sh) | the `polish-worker` agent, as `~/.claude/hooks/write-scope.sh` | Blocks a worker's write outside the folders in `.polish-scope.json`; shared files stay with the director |
+| [`harness/claude/hooks/loop-stop.sh`](harness/claude/hooks/loop-stop.sh) | the Stop hook, as `~/.claude/hooks/loop-stop.sh` | Keeps a creative loop going until its budget is spent, reading the app's `LOOP.md` (see [loop log](docs/loop-log.md)); a no-op without a `.loop-active` marker |
 
 The only patch to vendored code is renaming Matt's `code-review` to `matt-code-review`, because the original collides with Claude Code's built-in `/code-review`. New additions come only after a pilot, one ticket per `/retro` finding.
 
@@ -128,7 +135,7 @@ Each skill has a scope that decides where it shows up:
 | `spoke` | Spoke only |
 | `off` | nowhere (kept on record, not installed) |
 
-Own skills declare it in frontmatter. Vendored skills get one line in [`scopes.json`](scopes.json); a vendored skill missing from it is not installed. Subagents in `agents/<category>/<name>.md` use the same `metadata.scope` and are linked into `~/.claude/agents/`; only `personal`, `both` and `off` apply, since Spoke has no agent source.
+Own skills declare it in frontmatter. Vendored skills get one line in [`scopes.json`](scopes.json); a vendored skill missing from it is not installed. A subagent in `agents/<category>/<name>.md` (none today) uses the same `metadata.scope` and is linked into `~/.claude/agents/`; only `personal`, `both` and `off` apply, since Spoke has no agent source.
 
 ```yaml
 metadata:
@@ -160,7 +167,6 @@ agent-skills/
 │   ├── game/
 │   ├── creative/
 │   └── orchestration/
-├── agents/                         role-scoped subagents, agents/<category>/<name>.md, linked into ~/.claude/agents
 ├── vendor/                         one skills-lock.json per source in git; skills fetched by install.sh
 │   ├── anthropics/skills/
 │   ├── mattpocock/skills/
@@ -169,7 +175,7 @@ agent-skills/
 ├── scopes.json                     scope for each vendored skill, grouped by source
 ├── harness/
 │   ├── shared/                     instructions.md (~/.claude/CLAUDE.md), CODING_STANDARDS.md
-│   └── claude/                     settings.json, statusline-command.sh, hooks/write-scope.sh
+│   └── claude/                     settings.json, statusline-command.sh, hooks/loop-stop.sh
 ├── docs/                           guides, adr/ and images/ (diagrams for this README)
 ├── tests/                          *.test.sh files, run by tests/run.sh
 ├── install.sh                      the only command
@@ -184,7 +190,7 @@ agent-skills/
 
 | Command | Effect |
 | ------- | ------ |
-| `./install.sh` | Installs each vendor source at its locked commit with `npx skills` (skipped when the lock is unchanged since the last run) and applies the `matt-code-review` rename; links `~/.claude/CLAUDE.md`, `CODING_STANDARDS.md`, `settings.json` and `statusline-command.sh` and `hooks/write-scope.sh` into `harness/`; links each `personal`/`both` skill into `~/.claude/skills/<name>` and each `personal`/`both` agent into `~/.claude/agents/<name>.md`; removes links into this repo that are no longer wanted; applies the Spoke layer when `~/Developer/spoke` exists |
+| `./install.sh` | Installs each vendor source at its locked commit with `npx skills` (skipped when the lock is unchanged since the last run) and applies the `matt-code-review` rename; links `~/.claude/CLAUDE.md`, `CODING_STANDARDS.md`, `settings.json` and `statusline-command.sh` and `hooks/loop-stop.sh` into `harness/`; links each `personal`/`both` skill into `~/.claude/skills/<name>` and each `personal`/`both` agent into `~/.claude/agents/<name>.md`; removes links into this repo that are no longer wanted; applies the Spoke layer when `~/Developer/spoke` exists |
 | `./install.sh --update [<owner>/<repo>]` | Moves every source, or the one named, to its newest upstream commit with only the skills `scopes.json` enables, rewrites its lock, prints the diff of those skills and lists new upstream skills as candidates |
 | `./install.sh --force` | Replaces a real file that sits where a link should go |
 | `./install.sh check` | Runs the `skill-creator-plus` validator on every own skill, plus scope and README checks; checks each agent for `name` (equal to its file name), `description`, `model` and a scope |

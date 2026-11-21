@@ -17,7 +17,7 @@ Run `check` first and fix every error before a plain `./install.sh`. Requirement
 
 - Own skills (`skills/<category>/<name>/`) and `personal` or `both` vendored skills into `~/.claude/skills/<name>`.
 - Agents (`agents/<category>/<name>.md`) into `~/.claude/agents/`.
-- `harness/shared/instructions.md` as `~/.claude/CLAUDE.md`, plus `CODING_STANDARDS.md`, `settings.json`, the statusline and the `write-scope` hook.
+- `harness/shared/instructions.md` as `~/.claude/CLAUDE.md`, plus `CODING_STANDARDS.md`, `settings.json`, the statusline and the `loop-stop` hook.
 - Git hooks: it sets `core.hooksPath` to `.githooks/`, whose `pre-commit` runs `tests/run.sh` and `./install.sh check`.
 
 `vendor/<owner>/<repo>/skills-lock.json` pins each source to an upstream commit; the fetched `.agents/` folder is gitignored. The only local patch is renaming Matt's `code-review` to `matt-code-review`.

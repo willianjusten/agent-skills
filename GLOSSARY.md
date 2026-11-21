@@ -1,13 +1,18 @@
 # Glossary
 
-Terms used across the skills, agents and harness in this repo.
+Terms used across the skills and harness in this repo.
 
 - **Leaf skill**: a skill that works alone and names no sibling skill in this repo. Most skills are leaves.
-- **Orchestrator**: an agent in `agents/` or a skill in `skills/orchestration/` that runs other skills and agents. It may name them; `install.sh check` verifies each one is installed where the orchestrator can see it. See `docs/adr/0001-leaf-and-orchestrator-skills.md`.
-- **Pitch**: the one-page concept that ends ideation and that Will approves. Everything after the pitch runs autonomously.
-- **Run**: one conductor execution on one app, from pitch to delivery, logged append-only in the app's `RUN.md`. A run can stop and resume.
-- **Conductor**: the orchestrator agent that drives a run through its phases.
-- **Stop point**: a moment where a run stops, notifies Will and waits: a look variant chosen (skipped with `look=auto`), target frames chosen when the pitch asks for a target, polish plateau, a split taste call, a gate still failing after two fixes, a budget spent, or any stop the brief adds.
-- **Budget**: the limits on a run (polish rounds, wall-clock hours). Spending one is a stop point.
-- **Component**: one item of a run's checklist, with a measurable target, the folder it owns and the judge lens that scores it (visual, feel or motion). Polish workers own components.
-- **Area**: the fixed polish split (lighting, VFX, props, UI, audio), used only when no component checklist is given.
+- **Orchestrator**: a skill in `skills/orchestration/` (or an agent in `agents/`) that runs other skills. It may name them; `install.sh check` verifies each one is installed where the orchestrator can see it. See `docs/adr/0001-leaf-and-orchestrator-skills.md`.
+- **Pitch**: the one-page concept that ends ideation and that Will approves.
+- **Brief**: the one-page `BRIEF.md` written from the pitch: promise, Not this, features with checks, demo mode and the ordered Next directions list.
+- **Loop**: one `/creative-loop` run on one app, from a pitch or brief to a checked, recorded build, on its own branch and in the user's session. See `docs/adr/0002-thin-loop.md`.
+- **Inner loop**: edit, shot, look, check, commit. Takes minutes and ends with one `## Cycles` line.
+- **Outer loop**: the Stop hook. Each time the agent tries to stop before its budget is spent, it hands back the next direction.
+- **Direction**: one line of the brief's Next directions list, copied into the log as `- [ ]` and ticked when met.
+- **Attempt**: one of two or three parallel builds of the same brief (`--attempts`), each on its own branch and worktree. The user picks one.
+- **Check**: a script that passes or fails (`pnpm check <app>`); the only guardrail inside the loop. No model judges taste.
+- **Demo mode**: what an app does with no input (`?demo=1`), so a recorder sees a full loop.
+- **Hand-off**: the end of a run: log closed, `pnpm check`, `pnpm record`, `pnpm verify`, `summary.md`, files and a notification sent. Nothing is merged or pushed.
+- **Loop log**: the app's `LOOP.md`: header, `## Directions`, `## Cycles`, `## Notes` and `## Open items`. Read by the Stop hook. Format in `docs/loop-log.md`.
+- **Budget**: the limit of a run, in minutes, hours or cycles. The hook lets the agent stop when it is spent.
