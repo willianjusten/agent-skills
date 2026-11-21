@@ -1,6 +1,6 @@
 ---
 name: brief
-description: Writes a one-page BRIEF.md for a game or animated experiment before any code, with promise, pillars, loop or treatment, Not this list, done condition, cut list, a feature list with a check per feature, demo mode, look direction and an ordered next-directions list. Use when starting a game or creative experiment, when scope is unclear, when asked for a brief, GDD, treatment, pillars, cut list or feature list, or when agents keep drifting to default looks.
+description: Writes a one-page BRIEF.md for a game or animated experiment before any code, with promise, pillars, loop or treatment, screens, Not this list, done condition, cut list, a feature list with a check per feature, demo mode, look direction and an ordered next-directions list. Use when starting a game or creative experiment, when scope is unclear, when asked for a brief, GDD, treatment, pillars, cut list or feature list, or when agents keep drifting to default looks.
 metadata:
   scope: personal
 ---
@@ -15,6 +15,7 @@ One page that tells every agent what to build, what not to build and how to know
 2. **Write the brief.** Use [references/brief-template.md](references/brief-template.md) and save `BRIEF.md` in the app's folder. Every section gets content; a section you cannot fill becomes a question to the user, and a section that does not apply to the mode says `n/a`. Done when no placeholder text remains and it fits one page.
 3. **Check the testable parts.**
    - Pillars: three at most, each checkable against a decision.
+   - Screens: every screen has exactly one primary action; what is shown at once is short, and the rest (settings, controls list, stats, help) sits behind a button or submenu. A screen with two primary actions or a wall of text is rewritten.
    - Not this: five or more concrete items, each checkable by looking at a frame.
    - Done condition: a statement a script or a screenshot can confirm, not "feels good".
    - Cut list: ordered, first cut first.
