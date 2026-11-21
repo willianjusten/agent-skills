@@ -9,7 +9,7 @@ The first creative harness ran a whole build in the background through nested ag
 ## Decision
 
 1. **One agent, your own session.** `creative-loop` runs in the session you started, so every step is visible and steerable through the `## Notes` of the loop log. It is an orchestrator that runs `ideation`, `brief`, `three-build` and `game-feel`.
-2. **Inner and outer loop.** The inner loop is edit, shot, look, check, commit. The outer loop is the Stop hook: when the agent tries to stop before its budget is spent, the hook blocks and hands back the next direction from the log. The hook only reads a file and fails open, so it is a no-op for every session without a `.loop-active` marker.
+2. **Inner and outer loop.** The inner loop is edit, shot, look, check, commit. The outer loop is the Stop hook: when the agent tries to stop before the run is finished, the hook blocks and hands back the next direction from the log, or a review cycle once every direction is checked. The run ends when every direction is checked and the last two cycles are dry reviews (`Status: done`); the budget is a ceiling, and `Status: stopped` is the user's early exit. The hook only reads a file and fails open, so it is a no-op for every session without a `.loop-active` marker.
 3. **No model taste judges.** Guardrails are scripts that pass or fail (`pnpm check` in the loop, `pnpm verify` at delivery). Taste is judged by the user from the recorded video. Two blind judge panels disagreed with the user twice; a judge may not decide taste. This is the rule that guards the decision.
 4. **Parallel attempts are optional.** Two or three independent builds of one brief, picked by the user from a stacked video. The user's pick is never delegated.
 5. **Overnight is the same loop.** A larger budget plus rules: no merge, push, deploy, deletion or spending.
@@ -19,5 +19,5 @@ The first creative harness ran a whole build in the background through nested ag
 - Removed: the background multi-agent run flow, its run log and pause points, polish rounds, the judge agents and the per-worker write hook. The `agents/` folder is empty and stays supported by `install.sh`.
 - The git tag `pre-thin-harness` marks the tree before the removal; recover any removed piece from it (`git show pre-thin-harness:<path>`).
 - The loop log (`LOOP.md`) is the only run state; format in `skills/orchestration/creative-loop/references/loop-log.md`.
-- The budget is enforced by one small hook instead of by prompt discipline, which is what made the old flow stop early.
+- The end of the run and the budget ceiling are enforced by one small hook instead of by prompt discipline, which is what made the old flow stop early.
 - Claude Code ends a session after 8 consecutive blocked stops without a tool call, so the skill requires tool calls after every block.
