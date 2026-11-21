@@ -28,7 +28,9 @@ A recipe is layers of tones (sine, triangle, square, sawtooth; `fromHz` sliding 
 
 - `createSequencer(mixer, { now, pattern, seed, intensity })` plays a `MusicPattern` (bpm, steps per bar, layers) on the audio clock. Ship patterns: `ARENA_LOOP`, `CALM_AMBIENT`, `VICTORY_STING`; merge the pattern's `sounds` into the mixer table.
 - Vertical layering: each layer has a `minIntensity`; set `setIntensity(0..1)` from game state (enemies, health, wave). A change fades in at the next bar, never mid-bar.
-- Against repetition: two to four variants per layer, `chance` on filler notes, layers of unequal `lengthSteps` that realign only at their least common multiple.
+- Music is a musical idea, not a texture: a chord progression, a bass line that follows it, and a lead or arpeggio motif. A loop of percussion and noise with no pitch movement reads as an annoying drone within a minute, however well it is mixed.
+- Against repetition: sections (intro, A, B, a breakdown) so nothing repeats exactly for 30 to 60 seconds; two to four variants per layer; `chance` on filler notes; layers of unequal `lengthSteps` that realign only at their least common multiple.
+- Dynamics: intensity changes which layers play, not only how loud they are. Calm early play gets a sparse layer or two, later waves add drums and the motif, a boss or elite adds its own layer, and a breakdown drops back to let the music breathe. Keep any noise layer short (hats, a riser), never a constant bed.
 - Keep the layer stack under -18 dBFS before the music bus. Chiptune 100 to 140 BPM, ambient 50 to 80.
 - Stings (victory) play on the effects bus and duck the music.
 - Under `pnpm check`'s virtual clock the audio clock barely moves: drive the sequencer's `now` and `tick()` from game time as the game template does, and stamp notes with game time (`gameTimeAt`).
