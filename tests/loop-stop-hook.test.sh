@@ -15,7 +15,7 @@ mkdir -p "$run/sub"
 git -C "$run" init -q
 now=$(date -u -d '2026-06-01T12:00:00Z' +%s 2>/dev/null || date -u -j -f '%Y-%m-%dT%H:%M:%SZ' 2026-06-01T12:00:00Z +%s)
 
-# write_log <budget> <status> <direction lines...>
+# write_log <budget> <status> <direction lines...>; $extra_cycles adds lines under Cycles.
 write_log() {
   local budget="$1" status="$2"
   shift 2
@@ -33,6 +33,7 @@ write_log() {
     echo
     echo "## Cycles"
     echo "- 1 2026-06-01T11:10:00Z first pass"
+    [ -n "${extra_cycles:-}" ] && printf '%s\n' "$extra_cycles"
     echo
     echo "## Notes"
     echo "- [ ] not a direction"
@@ -87,6 +88,24 @@ expect_block "blocks while cycles remain" "open"
 write_log "45 minutes, ends 2026-06-01T12:45:00Z" done "- [ ] open"
 start_run
 expect_block "blocks Status: done while budget remains, with the review cycle" "review cycle"
+dry_two="- 2 2026-06-01T11:20:00Z review: dry, checked the brief, rejected a dash
+- 3 2026-06-01T11:30:00Z Review: dry, checked menus, rejected a second boss"
+extra_cycles="$dry_two" write_log "45 minutes, ends 2026-06-01T12:45:00Z" done "- [x] one"
+start_run
+expect_allow "allows Status: done early after two dry reviews with every direction checked"
+extra_cycles="- 2 2026-06-01T11:20:00Z review: dry, nothing found" write_log "45 minutes, ends 2026-06-01T12:45:00Z" done "- [x] one"
+start_run
+expect_block "blocks Status: done after only one dry review" "dry reviews"
+extra_cycles="$dry_two
+- 4 2026-06-01T11:40:00Z added crates" write_log "45 minutes, ends 2026-06-01T12:45:00Z" done "- [x] one"
+start_run
+expect_block "blocks Status: done when work followed the dry reviews" "review cycle"
+extra_cycles="$dry_two" write_log "45 minutes, ends 2026-06-01T12:45:00Z" done "- [x] one" "- [ ] new idea"
+start_run
+expect_block "blocks Status: done with dry reviews but an open direction" "review cycle"
+extra_cycles="$dry_two" write_log "45 minutes, ends 2026-06-01T12:45:00Z" running "- [x] one"
+start_run
+expect_block "blocks dry reviews while Status is still running" "review: dry"
 write_log "45 minutes, ends 2026-06-01T12:45:00Z" stopped "- [ ] open"
 start_run
 expect_allow "allows when Status is stopped"

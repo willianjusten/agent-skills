@@ -1,6 +1,6 @@
 #!/bin/bash
 # Stop hook for long runs (format: skills/orchestration/creative-loop/references/loop-log.md). While a run is active, budget
-# remains and the run is not stopped, it blocks the stop with the next unchecked
+# remains and the run is not stopped or finished, it blocks the stop with the next unchecked
 # direction from the loop log, or with the review-cycle instruction once the list is
 # done. A no-op outside a run. Fails open: no jq, unparsable input, a missing or
 # unreadable log all allow the stop, so a broken run never traps a session.
@@ -12,7 +12,8 @@
 # the hook writes that session_id into the marker. Removing the marker ends the run.
 #
 # Allows the stop when: no marker, other session, log missing, Status: stopped (the user's early
-# end; Status: done does not allow while budget remains), budget
+# end), Status: done with every direction checked and the last two cycles dry reviews
+# (lines containing "review: dry": a review that found nothing left to do or add), budget
 # spent (cycle count or end time), a stale marker (older than the budget plus an
 # hour; 7 days for a cycle budget), or the agent stopped twice with the loop log
 # and the repo that holds it unchanged (loop breaker, state kept in
@@ -54,9 +55,16 @@ case "$log_path" in /*) ;; *) log_path="$run_dir/$log_path" ;; esac
 header() { sed -n "s/^$1:[[:space:]]*//p" "$log_path" | head -1; }
 section_lines() { awk -v name="$1" '/^## / { in_section = ($0 == "## " name); next } in_section' "$log_path"; }
 
-# Only the user ends a run early. Status: done while budget remains does not allow the stop.
 run_status=$(header Status | tr '[:upper:]' '[:lower:]')
 [ "$run_status" = "stopped" ] && exit 0
+next_direction=$(section_lines Directions | sed -n 's/^- \[ \][[:space:]]*//p' | head -1)
+# Done ends the run early only when the work ran out, not the patience: no open
+# direction and two dry reviews in a row.
+DRY_REVIEWS_TO_FINISH=2
+dry_reviews=$(section_lines Cycles | grep '^- ' | tail -n "$DRY_REVIEWS_TO_FINISH" | grep -ci 'review: dry')
+if [ "$run_status" = "done" ] && [ -z "$next_direction" ] && [ "$dry_reviews" -ge "$DRY_REVIEWS_TO_FINISH" ]; then
+  exit 0
+fi
 
 now=${LOOP_NOW:-$(date -u +%s)}
 STALE_MARGIN_SECONDS=3600
@@ -87,12 +95,12 @@ if [ -f "$state_file" ] && [ "$(cat "$state_file")" = "$fingerprint" ]; then
 fi
 echo "$fingerprint" >"$state_file"
 
-next_direction=$(section_lines Directions | sed -n 's/^- \[ \][[:space:]]*//p' | head -1)
+review_cycle="take fresh shots, review the current state against the brief and every direction so far, and list new ideas that would make it better. Add each as an unchecked direction in the loop log ($log_path) and do them. If nothing falls short and no idea is worth doing, log the cycle as '- <n> <time> review: dry, <what you checked and the ideas you rejected>'. Status: done ends the run once every direction is checked and the last $DRY_REVIEWS_TO_FINISH cycles are dry reviews."
 if [ "$run_status" = "done" ]; then
-  reason="Status is done but budget remains: finishing early earns nothing. Set Status back to running and run a review cycle: take fresh shots, review the current state against the brief, add new unchecked directions to the loop log ($log_path) for what still falls short, and do them. Only the user's Status: stopped ends the run before the budget is spent."
+  reason="Status is done but the run is not finished: an unchecked direction remains or the last $DRY_REVIEWS_TO_FINISH cycles are not dry reviews. Set Status back to running and run a review cycle: $review_cycle"
 elif [ -n "$next_direction" ]; then
   reason="Loop budget remains. Next direction from the loop log ($log_path): $next_direction. Do it, tick its box and add a line under Cycles."
 else
-  reason="Loop budget remains and every direction is checked. Run a review cycle: review the current state against the brief, add new unchecked directions to the loop log ($log_path) for what still falls short, or set Status: done if nothing does."
+  reason="Loop budget remains and every direction is checked. Run a review cycle: $review_cycle"
 fi
 jq -n --arg reason "$reason" '{decision: "block", reason: $reason}'
