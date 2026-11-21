@@ -6,7 +6,7 @@ From a spark of an idea to a judged build, with Will approving only taste. Every
 flowchart TD
   I[ideation] --> P[/PITCH.md, Approved by/]
   P --> C["/conduct (starts the conductor)"]
-  C --> B[brief: game-brief or creative-brief]
+  C --> B[brief: brief skill]
   B --> A[art-bible, signed on your behalf]
   A --> T[first playable, three look variants]
   T --> S1{{Stop 1: you pick a look variant}}
@@ -24,7 +24,7 @@ flowchart TD
 | ----- | ----------- | ------ |
 | Ideation | `ideation` skill, with you | `PITCH.md` with an `Approved by` line |
 | Start | `/conduct <pitch or app folder>` | the conductor in the background |
-| Brief | conductor, via `game-brief` (game) or `creative-brief` (experiment) | `GDD.md` or `TREATMENT.md`, "Not this" list |
+| Brief | conductor, via `brief` | `BRIEF.md`, "Not this" list |
 | Art bible | conductor, via `art-bible` | palette and asset levels (`placeholder` or `free`; `premium` stays locked) |
 | Look | conductor builds the first playable with `three-build` and `three-verify`, writes three look presets and captures them with `verify --variants` | stop 1: answer with one line naming a variant (`look=auto` picks and logs it); the chosen look is recorded, never a judge benchmark |
 | Target | only when the pitch asks for a target: `target-loop` | captures and a prepared target; a second stop |
