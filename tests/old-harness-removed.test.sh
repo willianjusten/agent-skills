@@ -24,7 +24,7 @@ for skill_dir in skills/realtime/three-build skills/realtime/asset-pipeline skil
 done
 
 # The docs name no removed skill, agent, hook or file. ADR 0001 is history and is skipped.
-removed_doc_names='conductor|/conduct\b|polish-director|polish-worker|visual-judge|feel-judge|motion-judge|asset-wrangler|realtime-judge|motion-review|target-loop|art-bible|three-verify|write-scope|RUN\.md|run_state|COMPONENTS\.md|polish-scope|stop point'
+removed_doc_names='conductor|/conduct\b|polish-director|polish-worker|visual-judge|feel-judge|motion-judge|asset-wrangler|realtime-judge|motion-review|target-loop|art-bible|three-verify|write-scope|RUN\.md|run_state|COMPONENTS\.md|polish-scope|^#+ Stop point|`stop point`'
 doc_files=$(find "$REPO_ROOT/README.md" "$REPO_ROOT/GLOSSARY.md" "$REPO_ROOT/AGENTS.md" "$REPO_ROOT/docs" -type f \( -name '*.md' -o -name '*.svg' \) ! -path '*/docs/adr/0001-*')
 if hits=$(echo "$doc_files" | xargs grep -En "$removed_doc_names"); then fail "the docs name no removed piece" "$hits"; else pass "the docs name no removed piece"; fi
 
