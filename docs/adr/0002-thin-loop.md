@@ -16,7 +16,7 @@ The first creative harness ran a whole build in the background through nested ag
 
 ## Consequences
 
-- Removed: the background multi-agent run flow, its run log and stop points, polish rounds, the judge agents and the per-worker write hook. The `agents/` folder is empty and stays supported by `install.sh`.
+- Removed: the background multi-agent run flow, its run log and pause points, polish rounds, the judge agents and the per-worker write hook. The `agents/` folder is empty and stays supported by `install.sh`.
 - The loop log (`LOOP.md`) is the only run state; see `docs/loop-log.md`.
 - The budget is enforced by one small hook instead of by prompt discipline, which is what made the old flow stop early.
 - Claude Code ends a session after 8 consecutive blocked stops without a tool call, so the skill requires tool calls after every block.
