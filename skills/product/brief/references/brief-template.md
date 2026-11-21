@@ -19,9 +19,9 @@ Save as `BRIEF.md`. One page, engine-neutral.
 <input to action for keyboard, pointer and touch; for an experiment also no input and reduced motion>
 
 ## Screens
-| Screen | Primary action | Shown at once | Behind a button or submenu |
-| ------ | -------------- | ------------- | -------------------------- |
-| <title, play, pause, game over, ...> | <the one thing the player does here> | <the few things always visible> | <detail that opens on demand> |
+| Screen | Decision it asks | Shown at once | Behind a button | Hidden until available | Controls help |
+| ------ | ---------------- | ------------- | --------------- | ---------------------- | ------------- |
+| <title, play, pause, game over, ...> | <exactly one decision; its primary action> | <at most 5 named items> | <settings, controls, records> | <locked or unmet items> | <taught in play at first use, or the Controls button> |
 
 ## Not this
 <five or more concrete defaults to avoid, each checkable in a frame>
