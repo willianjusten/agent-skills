@@ -14,13 +14,6 @@
       "sourceType": "github",
       "skillPath": "agent-skills/game-development/test-playable-web-games/SKILL.md",
       "computedHash": "60509138b102acbc8cac4ebe23458f8a673fbb5deeeb9c75176cd3bd689a5c90"
-    },
-    "workflow-score-to-target": {
-      "source": "MengTo/Skills",
-      "commit": "3cc93458c4949c39a04e938ea7892a1d6d3d40bf",
-      "sourceType": "github",
-      "skillPath": "agent-skills/workflow/workflow-score-to-target/SKILL.md",
-      "computedHash": "d6e0c78843f8bfa0eb43a9106c0a19bfe3a78850b75b0ff670839a105733e402"
     }
   }
 }
