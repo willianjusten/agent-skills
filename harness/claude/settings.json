@@ -52,6 +52,14 @@
         "hooks": [
           {
             "type": "command",
+            "command": "bash \"$HOME/.claude/hooks/loop-stop.sh\""
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
             "command": "afplay /System/Library/Sounds/Glass.aiff",
             "async": true
           }

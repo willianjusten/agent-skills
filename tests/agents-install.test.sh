@@ -83,6 +83,13 @@ else
   fail "install.sh points core.hooksPath at .githooks in a git checkout" "$(git -C "$git_fixture" config --get core.hooksPath)"
 fi
 
+loop_hook_link="$home/.claude/hooks/loop-stop.sh"
+if [ -L "$loop_hook_link" ] && [ "$(readlink "$loop_hook_link")" = "$fixture/harness/claude/hooks/loop-stop.sh" ]; then
+  pass "the loop-stop hook is linked into ~/.claude/hooks"
+else
+  fail "the loop-stop hook is linked into ~/.claude/hooks" "$(ls -la "$home/.claude/hooks" 2>&1)"
+fi
+
 linked_agent="$home/.claude/agents/sample-builder.md"
 if [ -L "$linked_agent" ] && [ "$(readlink "$linked_agent")" = "$fixture/agents/realtime/sample-builder.md" ]; then
   pass "a personal agent is linked into ~/.claude/agents"
