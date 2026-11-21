@@ -16,3 +16,9 @@ done
 [ ! -e "$REPO_ROOT/harness/claude/hooks/write-scope.sh" ] && pass "the write-scope hook is removed" || fail "the write-scope hook is removed"
 if find "$REPO_ROOT/skills" -name 'run_state*' | grep -q .; then fail "the run-state scripts are removed"; else pass "the run-state scripts are removed"; fi
 [ "$(jq -r '.["MengTo/Skills"]["workflow-score-to-target"]' "$REPO_ROOT/scopes.json")" = "off" ] && pass "workflow-score-to-target is scoped off" || fail "workflow-score-to-target is scoped off"
+
+# The updated leaf skills teach the slim lab: none names a removed sibling skill, lab module, gate or file.
+removed_names='three-verify|art-bible|conduct|polish-director|assetLevel|assetMode": "placeholder|TREATMENT\.md|playtest\.ts|captures\.json|--accept|--trailer|autopilot|__game|zzfx|ZzFX|--level premium'
+for skill_dir in skills/realtime/three-build skills/realtime/asset-pipeline skills/game/game-feel; do
+  if hits=$(grep -rEn "$removed_names" "$REPO_ROOT/$skill_dir"); then fail "$skill_dir names no removed piece" "$hits"; else pass "$skill_dir names no removed piece"; fi
+done
