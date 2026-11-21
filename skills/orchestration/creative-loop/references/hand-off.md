@@ -2,7 +2,7 @@
 
 Run in order after the hook lets you stop.
 
-1. **Close the log.** The hook has let you stop (budget spent, or the user wrote `Status: stopped`); only now set `Status: done` (leave `stopped` as is); delete `.loop-active` and `.loop-active.state` from the folder the session started in. Add anything left undecided under `## Open items`.
+1. **Close the log.** The hook has let you stop (two dry reviews and `Status: done`, budget spent, or the user wrote `Status: stopped`); set `Status: done` if it is not already (leave `stopped` as is); delete `.loop-active` and `.loop-active.state` from the folder the session started in. Add anything left undecided under `## Open items`.
 2. **Gates and proof.** From the run worktree: `pnpm check <app>`, `pnpm record <app>`, then `pnpm verify <app>` (record and check first, verify builds its packet from them). A failing gate is fixed or listed as an open item; never edit a threshold to pass. Commit.
 3. **Summary.** Write `apps/<app>/.verify/<app>/summary.md` (not committed), at most 25 lines:
    - the branch and the last commit;

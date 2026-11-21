@@ -44,12 +44,14 @@ assert_text "hand-off sends files" 'SendUserFile' "$SKILL_DIR/references/hand-of
 assert_text "hand-off notifies" 'PushNotification' "$SKILL_DIR/references/hand-off.md"
 assert_text "hand-off forbids merge, push, deploy, delete" 'not merge, push, deploy or delete' "$SKILL_DIR/references/hand-off.md"
 
-assert_text "never done before the budget is spent" 'never set .Status: done. before the budget is spent'
-assert_text "review cycles when the list is finished" 'run review cycles until the budget ends'
-assert_text "done condition is a quality bar" 'quality bar'
-assert_text "documents Status: stopped for the user" 'Status: stopped. ends a run early' 
-assert_text "log reference documents stopped" 'stopped. is the only early exit' "$SKILL_DIR/references/loop-log.md"
-assert_text "hand-off sets done after the hook lets it stop" 'only now set .Status: done' "$SKILL_DIR/references/hand-off.md"
+assert_text "the list, not the clock, decides the end" 'the list, not the clock, decides the end'
+assert_text "review cycles list new ideas" 'list new ideas'
+assert_text "done needs two dry reviews" 'only after two dry reviews in a row'
+assert_text "the budget is a ceiling" 'budget is a ceiling'
+assert_text "documents Status: stopped for the user" 'Status: stopped. is the user.s early exit'
+assert_text "log reference documents dry reviews" 'review: dry' "$SKILL_DIR/references/loop-log.md"
+assert_text "log reference documents stopped" 'stopped. is the user.s early exit' "$SKILL_DIR/references/loop-log.md"
+assert_text "hand-off sets done if not already" 'set .Status: done. if it is not already' "$SKILL_DIR/references/hand-off.md"
 
 # start-run.sh, hermetic
 make_app() { # <dir>

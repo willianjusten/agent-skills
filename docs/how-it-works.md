@@ -1,6 +1,6 @@
 # How the creative flow works
 
-From a spark of an idea to a delivered build. One agent works in your own session, so every step shows in the terminal. You approve the pitch and the brief; after that the loop runs until its budget is spent.
+From a spark of an idea to a delivered build. One agent works in your own session, so every step shows in the terminal. You approve the pitch and the brief; after that the loop runs until its directions and reviews run dry, or its budget is spent.
 
 <p align="center">
   <img src="images/creative-loop.svg" alt="Ideation and brief, approved by you; then creative-loop scaffolds a run branch and loop log, runs the inner loop edit, shot, look, check, commit, the Stop hook hands back the next direction while budget is left, then hand-off." width="100%">
@@ -74,7 +74,7 @@ No model judges taste. The guardrails are scripts that pass or fail; you judge t
 
 ## 5. Outer loop
 
-The Stop hook `harness/claude/hooks/loop-stop.sh` reads `.loop-active`, finds the log and, each time the agent tries to stop before the budget is spent, blocks with the next unchecked direction. When the list is done it asks for a review cycle: fresh shots, the three weakest things a player would notice, fix them. The hook lets the agent stop when the budget is spent or the log says `Status: done`.
+The Stop hook `harness/claude/hooks/loop-stop.sh` reads `.loop-active`, finds the log and, each time the agent tries to stop before the budget is spent, blocks with the next unchecked direction. When the list is done it asks for a review cycle: fresh shots, the three weakest things a player would notice, fix them. The list, not the clock, decides the end: each review also lists new ideas, which become new directions. A review that finds nothing and no idea worth doing is a dry review; after two in a row with every direction checked the agent sets `Status: done` and the hook lets it stop. The budget is a ceiling, and `Status: stopped` is your early exit.
 
 Claude Code ends a session after 8 consecutive blocked stops with no tool call in between, so every block is answered with tool calls, never prose only. The hook drives only the session `/creative-loop` runs in.
 

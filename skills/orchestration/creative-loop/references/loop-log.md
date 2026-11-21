@@ -1,6 +1,6 @@
 # Loop log and the Stop hook
 
-A long run keeps a loop log, a Markdown file the run owns. The Stop hook `harness/claude/hooks/loop-stop.sh` reads it so the run continues until its budget is spent.
+A long run keeps a loop log, a Markdown file the run owns. The Stop hook `harness/claude/hooks/loop-stop.sh` reads it so the run continues until its directions and reviews run dry or its budget is spent.
 
 ## Format
 
@@ -30,9 +30,9 @@ User notes and steering, free text.
 - Header lines are `Key: value`, one per line, before the first `##` section. A tool can parse them with `^Key:`.
 - `Started:` is a UTC ISO 8601 time ending in `Z`.
 - `Budget:` is either `<N> minutes, ends <ISO time>Z` (also `hours`; only the `ends` time is read) or `<N> cycles`. The hook reads `ends <time>Z` or `<N> cycles`; any other value means no loop.
-- `Status:` is `running`, `stopped` or `done`. `stopped` is the only early exit: the user writes it (or the skill does when the user asks to stop in the conversation) and the hook allows the stop. `done` is set only at hand-off, after the hook let the session stop; while budget remains the hook ignores it and blocks with a review cycle.
+- `Status:` is `running`, `stopped` or `done`. `stopped` is the user's early exit: the user writes it (or the skill does when the user asks to stop in the conversation) and the hook allows the stop. `done` ends the run before the budget only when the work ran out: every direction is checked and the last two cycles are dry reviews. Otherwise the hook ignores it while budget remains and blocks with a review cycle.
 - `## Directions` holds ordered checkbox lines (`- [ ]` open, `- [x]` done). Only this section is read for directions.
-- `## Cycles` holds one `- ` line per cycle. The cycle count is the number of those lines, which is what a `<N> cycles` budget spends.
+- `## Cycles` holds one `- ` line per cycle. The cycle count is the number of those lines, which is what a `<N> cycles` budget spends. A review cycle that found nothing short of the brief and no new idea worth doing is a dry review: its line contains `review: dry`, then what it checked and the ideas it rejected, for example `- 41 2026-06-01T15:02:00Z review: dry, checked menus and waves at 3 widths, rejected a dash and a second boss`.
 
 ## Active run
 
@@ -53,7 +53,8 @@ Stop input (Claude Code hooks docs, Stop): common fields `session_id`, `transcri
 | No marker, other session, missing log, unparsable budget | allow |
 | Stale marker: older than the budget plus an hour (7 days for a cycle budget) | allow |
 | `Status: stopped` | allow |
-| `Status: done` with budget remaining | block with the review-cycle instruction |
+| `Status: done`, every direction checked, last two cycles dry reviews | allow |
+| `Status: done` otherwise, with budget remaining | block with the review-cycle instruction |
 | Budget spent (end time passed or cycle lines >= N), whatever the status | allow |
 | Log and working tree identical to the previous blocked stop | allow (loop breaker) |
 | An unchecked direction exists | block with the first one |

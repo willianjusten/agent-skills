@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 360" width="960" height="360" role="img" aria-labelledby="t d">
   <title id="t">The creative loop</title>
-  <desc id="d">You settle the idea with ideation and brief. Then creative-loop scaffolds a run branch and loop log, and runs the inner loop: edit, shot, look, check, commit. The Stop hook is the outer loop: while budget is left it hands back the next direction. When the budget is spent, hand-off sends the video, contact sheet and summary.</desc>
+  <desc id="d">You settle the idea with ideation and brief. Then creative-loop scaffolds a run branch and loop log, and runs the inner loop: edit, shot, look, check, commit. The Stop hook is the outer loop: it hands back the next direction, then review cycles that add new ideas. When two reviews run dry or the budget is spent, hand-off sends the video, contact sheet and summary.</desc>
   <style>
     .card{fill:#F6F8FA;stroke:#D1D9E0}
     .surface{fill:#FFFFFF}

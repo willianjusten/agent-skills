@@ -110,7 +110,7 @@ Matt's skills run untouched. Everything this repo layers on top lives in a few f
 | [`harness/shared/instructions.md`](harness/shared/instructions.md) | every session and subagent, as `~/.claude/CLAUDE.md` | Precedence, safety, style, environment, tracker defaults |
 | [`harness/shared/CODING_STANDARDS.md`](harness/shared/CODING_STANDARDS.md) | sessions, as `~/.claude/CODING_STANDARDS.md` | Cross-repo coding standards; a repo's own standards win |
 | [`harness/claude/settings.json`](harness/claude/settings.json) | Claude Code | Deny rules, auto mode, notification sounds, statusline |
-| [`harness/claude/hooks/loop-stop.sh`](harness/claude/hooks/loop-stop.sh) | the Stop hook, as `~/.claude/hooks/loop-stop.sh` | Keeps a creative loop going until its budget is spent, reading the app's `LOOP.md` (see [loop log](skills/orchestration/creative-loop/references/loop-log.md)); a no-op without a `.loop-active` marker |
+| [`harness/claude/hooks/loop-stop.sh`](harness/claude/hooks/loop-stop.sh) | the Stop hook, as `~/.claude/hooks/loop-stop.sh` | Keeps a creative loop going until its directions and reviews run dry or its budget is spent, reading the app's `LOOP.md` (see [loop log](skills/orchestration/creative-loop/references/loop-log.md)); a no-op without a `.loop-active` marker |
 
 The only patch to vendored code is renaming Matt's `code-review` to `matt-code-review`, because the original collides with Claude Code's built-in `/code-review`. New additions come only after a pilot, one ticket per `/retro` finding.
 
