@@ -11,11 +11,12 @@ FIXTURE_BRIEF="$REPO_ROOT/tests/fixtures/loop-brief/BRIEF.md"
 . "$(dirname "$0")/lib.sh"
 
 work=$(mktemp -d)
-trap 'rm -rf "$work"' EXIT
+lab_cleanup="" # set by the opt-in dry run
+trap '[ -z "$lab_cleanup" ] || $lab_cleanup; rm -rf "$work"' EXIT
 
 # Shape
-[ "$(field "$SKILL" name)" = creative-loop ] && pass "name is creative-loop" || fail "name is loop"
-[ "$(field "$SKILL" disable-model-invocation)" = true ] && pass "run by name only" || fail "run by name only"
+[ "$(field "$SKILL" name)" = creative-loop ] && pass "name is creative-loop" || fail "name is creative-loop" "$(field "$SKILL" name)"
+[ "$(field "$SKILL" disable-model-invocation)" = true ] && pass "run by name only" || fail "run by name only" "disable-model-invocation: $(field "$SKILL" disable-model-invocation)"
 [ "$(meta "$SKILL" uses)" = "ideation brief three-build game-feel" ] && pass "uses the four skills" || fail "uses the four skills" "$(meta "$SKILL" uses)"
 [ -f "$SKILL_DIR/README.md" ] && pass "has a README" || fail "has a README"
 
@@ -83,7 +84,7 @@ if [ -n "${LAB_ROOT:-}" ]; then
   rm -rf "$LAB_ROOT/apps/games/$app"
   lab_status_before=$(git -C "$LAB_ROOT" status --short)
   cleanup_lab() { rm -rf "$LAB_ROOT/apps/games/$app"; git -C "$LAB_ROOT" checkout -q -- pnpm-lock.yaml .gitignore 2>/dev/null; }
-  trap 'cleanup_lab; rm -rf "$work"' EXIT
+  lab_cleanup=cleanup_lab
   if (cd "$LAB_ROOT" && pnpm create-app game "$app" >"$work/create.log" 2>&1); then pass "dry run: scaffolds from the game template"; else fail "dry run: scaffolds from the game template" "$(tail -5 "$work/create.log")"; fi
   cp "$FIXTURE_BRIEF" "$LAB_ROOT/apps/games/$app/BRIEF.md"
   run_folder="$work/dry-session"
