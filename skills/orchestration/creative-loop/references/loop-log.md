@@ -30,7 +30,7 @@ User notes and steering, free text.
 - Header lines are `Key: value`, one per line, before the first `##` section. A tool can parse them with `^Key:`.
 - `Started:` is a UTC ISO 8601 time ending in `Z`.
 - `Budget:` is either `<N> minutes, ends <ISO time>Z` (also `hours`; only the `ends` time is read) or `<N> cycles`. The hook reads `ends <time>Z` or `<N> cycles`; any other value means no loop.
-- `Status:` is `running` or `done`. Setting `done` is how a run meets its done condition; the hook then allows the stop.
+- `Status:` is `running`, `stopped` or `done`. `stopped` is the only early exit: the user writes it (or the skill does when the user asks to stop in the conversation) and the hook allows the stop. `done` is set only at hand-off, after the hook let the session stop; while budget remains the hook ignores it and blocks with a review cycle.
 - `## Directions` holds ordered checkbox lines (`- [ ]` open, `- [x]` done). Only this section is read for directions.
 - `## Cycles` holds one `- ` line per cycle. The cycle count is the number of those lines, which is what a `<N> cycles` budget spends.
 
@@ -52,8 +52,9 @@ Stop input (Claude Code hooks docs, Stop): common fields `session_id`, `transcri
 | --------- | ------ |
 | No marker, other session, missing log, unparsable budget | allow |
 | Stale marker: older than the budget plus an hour (7 days for a cycle budget) | allow |
-| `Status: done` | allow |
-| Budget spent (end time passed or cycle lines >= N) | allow |
+| `Status: stopped` | allow |
+| `Status: done` with budget remaining | block with the review-cycle instruction |
+| Budget spent (end time passed or cycle lines >= N), whatever the status | allow |
 | Log and working tree identical to the previous blocked stop | allow (loop breaker) |
 | An unchecked direction exists | block with the first one |
 | Every direction checked | block with the review-cycle instruction |
