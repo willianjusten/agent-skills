@@ -32,7 +32,7 @@ User notes and steering, free text.
 - `Budget:` is either `<N> minutes, ends <ISO time>Z` (also `hours`; only the `ends` time is read) or `<N> cycles`. The hook reads `ends <time>Z` or `<N> cycles`; any other value means no loop.
 - `Status:` is `running`, `stopped` or `done`. `stopped` is the user's early exit: the user writes it (or the skill does when the user asks to stop in the conversation) and the hook allows the stop. `done` ends the run before the budget only when the work ran out: every direction is checked and the last two cycles are dry reviews. Otherwise the hook ignores it while budget remains and blocks with a review cycle.
 - `## Directions` holds ordered checkbox lines (`- [ ]` open, `- [x]` done). Only this section is read for directions.
-- `## Cycles` holds one `- ` line per cycle. The cycle count is the number of those lines, which is what a `<N> cycles` budget spends. A review cycle that found nothing short of the brief and no new idea worth doing is a dry review: its line contains `review: dry`, then what it checked and the ideas it rejected, for example `- 41 <time>Z review: dry, checked menus and waves at 3 widths, rejected a dash and a second boss`.
+- `## Cycles` holds one `- ` line per cycle. The cycle count is the number of those lines, which is what a `<N> cycles` budget spends. A review cycle that found nothing short of the brief and no new idea worth doing is a dry review: its line contains `review: dry`, then what it checked and the ideas it rejected, removals included, for example `- 41 <time>Z review: dry, checked the screens sheet and waves 1 to 10, rejected a dash, a second boss and cutting the crate timer`.
 
 ## Active run
 

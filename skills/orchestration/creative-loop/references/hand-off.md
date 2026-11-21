@@ -12,9 +12,9 @@ Run in order after the hook lets you stop.
    - **Open items:** copied from `## Open items`, each with its reason. Add what nobody has seen or heard yet, such as audio that was never listened to.
    - **Checks:** the PASS, FAIL and INFO counts from `.verify/<app>/check/results.json`, and the `pnpm verify` verdict with the fps lines.
    - **Run:** the branch, the last commit, start and end time, the number of cycles and dry reviews, and why it ended.
-   - **Files:** the absolute paths of `play.mp4`, `play-contact-sheet.png` and the verify packet.
+   - **Files:** the absolute paths of `play.mp4`, `play-contact-sheet.png`, `check/ui/screens.png` (every screen on one sheet) and the verify packet.
    - **Defaults taken:** the `Default:` Notes lines.
    - **Next:** numbered choices, the recommended one first (for example merge the branch, reopen with new directions, or listen to the audio).
-4. **Send files.** With SendUserFile, in this order: `play.mp4`, `play-contact-sheet.png` (both under `.verify/<app>/record/`), then `summary.md`. Start the dev server in the background on a free port and print the summary in the chat with that real port filled in.
+4. **Send files.** With SendUserFile, in this order: `screens.png` (under `.verify/<app>/check/ui/`), so the user judges every menu at a glance, then `play.mp4`, `play-contact-sheet.png` (both under `.verify/<app>/record/`), then `summary.md`. Start the dev server in the background on a free port and print the summary in the chat with that real port filled in.
 5. **Notify.** One PushNotification with the one line that matters: the verdict and the first open item, for example `loop/<app> ready: verify PASSED, 2 open items`.
 6. **Stop.** Do not merge, push, deploy or delete anything. The branch waits for the user.
