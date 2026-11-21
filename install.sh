@@ -129,6 +129,7 @@ link_harness() {
   link_path "$ROOT/harness/shared/CODING_STANDARDS.md" "$CLAUDE_HOME/CODING_STANDARDS.md"
   link_path "$ROOT/harness/claude/settings.json" "$CLAUDE_HOME/settings.json"
   link_path "$ROOT/harness/claude/statusline-command.sh" "$CLAUDE_HOME/statusline-command.sh"
+  link_path "$ROOT/harness/claude/hooks/loop-stop.sh" "$CLAUDE_HOME/hooks/loop-stop.sh"
   remove_retired_hook_link "$CLAUDE_HOME/hooks/write-scope.sh"
 }
 
