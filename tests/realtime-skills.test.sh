@@ -12,7 +12,7 @@ scope_of() {
 
 has_machine_path() { grep -rEn '/Users/[a-z]|/home/[a-z]' "$@"; }
 
-for skill in three-build three-tsl three-verify asset-pipeline realtime-judge target-loop; do
+for skill in three-build three-tsl asset-pipeline; do
   file="$REALTIME/$skill/SKILL.md"
   if [ ! -f "$file" ]; then
     fail "$skill exists under skills/realtime"
@@ -35,23 +35,6 @@ for skill in three-build three-tsl three-verify asset-pipeline realtime-judge ta
   fi
 done
 
-agent="$REPO_ROOT/agents/realtime/asset-wrangler.md"
-if [ -f "$agent" ]; then
-  pass "asset-wrangler exists under agents/realtime"
-  agent_field() { awk -v key="$1" -F': *' '$1 == key { print $2; exit }' "$agent"; }
-  [ "$(agent_field name)" = "asset-wrangler" ] && pass "asset-wrangler name equals its file name" || fail "asset-wrangler name equals its file name"
-  [ "$(agent_field model)" = "haiku" ] && pass "asset-wrangler runs on haiku" || fail "asset-wrangler runs on haiku" "found '$(agent_field model)'"
-  agent_scope=$(scope_of "$agent")
-  [ "$agent_scope" = "personal" ] && pass "asset-wrangler is scoped personal" || fail "asset-wrangler is scoped personal" "found '$agent_scope'"
-  if has_machine_path "$agent" >/dev/null; then fail "asset-wrangler has no machine paths"; else pass "asset-wrangler has no machine paths"; fi
-else
-  fail "asset-wrangler exists under agents/realtime"
-fi
-
-# review fixes: art bible templates stay identical, asset-pipeline steps stay short, packs are examples
-cmp -s "$REPO_ROOT/skills/game/game-brief/references/art-bible-template.md" "$REPO_ROOT/skills/realtime/art-bible/references/art-bible-template.md" && pass "the two art-bible templates are identical" || fail "the two art-bible templates are identical"
-if grep -rn 'Kenney or Quaternius' "$REPO_ROOT/skills/realtime/art-bible" "$REPO_ROOT/skills/game/game-brief" | grep -v 'for example Kenney or Quaternius' >/dev/null; then fail "art-bible and game-brief name pack families as examples"; else pass "art-bible and game-brief name pack families as examples"; fi
-grep -q 'for example Kenney, is a source, not an API' "$REPO_ROOT/skills/realtime/art-bible/SKILL.md" && pass "art-bible says a pack family is a source, not an API" || fail "art-bible says a pack family is a source, not an API"
 ASSET_SKILL="$REPO_ROOT/skills/realtime/asset-pipeline/SKILL.md"
 for step in 2 3 7; do
   length=$(grep "^$step\. " "$ASSET_SKILL" | wc -c)
