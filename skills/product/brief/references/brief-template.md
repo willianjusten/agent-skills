@@ -18,6 +18,11 @@ Save as `BRIEF.md`. One page, engine-neutral.
 ## Controls
 <input to action for keyboard, pointer and touch; for an experiment also no input and reduced motion>
 
+## Screens
+| Screen | Primary action | Shown at once | Behind a button or submenu |
+| ------ | -------------- | ------------- | -------------------------- |
+| <title, play, pause, game over, ...> | <the one thing the player does here> | <the few things always visible> | <detail that opens on demand> |
+
 ## Not this
 <five or more concrete defaults to avoid, each checkable in a frame>
 
