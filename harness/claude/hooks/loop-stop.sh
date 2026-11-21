@@ -1,6 +1,6 @@
 #!/bin/bash
 # Stop hook for long runs (format: skills/orchestration/creative-loop/references/loop-log.md). While a run is active, budget
-# remains and the run is not done, it blocks the stop with the next unchecked
+# remains and the run is not stopped, it blocks the stop with the next unchecked
 # direction from the loop log, or with the review-cycle instruction once the list is
 # done. A no-op outside a run. Fails open: no jq, unparsable input, a missing or
 # unreadable log all allow the stop, so a broken run never traps a session.
@@ -11,7 +11,8 @@
 # A marker without a session_id is bound to the first session that stops under it:
 # the hook writes that session_id into the marker. Removing the marker ends the run.
 #
-# Allows the stop when: no marker, other session, log missing, Status: done, budget
+# Allows the stop when: no marker, other session, log missing, Status: stopped (the user's early
+# end; Status: done does not allow while budget remains), budget
 # spent (cycle count or end time), a stale marker (older than the budget plus an
 # hour; 7 days for a cycle budget), or the agent stopped twice with the loop log
 # and the repo that holds it unchanged (loop breaker, state kept in
@@ -53,7 +54,9 @@ case "$log_path" in /*) ;; *) log_path="$run_dir/$log_path" ;; esac
 header() { sed -n "s/^$1:[[:space:]]*//p" "$log_path" | head -1; }
 section_lines() { awk -v name="$1" '/^## / { in_section = ($0 == "## " name); next } in_section' "$log_path"; }
 
-[ "$(header Status | tr '[:upper:]' '[:lower:]')" = "done" ] && exit 0
+# Only the user ends a run early. Status: done while budget remains does not allow the stop.
+run_status=$(header Status | tr '[:upper:]' '[:lower:]')
+[ "$run_status" = "stopped" ] && exit 0
 
 now=${LOOP_NOW:-$(date -u +%s)}
 STALE_MARGIN_SECONDS=3600
@@ -85,7 +88,9 @@ fi
 echo "$fingerprint" >"$state_file"
 
 next_direction=$(section_lines Directions | sed -n 's/^- \[ \][[:space:]]*//p' | head -1)
-if [ -n "$next_direction" ]; then
+if [ "$run_status" = "done" ]; then
+  reason="Status is done but budget remains: finishing early earns nothing. Set Status back to running and run a review cycle: take fresh shots, review the current state against the brief, add new unchecked directions to the loop log ($log_path) for what still falls short, and do them. Only the user's Status: stopped ends the run before the budget is spent."
+elif [ -n "$next_direction" ]; then
   reason="Loop budget remains. Next direction from the loop log ($log_path): $next_direction. Do it, tick its box and add a line under Cycles."
 else
   reason="Loop budget remains and every direction is checked. Run a review cycle: review the current state against the brief, add new unchecked directions to the loop log ($log_path) for what still falls short, or set Status: done if nothing does."

@@ -86,7 +86,13 @@ expect_block "blocks while cycles remain" "open"
 
 write_log "45 minutes, ends 2026-06-01T12:45:00Z" done "- [ ] open"
 start_run
-expect_allow "allows when Status is done"
+expect_block "blocks Status: done while budget remains, with the review cycle" "review cycle"
+write_log "45 minutes, ends 2026-06-01T12:45:00Z" stopped "- [ ] open"
+start_run
+expect_allow "allows when Status is stopped"
+write_log "45 minutes, ends 2026-06-01T11:59:00Z" done "- [ ] open"
+start_run
+expect_allow "allows Status: done after the budget is spent"
 
 write_log "45 minutes, ends 2026-06-01T12:45:00Z" running "- [ ] open"
 echo '{"log": "loop.md", "session_id": "other"}' >"$run/.loop-active"
