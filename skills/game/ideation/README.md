@@ -6,7 +6,7 @@ Interviews you in numbered rounds and ends with a one-page pitch you approve.
 
 ```mermaid
 flowchart LR
-  A[Spark] --> B[Divergent concepts]
+  A[Spark] --> P[Pre-flight] --> B[Divergent concepts]
   B --> C[Fantasy and verb]
   C --> D[Loop and twist]
   D --> E[Scope check]
@@ -15,8 +15,8 @@ flowchart LR
 
 | Mode | Rounds | Output |
 | ---- | ------ | ------ |
-| Game | concepts, player fantasy (MDA), verb test, core loop, twist, scope, optional toy | `PITCH.md` |
-| Experiment | feeling, input-to-motion mapping, directions, "Not this" | `PITCH.md` |
+| Game | pre-flight, concepts, player fantasy (MDA), verb test, core loop, twist, scope, optional toy | `PITCH.md` |
+| Experiment | pre-flight, feeling, input-to-motion mapping, directions, "Not this" | `PITCH.md` |
 
 ## Usage
 
@@ -32,5 +32,5 @@ Is the core loop of this game any good?
 
 ## FAQ
 
-- Does it write the GDD? No; it hands a pitch to a brief step.
+- Does it write the brief? No; it hands a pitch to a brief step.
 - Is a grilling skill required? No; it follows the same pattern itself.
