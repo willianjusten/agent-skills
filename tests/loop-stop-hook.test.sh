@@ -2,7 +2,7 @@
 # Tests for harness/claude/hooks/loop-stop.sh, the Stop hook of long runs: it blocks
 # the stop with the next direction or the review-cycle instruction while budget
 # remains, and allows it when the budget is spent, the run is done, no run is
-# active, or the agent stopped twice with nothing changed. Format: docs/loop-log.md.
+# active, or the agent stopped twice with nothing changed. Format: skills/orchestration/creative-loop/references/loop-log.md.
 
 REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 HOOK="$REPO_ROOT/harness/claude/hooks/loop-stop.sh"
@@ -96,5 +96,42 @@ echo '{"log": "missing.md"}' >"$run/.loop-active"
 expect_allow "allows when the log is missing"
 start_run
 echo "not json" | bash "$HOOK" >/dev/null 2>&1 && pass "allows on unparsable input" || fail "allows on unparsable input"
+
+# A marker without a session id binds to the first session; a second one is allowed.
+start_run
+expect_block "a marker without a session id loops the first session" "open"
+[ "$(jq -r .session_id "$run/.loop-active")" = s1 ] && pass "the hook binds the marker to that session" || fail "the hook binds the marker to that session"
+expect_allow "a second session is not blocked" "" s2
+
+# The loop breaker watches the repo that holds the log, not the session folder.
+lab="$work/lab"
+mkdir -p "$lab/app" "$work/session"
+git -C "$lab" init -q
+cp "$run/loop.md" "$lab/app/loop.md"
+echo '{"log": "'"$lab"'/app/loop.md", "session_id": "s1"}' >"$work/session/.loop-active"
+hook_in_session() {
+  jq -n --arg cwd "$work/session" '{session_id: "s1", cwd: $cwd}' | LOOP_NOW="$now" bash "$HOOK" 2>&1
+}
+[ "$(jq -r .decision <<<"$(hook_in_session)")" = block ] && pass "lab run blocks" || fail "lab run blocks"
+echo change >"$lab/app/work.txt"
+[ "$(jq -r .decision <<<"$(hook_in_session)")" = block ] && pass "a change in the lab tree lets the next stop block again" || fail "a change in the lab tree lets the next stop block again"
+[ -z "$(hook_in_session)" ] && pass "lab tree unchanged: loop breaker allows" || fail "lab tree unchanged: loop breaker allows"
+
+# Stale marker: older than the budget plus a margin.
+write_log "45 minutes, ends 2026-06-01T12:45:00Z" running "- [ ] open"
+start_run
+touch -t 202605010000 "$run/.loop-active"
+expect_allow "allows a marker older than the budget plus a margin"
+
+# A marker at or above HOME is ignored.
+fake_home="$work/home"
+mkdir -p "$fake_home/proj"
+echo '{"log": "'"$run"'/loop.md"}' >"$work/.loop-active"
+home_output=$(jq -n --arg cwd "$fake_home/proj" '{session_id: "s1", cwd: $cwd}' | HOME="$fake_home" LOOP_NOW="$now" bash "$HOOK" 2>&1)
+[ -z "$home_output" ] && pass "ignores a marker above HOME" || fail "ignores a marker above HOME" "$home_output"
+rm -f "$work/.loop-active"
+echo '{"log": "'"$run"'/loop.md"}' >"$fake_home/.loop-active"
+home_output=$(jq -n --arg cwd "$fake_home/proj" '{session_id: "s1", cwd: $cwd}' | HOME="$fake_home" LOOP_NOW="$now" bash "$HOOK" 2>&1)
+[ -z "$home_output" ] && pass "ignores a marker at HOME" || fail "ignores a marker at HOME" "$home_output"
 
 [ "$failures" -eq 0 ] || exit 1
