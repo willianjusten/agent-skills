@@ -1,6 +1,6 @@
 # Asset scripts
 
-Run from the lab root. Every command needs `--app <app directory>`; `--level` defaults to `free`, `--polish` to `rough`. Run `pnpm asset` with no arguments for the current options.
+Run from the lab root. Every command needs `--app <app directory>` except `pack search` and `pack sheet`. Leave `--level` and `--polish` at their defaults; `--polish polished` only adds mesh and texture compression to `optimize-gltf`. Run `pnpm asset` with no arguments for the current options.
 
 | Command | Does | Notes |
 | ------- | ---- | ----- |
@@ -10,8 +10,8 @@ Run from the lab root. Every command needs `--app <app directory>`; `--level` de
 | `pack fetch <pack>:<model id> --id <asset id> --role <role>` | Web-tier GLB into `public/assets/models/<id>.glb`, pivot and materials fixed, checked, recorded | Records the row's own license and credit; deletes a model that fails its role. Prints the clips (name and seconds) or "no clips". An id already in the manifest is refused without `--replace` |
 | `check-glb <asset id> --role <role> [--fix]` | Pivot, unlit materials, triangle budget and height of a recorded model | Roles: character, enemy, weapon, prop, tile, environment. Prints the clips or "no clips". Exits 1 on an error |
 | `ambientcg <id> [--resolution 1K]` | Downloads an ambientCG material zip and unpacks the same three maps | CC0 |
-| `optimize-gltf <asset id>` | gltf-transform optimize of a recorded model, saved as `<id>-optimized` | `rough` dedups and prunes; `polished` adds meshopt and webp compression |
-| `approve <asset id>` | Marks a polished asset approved | Only after the user has seen it |
+| `polyhaven-model <id> [--resolution 1k]` | Poly Haven model packed into one GLB | CC0 |
+| `optimize-gltf <asset id>` | gltf-transform optimize of a recorded model, saved as `<id>-optimized` | Dedups and prunes; `--polish polished` adds meshopt and webp compression |
 
 In a `code-only` app (`"assetMode": "code-only"` in `app.json`) no asset command runs and `verify` fails any asset file.
 
