@@ -14,7 +14,7 @@ Use the `skill-creator-plus` skill: it writes test prompts first and follows Ant
 
 3. Model-invoked skill: a trigger-rich `description` starting with what it does, then "Use when ...". Skill run only by name: `disable-model-invocation: true` and a short description.
 4. `SKILL.md` is a table of contents of ordered steps, each ending on a checkable "Done when". Detail goes in `references/`, one level deep, loaded by the step that needs it.
-5. A leaf skill names no sibling from this repo. An upstream skill may be named as "if installed", with a one-line fallback. An orchestrator lives in `skills/orchestration/` or `agents/` and declares `metadata.uses`.
+5. A skill may name a sibling from this repo when it lists it in `metadata.uses`; `check` fails on a sibling named in backticks but not listed. An upstream skill may be named as "if installed", with a one-line fallback.
 6. `README.md` beside `SKILL.md`: title and tagline, `## What It Does` (mermaid or table), `## Usage` (requests as a user would say them), then optionally `## Output`, `## Requirements`, `## FAQ`.
 7. No secrets, no machine paths (`/Users/<name>`), no dates or version pins.
 8. `./install.sh check`, fix every error, then `./install.sh`.

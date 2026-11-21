@@ -1,8 +1,8 @@
 #!/bin/bash
-# Tests for the orchestrator dependency check: an orchestrator (any agent, or a
-# skill under skills/orchestration/) lists the skills and agents it runs in
-# metadata.uses; `install.sh check` fails when one is missing or scoped where
-# the orchestrator cannot see it. Runs against a fixture copy of the repo.
+# Tests for the dependency check: any skill or agent lists the siblings it names
+# in metadata.uses; `install.sh check` fails when one is missing, scoped where
+# the namer cannot see it, or named in backticks without being listed.
+# Runs against a fixture copy of the repo.
 
 REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 . "$(dirname "$0")/lib.sh"
@@ -13,7 +13,7 @@ write_skill() {
   {
     printf -- '---\nname: %s\ndescription: Test skill.\nmetadata:\n  scope: %s\n' "$name" "$scope"
     [ -n "$uses" ] && printf '  uses: %s\n' "$uses"
-    printf -- '---\n\nBody.\n'
+    printf -- '---\n\n%s\n' "${6:-Body.}"
   } >"$root/skills/$category/$name/SKILL.md"
   echo "# $name" >"$root/skills/$category/$name/README.md"
 }
@@ -47,7 +47,7 @@ trap 'rm -rf "$work"' EXIT
 home="$work/home"
 mkdir -p "$home"
 
-# Runs check on a fresh fixture after $1 sets up the orchestrator; sets $status and $output.
+# Runs check on a fresh fixture after $1 sets up the skill under test; sets $status and $output.
 run_check() {
   local setup="$1" root="$work/repo"
   rm -rf "$root"
@@ -81,15 +81,21 @@ missing_agent() { write_agent "$1" boss personal "ghost-agent"; }
 narrow_agent() { write_agent "$1" boss both "helper-agent"; }
 both_sees_both() { write_skill "$1" orchestration conductor both "shared-leaf"; }
 leaf_with_uses() { write_skill "$1" engineering sibling-namer personal "shared-leaf"; }
+named_and_listed() { write_skill "$1" engineering sibling-namer personal "shared-leaf" 'Read `shared-leaf`.'; }
+named_not_listed() { write_skill "$1" engineering sibling-namer personal "" 'Read `shared-leaf`.'; }
+plain_word() { write_skill "$1" engineering sibling-namer personal "" 'A shared-leaf pattern, not a name in backticks.'; }
 
 expect_pass "check passes on an orchestrator skill whose dependencies are all visible" ok_skill
 expect_pass "check passes on an orchestrator scoped both naming a both skill" both_sees_both
 expect_pass "check passes on an orchestrator agent whose dependencies are all visible" ok_agent
 expect_fail "check fails on an orchestrator skill naming a missing skill" missing_skill "ghost-skill: not found"
 expect_fail "check fails on an orchestrator agent naming a missing agent" missing_agent "ghost-agent: not found"
-expect_fail "check fails on a both orchestrator naming a personal skill" narrow_skill "personal-leaf: scoped personal, not visible to a both orchestrator"
-expect_fail "check fails on a both agent naming a personal agent" narrow_agent "helper-agent: scoped personal, not visible to a both orchestrator"
+expect_fail "check fails on a both orchestrator naming a personal skill" narrow_skill "personal-leaf: scoped personal, not visible from scope both"
+expect_fail "check fails on a both agent naming a personal agent" narrow_agent "helper-agent: scoped personal, not visible from scope both"
 expect_fail "check fails on an orchestrator naming a skill scoped off" off_dep "off-leaf: scoped off"
-expect_fail "check fails on a leaf skill that declares uses" leaf_with_uses "only orchestrators"
+expect_pass "check passes on a non-orchestration skill that declares uses" leaf_with_uses
+expect_pass "check passes on a skill that names a sibling it lists" named_and_listed
+expect_pass "check ignores a sibling name outside backticks" plain_word
+expect_fail "check fails on a skill naming a sibling it does not list" named_not_listed "names \`shared-leaf\` without listing it"
 
 [ "$failures" -eq 0 ] || exit 1

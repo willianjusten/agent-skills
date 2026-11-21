@@ -41,8 +41,4 @@ assert_text "game-feel music: a musical idea, not a texture" 'musical idea, not 
 assert_text "game-feel music: sections against repetition" 'sections \(intro' "$REPO_ROOT/skills/game/game-feel/references/audio.md"
 assert_text "game-feel music: intensity changes which layers play" 'changes which layers play' "$REPO_ROOT/skills/game/game-feel/references/audio.md"
 
-for skill in "$THREE" "$FEEL"; do
-  if grep -qE 'ui-polish|creative-loop|\bbrief\b skill' "$skill"; then fail "leaf names no sibling: $skill"; else pass "leaf names no sibling: $(basename "$(dirname "$skill")")"; fi
-done
-
 [ "$failures" -eq 0 ] || exit 1

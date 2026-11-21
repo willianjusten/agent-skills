@@ -4,7 +4,7 @@ Two checks guard every commit; the `pre-commit` hook runs both (about 6 s).
 
 | Command | Checks |
 | ------- | ------ |
-| `./install.sh check` | each own skill against the `skill-creator-plus` validator, scope and README rules; each agent's frontmatter; every skill or agent an orchestrator names exists and is visible to it |
+| `./install.sh check` | each own skill against the `skill-creator-plus` validator, scope and README rules; each agent's frontmatter; every sibling a skill or agent names is in its `uses`, exists and is visible to it |
 | `tests/run.sh` | every `tests/*.test.sh` in parallel (about 3 s); prints each file's output in name order, ends `All tests passed.` or `FAILED: <files>` with exit 1 |
 
 ## One test file
@@ -13,7 +13,7 @@ Two checks guard every commit; the `pre-commit` hook runs both (about 6 s).
 bash tests/creative-loop-skill.test.sh
 ```
 
-Each file works in its own `mktemp` directory and prints `ok` or `FAIL` per assertion; it exits 1 when any assertion failed. Files by area: `creative-loop-skill`, `creative-loop-attempts`, `loop-stop-hook`, `orchestrators`, `realtime-skills`, `agents-install`, `settings-hooks`, `vendoring`, `old-harness-removed` (removed pieces stay removed, docs included).
+Each file works in its own `mktemp` directory and prints `ok` or `FAIL` per assertion; it exits 1 when any assertion failed. Files by area: `creative-loop-skill`, `creative-loop-attempts`, `loop-stop-hook`, `uses`, `realtime-skills`, `agents-install`, `settings-hooks`, `vendoring`, `old-harness-removed` (removed pieces stay removed, docs included).
 
 ## Adding a test
 

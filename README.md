@@ -34,7 +34,7 @@ For games and animated experiments in the lab repo: `ideation`, `brief`, then `/
 | [Install and scopes](docs/install-and-scopes.md) | `install.sh`, what it links, where each scope shows up |
 | [Writing a skill](docs/writing-a-skill.md) | the checklist for a new or changed skill or agent |
 | [Testing](docs/testing.md) | `./install.sh check`, `tests/run.sh`, one test file |
-| [AGENTS.md](AGENTS.md), [GLOSSARY.md](GLOSSARY.md), [ADR 0001](docs/adr/0001-leaf-and-orchestrator-skills.md), [ADR 0002](docs/adr/0002-thin-loop.md), [Loop log](skills/orchestration/creative-loop/references/loop-log.md) | repo conventions, terms, leaf versus orchestrator, why the loop is thin, log format |
+| [AGENTS.md](AGENTS.md), [GLOSSARY.md](GLOSSARY.md), [ADR 0003](docs/adr/0003-skills-name-siblings-through-uses.md), [ADR 0002](docs/adr/0002-thin-loop.md), [Loop log](skills/orchestration/creative-loop/references/loop-log.md) | repo conventions, terms, leaf versus orchestrator, why the loop is thin, log format |
 
 ## Quick Start
 

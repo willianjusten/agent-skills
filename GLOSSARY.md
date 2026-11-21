@@ -2,8 +2,8 @@
 
 Terms used across the skills and harness in this repo.
 
-- **Leaf skill**: a skill that works alone and names no sibling skill in this repo. Most skills are leaves.
-- **Orchestrator**: a skill in `skills/orchestration/` (or an agent in `agents/`) that runs other skills. It may name them; `install.sh check` verifies each one is installed where the orchestrator can see it. See `docs/adr/0001-leaf-and-orchestrator-skills.md`.
+- **Uses**: the `metadata.uses` list of siblings a skill or agent names. Any skill may name a sibling it lists; `install.sh check` verifies each one is installed where the namer can see it. See `docs/adr/0003-skills-name-siblings-through-uses.md`.
+- **Orchestrator**: a skill in `skills/orchestration/` (or an agent in `agents/`) whose main job is running other skills, such as `creative-loop`.
 - **Pitch**: the one-page concept that ends ideation and that Will approves.
 - **Brief**: the one-page `BRIEF.md` written from the pitch: promise, Not this, features with checks, demo mode and the ordered Next directions list.
 - **Loop**: one `/creative-loop` run on one app, from a pitch or brief to a checked, recorded build, on its own branch and in the user's session. See `docs/adr/0002-thin-loop.md`.

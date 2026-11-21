@@ -106,6 +106,6 @@ Once the hook lets the agent stop, it follows `references/hand-off.md` of the sk
 4. Send `play.mp4`, `play-contact-sheet.png` and `summary.md` with SendUserFile, then one PushNotification with the verdict.
 5. Stop. Nothing is merged, pushed or deployed; the branch waits for you.
 
-## Leaf versus orchestrator
+## Naming siblings
 
-A **leaf** skill works alone and names no sibling (`ideation`, `brief`, `three-build`, `game-feel`). An **orchestrator** is a skill in `skills/orchestration/` (or an agent in `agents/`) and may name and run others; `creative-loop` lists `ideation brief three-build game-feel` in `metadata.uses`. `./install.sh check` fails when an orchestrator names a skill or agent that is missing or scoped where it cannot see it. Why: [ADR 0001](adr/0001-leaf-and-orchestrator-skills.md). Why the loop is thin: [ADR 0002](adr/0002-thin-loop.md).
+Any skill may name a sibling it lists in `metadata.uses`; `creative-loop` lists `ideation brief three-build game-feel ui-polish`. An **orchestrator** is a skill in `skills/orchestration/` (or an agent in `agents/`) whose main job is running others. `./install.sh check` fails when a skill names a sibling in backticks without listing it, or lists one that is missing or scoped where it cannot see it. Why: [ADR 0003](adr/0003-skills-name-siblings-through-uses.md). Why the loop is thin: [ADR 0002](adr/0002-thin-loop.md).

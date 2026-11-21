@@ -33,7 +33,7 @@ Run `check` first and fix every error before a plain `./install.sh`. Requirement
 
 - Own skill or agent: set `metadata.scope` in its frontmatter. Agents take only `personal`, `both` or `off`.
 - Vendored skill: one line in `scopes.json` under its source. A skill missing there is not installed.
-- An orchestrator must be scoped where everything it names is visible; `check` enforces it.
+- A skill or agent must be scoped where everything in its `uses` is visible; `check` enforces it.
 
 ## Tasks
 

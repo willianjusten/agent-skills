@@ -610,24 +610,32 @@ frontmatter_metadata_field() {
   ' "$1"
 }
 
-# Orchestrators (agents, and skills under skills/orchestration/) may run siblings,
-# listed in metadata.uses. Every one must exist and be visible at the
-# orchestrator's scope: personal sees personal and both, both sees only both.
-check_orchestrators() {
+# Any skill or agent may name a sibling, listed in metadata.uses. Every one must
+# exist and be visible at the namer's scope: personal sees personal and both,
+# both sees only both. A skill that names a sibling skill or agent in backticks
+# (`name`) without listing it fails, so a missing dependency is an install error.
+check_uses() {
   local failed=0 resolved_skills file kind scope uses dependency found dependency_scope
+  local sibling_names skill_dir self sibling
   resolved_skills="$(resolve_skills)"
+  sibling_names="$(own_skill_dirs | xargs -n1 basename; own_agent_files | xargs -n1 basename | sed 's/\.md$//')"
+  for skill_dir in $(own_skill_dirs); do
+    self="$(basename "$skill_dir")"
+    uses=" $(frontmatter_metadata_field "$skill_dir/SKILL.md" uses) "
+    for sibling in $sibling_names; do
+      [ "$sibling" = "$self" ] && continue
+      case "$uses" in *" $sibling "*) continue ;; esac
+      if grep -rqF --include='*.md' --exclude=README.md "\`$sibling\`" "$skill_dir"; then
+        echo "ERROR uses: ${skill_dir#"$ROOT"/} names \`$sibling\` without listing it in metadata.uses"
+        failed=1
+      fi
+    done
+  done
   for file in $(own_skill_dirs | sed 's|$|/SKILL.md|') $(own_agent_files); do
     uses="$(frontmatter_metadata_field "$file" uses)"
     [ -n "$uses" ] || continue
     case "$file" in
-      */SKILL.md)
-        kind=skill
-        if [ "$(basename "$(dirname "$(dirname "$file")")")" != orchestration ]; then
-          echo "ERROR uses: ${file#"$ROOT"/}: only orchestrators (agents, skills/orchestration/) may declare metadata.uses"
-          failed=1
-          continue
-        fi
-        ;;
+      */SKILL.md) kind=skill ;;
       *) kind=agent ;;
     esac
     scope="$(frontmatter_scope "$file")"
@@ -644,10 +652,10 @@ check_orchestrators() {
         echo "ERROR uses: ${file#"$ROOT"/} names $dependency: scoped off, installed nowhere"
         failed=1
       elif [ "$scope" = both ] && [ "$dependency_scope" != both ]; then
-        echo "ERROR uses: ${file#"$ROOT"/} names $dependency: scoped $dependency_scope, not visible to a both orchestrator"
+        echo "ERROR uses: ${file#"$ROOT"/} names $dependency: scoped $dependency_scope, not visible from scope both"
         failed=1
       elif [ "$scope" = personal ] && [ "$dependency_scope" = spoke ]; then
-        echo "ERROR uses: ${file#"$ROOT"/} names $dependency: scoped spoke, not visible to a personal orchestrator"
+        echo "ERROR uses: ${file#"$ROOT"/} names $dependency: scoped spoke, not visible from scope personal"
         failed=1
       fi
     done
@@ -669,7 +677,7 @@ main() {
       local status=0
       check_own_skills || status=1
       check_own_agents || status=1
-      check_orchestrators || status=1
+      check_uses || status=1
       exit "$status"
       ;;
   esac
