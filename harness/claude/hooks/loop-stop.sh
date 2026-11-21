@@ -13,7 +13,7 @@
 #
 # Allows the stop when: no marker, other session, log missing, Status: stopped (the user's early
 # end), Status: done with every direction checked and the last two cycles dry reviews
-# (lines containing "review: dry": a review that found nothing left to do or add), budget
+# (lines shaped "- <n> <time> review: dry": a review that found nothing left to do or add), budget
 # spent (cycle count or end time), a stale marker (older than the budget plus an
 # hour; 7 days for a cycle budget), or the agent stopped twice with the loop log
 # and the repo that holds it unchanged (loop breaker, state kept in
@@ -61,7 +61,7 @@ next_direction=$(section_lines Directions | sed -n 's/^- \[ \][[:space:]]*//p' |
 # Done ends the run early only when the work ran out, not the patience: no open
 # direction and two dry reviews in a row.
 DRY_REVIEWS_TO_FINISH=2
-dry_reviews=$(section_lines Cycles | grep '^- ' | tail -n "$DRY_REVIEWS_TO_FINISH" | grep -ci 'review: dry')
+dry_reviews=$(section_lines Cycles | grep '^- ' | tail -n "$DRY_REVIEWS_TO_FINISH" | grep -ciE '^- [0-9]+ [^ ]+ review: dry')
 if [ "$run_status" = "done" ] && [ -z "$next_direction" ] && [ "$dry_reviews" -ge "$DRY_REVIEWS_TO_FINISH" ]; then
   exit 0
 fi
@@ -95,7 +95,7 @@ if [ -f "$state_file" ] && [ "$(cat "$state_file")" = "$fingerprint" ]; then
 fi
 echo "$fingerprint" >"$state_file"
 
-review_cycle="take fresh shots, review the current state against the brief and every direction so far, and list new ideas that would make it better. Add each as an unchecked direction in the loop log ($log_path) and do them. If nothing falls short and no idea is worth doing, log the cycle as '- <n> <time> review: dry, <what you checked and the ideas you rejected>'. Status: done ends the run once every direction is checked and the last $DRY_REVIEWS_TO_FINISH cycles are dry reviews."
+review_cycle="take fresh shots, review the current state against the brief and every direction so far, name the three weakest things a player would notice and fix them, and list new ideas that would make it better. Add each as an unchecked direction in the loop log ($log_path) and do them. If nothing falls short and no idea is worth doing, log the cycle as '- <n> <time> review: dry, <what you checked and the ideas you rejected>'. Status: done ends the run once every direction is checked and the last $DRY_REVIEWS_TO_FINISH cycles are dry reviews."
 if [ "$run_status" = "done" ]; then
   reason="Status is done but the run is not finished: an unchecked direction remains or the last $DRY_REVIEWS_TO_FINISH cycles are not dry reviews. Set Status back to running and run a review cycle: $review_cycle"
 elif [ -n "$next_direction" ]; then

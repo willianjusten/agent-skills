@@ -96,6 +96,10 @@ expect_allow "allows Status: done early after two dry reviews with every directi
 extra_cycles="- 2 2026-06-01T11:20:00Z review: dry, nothing found" write_log "45 minutes, ends 2026-06-01T12:45:00Z" done "- [x] one"
 start_run
 expect_block "blocks Status: done after only one dry review" "dry reviews"
+extra_cycles="- 2 2026-06-01T11:20:00Z review: dry, nothing found
+- 3 2026-06-01T11:30:00Z added crates, the earlier review: dry was wrong" write_log "45 minutes, ends 2026-06-01T12:45:00Z" done "- [x] one"
+start_run
+expect_block "a line that only mentions review: dry later does not count as a dry review" "dry reviews"
 extra_cycles="$dry_two
 - 4 2026-06-01T11:40:00Z added crates" write_log "45 minutes, ends 2026-06-01T12:45:00Z" done "- [x] one"
 start_run
