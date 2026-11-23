@@ -12,7 +12,8 @@
 # the hook writes that session_id into the marker. Removing the marker ends the run.
 #
 # Allows the stop when: no marker, other session, log missing, Status: stopped (the user's early
-# end), Status: done with every direction checked and the last two cycles dry reviews
+# end), Status: waiting in Mode: review (the run paused after a cycle for the user's notes),
+# Status: done with every direction checked and the last two cycles dry reviews
 # (lines shaped "- <n> <time> review: dry": a review that found nothing left to do or add), budget
 # spent (cycle count or end time), a stale marker (older than the budget plus an
 # hour; 7 days for a cycle budget), or the agent stopped twice with the loop log
@@ -57,6 +58,9 @@ section_lines() { awk -v name="$1" '/^## / { in_section = ($0 == "## " name); ne
 
 run_status=$(header Status | tr '[:upper:]' '[:lower:]')
 [ "$run_status" = "stopped" ] && exit 0
+# Waiting pauses a review run for the user's notes; an overnight run has nobody to wait for.
+run_mode=$(header Mode | tr '[:upper:]' '[:lower:]')
+[ "$run_status" = "waiting" ] && [ "$run_mode" = "review" ] && exit 0
 next_direction=$(section_lines Directions | sed -n 's/^- \[ \][[:space:]]*//p' | head -1)
 # Done ends the run early only when the work ran out, not the patience: no open
 # direction and two dry reviews in a row.

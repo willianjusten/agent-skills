@@ -24,7 +24,7 @@ write_log() {
     echo "Brief: make it better"
     echo "Started: 2026-06-01T11:00:00Z"
     echo "Budget: $budget"
-    echo "Mode: autonomous"
+    echo "Mode: ${run_mode:-autonomous}"
     echo "Attempts: 1"
     echo "Status: $status"
     echo
@@ -116,6 +116,15 @@ expect_allow "allows when Status is stopped"
 write_log "45 minutes, ends 2026-06-01T11:59:00Z" done "- [ ] open"
 start_run
 expect_allow "allows Status: done after the budget is spent"
+run_mode=review write_log "45 minutes, ends 2026-06-01T12:45:00Z" waiting "- [ ] open"
+start_run
+expect_allow "allows Status: waiting in review mode"
+run_mode=review write_log "45 minutes, ends 2026-06-01T12:45:00Z" running "- [ ] open"
+start_run
+expect_block "blocks a review run that is running, not waiting" "open"
+run_mode=overnight write_log "45 minutes, ends 2026-06-01T12:45:00Z" waiting "- [ ] open"
+start_run
+expect_block "blocks Status: waiting in overnight mode" "open"
 
 write_log "45 minutes, ends 2026-06-01T12:45:00Z" running "- [ ] open"
 echo '{"log": "loop.md", "session_id": "other"}' >"$run/.loop-active"
