@@ -19,7 +19,7 @@ flowchart LR
 | Branch | `loop/<app>` in its own lab worktree |
 | Log | `LOOP.md` header, directions from the brief, `.loop-active` |
 | Cycles | one commit and one log line per green cycle, an on-track verdict per direction |
-| Hand-off | `pnpm verify`, `pnpm record`, a summary, files sent to you, a push notification |
+| Hand-off | `pnpm verify`, `pnpm record`, a summary, a run article (one frame per cycle, time and cost, as a private artifact page), files sent to you, a push notification |
 
 ## Usage
 
