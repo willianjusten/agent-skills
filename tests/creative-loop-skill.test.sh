@@ -68,6 +68,8 @@ assert_text "done needs two dry reviews" 'two dry reviews in a row'
 assert_text "the budget is a ceiling" 'budget is a ceiling'
 assert_text "documents Status: stopped for the user" 'Status: stopped. is the user.s early exit'
 assert_text "log reference documents dry reviews" 'review: dry' "$SKILL_DIR/references/loop-log.md"
+assert_text "review mode pauses after every cycle" 'Review mode pauses after every committed cycle'
+assert_text "log reference documents Status: waiting" 'waiting. pauses a review run' "$SKILL_DIR/references/loop-log.md"
 assert_text "log reference documents stopped" 'stopped. is the user.s early exit' "$SKILL_DIR/references/loop-log.md"
 assert_text "hand-off sets done if not already" 'set .Status: done. if it is not already' "$SKILL_DIR/references/hand-off.md"
 
