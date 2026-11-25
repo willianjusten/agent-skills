@@ -26,12 +26,12 @@ flowchart TD
 | ---- | ----------- | ------ |
 | Ideation | the `ideation` skill, with you | `PITCH.md` with your `Approved by` line |
 | Brief | the `brief` skill, with you | `BRIEF.md`: promise, pillars, Not this, features with checks, demo mode, Next directions |
-| Scaffold | `/creative-loop` | a run branch and worktree, an app from `pnpm create-app` |
+| Scaffold | `/creative-loop` | a run branch and worktree, an app from `pnpm create-app`; outside the lab, the existing piece on its branch |
 | Inner loop | the agent | one commit and one `## Cycles` line per green direction |
 | Outer loop | the Stop hook | the next direction, or a review cycle, each time the agent tries to stop early |
 | Overnight | the same loop, `--mode overnight` | a larger budget and no merge, push or deploy |
 | Attempts | `--attempts 2` or `3` | parallel builds of one brief and a stacked video to pick from |
-| Delivery | the agent | `pnpm check`, `pnpm record`, `pnpm verify`, `summary.md` |
+| Delivery | the agent | the adapter's `check`, `record`, `verify` (lab: `pnpm ...`), `summary.md`, met tickets closed |
 | Hand-off | the agent | video, contact sheet and summary on your phone; the branch waits |
 
 ## 1. Ideation
@@ -52,11 +52,11 @@ The `brief` skill turns the pitch into a one-page `BRIEF.md` and shows you the p
 /creative-loop PITCH.md --budget 45m --mode review
 ```
 
-Arguments: `<pitch, brief path or idea> [--budget 45m | 8h | 20cycles] [--mode review|overnight] [--attempts 1..3] [--lab <path>] [--app <name>]`. An argument or answer that is missing gets a default, logged as `Default: ...` under `## Notes`: mode `review`, 45 minutes (review) or 8 hours (overnight), the lab next to the current folder, an app name taken from the pitch.
+Arguments: `<pitch, brief path or idea> [--budget 45m | 8h | 20cycles] [--mode review|overnight] [--attempts 1..3] [--lab <path>] [--app <name>]`. An argument or answer that is missing gets a default, logged as `Default: ...` under `## Notes`: mode `review`, 45 minutes (review) or 8 hours (overnight), the repo's adapter (the lab's commands when the repo is the lab or a new piece goes to the lab next to it), an app name taken from the pitch.
 
-The skill never works on the default branch. It runs `git worktree add -b loop/<app> <lab-parent>/<lab-dirname>-<app> HEAD` from the lab, `pnpm install --frozen-lockfile --offline`, then `pnpm create-app game|experiment <app>`, copies the brief to `apps/<app>/BRIEF.md` and commits the scaffold. `pnpm check <app>` must pass on the untouched template.
+The skill never works on the default branch. It runs `git worktree add -b loop/<app> <lab-parent>/<lab-dirname>-<app> HEAD` from the lab, `pnpm install --frozen-lockfile --offline`, then `pnpm create-app game|experiment <app>`, copies the brief to `apps/<category>/<app>/BRIEF.md` and commits the scaffold. `pnpm check <app>` must pass on the untouched template.
 
-`scripts/start-run.sh --app-dir <worktree>/apps/<app> --budget <budget> --mode <mode> --title <title>` then fills `LOOP.md` (header and directions from the brief), writes `.loop-active` in the folder the session started in and ignores `.loop-active*` in git. Format of the log: [loop-log.md](../skills/orchestration/creative-loop/references/loop-log.md).
+`scripts/start-run.sh --app-dir <worktree>/apps/<category>/<app> --budget <budget> --mode <mode> --title <title>` then fills `LOOP.md` (header and directions from the brief, or from GitHub issues or `.scratch/` tickets with `--directions-from`), writes `.loop-active` in the folder the session started in and ignores `.loop-active*` in git. Format of the log: [loop-log.md](../skills/orchestration/creative-loop/references/loop-log.md).
 
 ## 4. Inner loop
 
@@ -68,7 +68,7 @@ For each direction, in order:
 4. When it is green, commit on the run branch and add one line under `## Cycles`:
    `- <n> <UTC time> <what changed>; check <PASS|FAIL counts>; <minutes used>`.
 
-A direction that adds a gameplay event gets a sound and feedback the `game-feel` way. Two failed tries at one problem: log it under `## Open items`, cut the feature and move on. If a later try is worse than an earlier one, revert: keep the best version, not the latest.
+The profile adds its rules: under `game`, a direction that adds a gameplay event gets a sound and feedback the `game-feel` way; `experiment` and `site` carry no game rules. Two failed tries at one problem: log it under `## Open items`, cut the feature and move on. If a later try is worse than an earlier one, revert: keep the best version, not the latest.
 
 No model judges taste. The guardrails are scripts that pass or fail; you judge the look from the video.
 
@@ -102,9 +102,14 @@ Once the hook lets the agent stop, it follows `references/hand-off.md` of the sk
 
 1. Set `Status: done` in the log; delete `.loop-active` and `.loop-active.state`.
 2. From the run worktree: `pnpm check <app>`, `pnpm record <app>`, then `pnpm verify <app>`. A failing gate is fixed or listed as an open item; a threshold is never edited to pass.
-3. Write `apps/<app>/.verify/<app>/summary.md` (at most 25 lines): branch, changes, open items, check results, defaults taken.
+3. Write `.verify/<app>/summary.md` (at most 40 lines): branch, changes, open items, check results, defaults taken.
 4. Send `play.mp4`, `play-contact-sheet.png` and `summary.md` with SendUserFile, then one PushNotification with the verdict.
-5. Stop. Nothing is merged, pushed or deployed; the branch waits for you.
+5. Close the GitHub tickets the run met, with a comment naming the commits.
+6. Stop. Nothing is merged, pushed or deployed; the branch waits for you.
+
+## Outside the lab
+
+Run `/setup-creative-loop` once in the repo. It writes `.claude/creative-loop.json`, the adapter that names the repo's `shot`, `check`, `verify` and `record` commands, its profile (`game`, `experiment` or `site`) and its default directions source, and adds any shot or record script the repo lacks. Then `/creative-loop <brief path>` works there: on a branch other than the default it runs in place, the hook and the log work unchanged, and attempts mode stays lab-only. Format: [adapter.md](../skills/orchestration/creative-loop/references/adapter.md).
 
 ## Naming siblings
 
