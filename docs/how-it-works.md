@@ -31,8 +31,8 @@ flowchart TD
 | Outer loop | the Stop hook | the next direction, or a review cycle, each time the agent tries to stop early |
 | Overnight | the same loop, `--mode overnight` | a larger budget and no merge, push or deploy |
 | Attempts | `--attempts 2` or `3` | parallel builds of one brief and a stacked video to pick from |
-| Delivery | the agent | the adapter's `check`, `record`, `verify` (lab: `pnpm ...`), `summary.md`, met tickets closed |
-| Hand-off | the agent | video, contact sheet and summary on your phone; the branch waits |
+| Delivery | the agent | the adapter's `check`, `summary.md`, met tickets closed; `record` and `verify` (lab: `pnpm ...`) with `--slow-checks`, a run article with `--article` |
+| Hand-off | the agent | the summary on your phone (video and contact sheet when `record` ran); the branch waits |
 
 ## 1. Ideation
 
@@ -52,7 +52,9 @@ The `brief` skill turns the pitch into a one-page `BRIEF.md` and shows you the p
 /creative-loop PITCH.md --budget 45m --mode review
 ```
 
-Arguments: `<pitch, brief path or idea> [--budget 45m | 8h | 20cycles] [--mode review|overnight] [--attempts 1..3] [--lab <path>] [--app <name>]`. An argument or answer that is missing gets a default, logged as `Default: ...` under `## Notes`: mode `review`, 45 minutes (review) or 8 hours (overnight), the repo's adapter (the lab's commands when the repo is the lab or a new piece goes to the lab next to it), an app name taken from the pitch.
+Arguments: `<pitch, brief path or idea> [--budget 45m | 8h | 20cycles] [--mode review|overnight] [--attempts 1..3] [--lab <path>] [--app <name>] [--slow-checks] [--article]`. An argument or answer that is missing gets a default, logged as `Default: ...` under `## Notes`: mode `review`, 45 minutes (review) or 8 hours (overnight), the repo's adapter (the lab's commands when the repo is the lab or a new piece goes to the lab next to it), an app name taken from the pitch, and slow checks and the run article off.
+
+Two opt-in flags cover the parts that take minutes, so a run spends its budget on the piece: `--slow-checks` runs the adapter's `checkSlow` in review cycles and `verify` and `record` at hand-off (on a site, often a full browser performance pass of ten minutes or more); `--article` saves a frame per cycle and publishes the run article, a private artifact page with the frames, time and token cost. Without them the per-cycle `check` is the only gate, no artifact is published, and the summary names the commands to run yourself, usually at the end of a bigger loop. Asking for either one in the conversation works too.
 
 The skill never works on the default branch. It runs `git worktree add -b loop/<app> <lab-parent>/<lab-dirname>-<app> HEAD` from the lab, `pnpm install --frozen-lockfile --offline`, then `pnpm create-app game|experiment <app>`, copies the brief to `apps/<category>/<app>/BRIEF.md` and commits the scaffold. `pnpm check <app>` must pass on the untouched template.
 
@@ -101,9 +103,9 @@ When all are done, `pnpm record <path-a> <path-b> [<path-c>]` writes one stacked
 Once the hook lets the agent stop, it follows `references/hand-off.md` of the skill:
 
 1. Set `Status: done` in the log; delete `.loop-active` and `.loop-active.state`.
-2. From the run worktree: `pnpm check <app>`, `pnpm record <app>`, then `pnpm verify <app>`. A failing gate is fixed or listed as an open item; a threshold is never edited to pass.
+2. From the run worktree: `pnpm check <app>`; with `--slow-checks` also `pnpm record <app>`, then `pnpm verify <app>`, otherwise the summary says they were not run. A failing gate is fixed or listed as an open item; a threshold is never edited to pass.
 3. Write `.verify/<app>/summary.md` (at most 40 lines): branch, changes, open items, check results, defaults taken.
-4. Send `play.mp4`, `play-contact-sheet.png` and `summary.md` with SendUserFile, then one PushNotification with the verdict.
+4. With `--article`, publish the run article. Send `summary.md` (and `play.mp4`, `play-contact-sheet.png` when `record` ran) with SendUserFile, then one PushNotification with the verdict.
 5. Close the GitHub tickets the run met, with a comment naming the commits.
 6. Stop. Nothing is merged, pushed or deployed; the branch waits for you.
 
