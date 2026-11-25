@@ -70,6 +70,8 @@ assert_text "documents Status: stopped for the user" 'Status: stopped. is the us
 assert_text "log reference documents dry reviews" 'review: dry' "$SKILL_DIR/references/loop-log.md"
 assert_text "log reference documents stopped" 'stopped. is the user.s early exit' "$SKILL_DIR/references/loop-log.md"
 assert_text "hand-off sets done if not already" 'set .Status: done. if it is not already' "$SKILL_DIR/references/hand-off.md"
+assert_text "checks the Stop hook is installed" 'names .loop-stop.sh.'
+assert_text "works in place on an existing branch" 'work in place on that branch'
 PROFILES="$SKILL_DIR/references"
 assert_text "game rules only under the game profile" 'Game rules apply only under the game profile'
 assert_text "game profile: sound the game-feel way" 'game-feel. way' "$PROFILES/profile-game.md"
