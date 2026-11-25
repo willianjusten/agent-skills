@@ -47,6 +47,12 @@ assert_text "hand-off links demo and tune" '\?demo=1., .\?tune' "$SKILL_DIR/refe
 assert_text "hand-off forbids merge, push, deploy, delete" 'not merge, push, deploy or delete' "$SKILL_DIR/references/hand-off.md"
 
 assert_text "review cycle runs the UI pass" 'run the UI pass'
+assert_text "slow checks are opt-in" '\[--slow-checks\]'
+assert_text "run article is opt-in" '\[--article\]'
+assert_text "slow checks and article default off" 'slow checks and the run article off'
+assert_text "hand-off skips slow gates without the flag" 'without it skip those three' "$SKILL_DIR/references/hand-off.md"
+assert_text "hand-off skips the article without the flag" 'Only with .--article.' "$SKILL_DIR/references/hand-off.md"
+assert_text "site profile runs checkSlow only with the flag" 'With .--slow-checks., run .checkSlow.' "$SKILL_DIR/references/profile-site.md"
 assert_text "UI pass reads the check ui shots" 'check/ui/' "$SKILL_DIR/references/ui-pass.md"
 assert_text "UI pass fixes ui layout FAILs" 'ui layout. FAIL' "$SKILL_DIR/references/ui-pass.md"
 assert_text "UI pass holds screens to game-design ui-ux" 'game-design.*ui-ux.md' "$SKILL_DIR/references/ui-pass.md"
