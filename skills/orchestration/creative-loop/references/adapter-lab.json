@@ -1,0 +1,14 @@
+{
+  "profile": "{kind}",
+  "brief": "apps/{category}/{app}/BRIEF.md",
+  "directions": { "source": "brief" },
+  "install": "pnpm install --frozen-lockfile --offline",
+  "scaffold": "pnpm create-app {kind} {app}",
+  "dev": { "command": "pnpm --dir apps/{category}/{app} dev --host", "url": null },
+  "shot": "pnpm shot {app} {seconds}",
+  "check": "pnpm check {app}",
+  "checkSlow": null,
+  "verify": "pnpm verify {app}",
+  "record": "pnpm record {app}",
+  "out": ".verify/{app}"
+}

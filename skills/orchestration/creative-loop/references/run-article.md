@@ -7,7 +7,7 @@ A private artifact page that shows the piece growing, one frame per cycle, with 
 One frame per cycle, all taken the same way, so the only thing that changes between two frames is the build.
 
 - At cycle 1 choose the frame: one demo second that shows play (not a menu) and the window the brief names (a phone-first piece is shot upright). Log it under `## Notes` as `Frame: <seconds>s, <width>x<height>`.
-- After each cycle's commit, save that frame as `.verify/<app>/history/<cycle, two digits>.jpg`.
+- After each cycle's commit, save that frame as `<out>/history/<cycle, two digits>.jpg` (lab: `.verify/<app>/history/`).
 - A cycle with no frame at hand-off is rebuilt from its commit: `git worktree add` a scratch checkout at that commit, build, shoot the same frame, remove the scratch worktree.
 
 Done when every `## Cycles` line has a frame.
