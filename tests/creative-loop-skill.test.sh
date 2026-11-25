@@ -17,7 +17,7 @@ trap '[ -z "$lab_cleanup" ] || $lab_cleanup; rm -rf "$work"' EXIT
 # Shape
 [ "$(field "$SKILL" name)" = creative-loop ] && pass "name is creative-loop" || fail "name is creative-loop" "$(field "$SKILL" name)"
 [ "$(field "$SKILL" disable-model-invocation)" = true ] && pass "run by name only" || fail "run by name only" "disable-model-invocation: $(field "$SKILL" disable-model-invocation)"
-[ "$(meta "$SKILL" uses)" = "ideation brief three-build game-feel game-design ui-polish" ] && pass "uses the six skills" || fail "uses the six skills" "$(meta "$SKILL" uses)"
+[ "$(meta "$SKILL" uses)" = "ideation brief three-build game-feel game-design ui-polish setup-creative-loop" ] && pass "uses the seven skills" || fail "uses the seven skills" "$(meta "$SKILL" uses)"
 [ -f "$SKILL_DIR/README.md" ] && pass "has a README" || fail "has a README"
 
 # Text assertions: overnight safety and unattended behaviour

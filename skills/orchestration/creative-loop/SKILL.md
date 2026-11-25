@@ -4,7 +4,7 @@ description: Runs one game, experiment or site piece from a pitch or brief to a 
 disable-model-invocation: true
 metadata:
   scope: personal
-  uses: ideation brief three-build game-feel game-design ui-polish
+  uses: ideation brief three-build game-feel game-design ui-polish setup-creative-loop
 ---
 
 # Creative Loop

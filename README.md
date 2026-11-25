@@ -24,7 +24,7 @@ Throughout, deny rules block `rm -rf` and reading `.env` files, and the global i
   <img src="docs/images/creative-loop.svg" alt="Ideation and brief, approved by you; then creative-loop runs the inner loop edit, shot, look, check, commit, the Stop hook is the outer loop, then hand-off." width="100%">
 </p>
 
-For games and animated experiments in the lab repo: `ideation`, `brief`, then `/creative-loop`. Walkthrough in [How the creative flow works](docs/how-it-works.md).
+For games and animated experiments in the lab repo, or a site or app set up once with `/setup-creative-loop`: `ideation`, `brief`, then `/creative-loop`. Walkthrough in [How the creative flow works](docs/how-it-works.md).
 
 ## Guides
 
@@ -83,7 +83,7 @@ For a bug: `/diagnosing-bugs` reproduces it and finds the cause, then the fix go
 | **Build** | `implement` (one ticket), `implement-spec` (whole spec, parallel), `tdd`, `ui-polish` (look at a UI change and fix it, before you review), `matt-code-review` |
 | **Realtime 3D** (lab repo) | `three-build` (apps on WebGPURenderer; the inner-loop commands `pnpm shot`, `pnpm check <app>`, `pnpm record`), `three-tsl` (shaders as TSL), `asset-pipeline` (packs-first, licensed or code-made assets) |
 | **Brief** (before building) | `ideation` (interview to a one-page pitch), `brief` (one-page BRIEF.md: promise, Not this, features with checks, demo mode, next directions) |
-| **Loop** (lab repo) | `creative-loop` (one run from a pitch or brief to a checked, recorded build in your session: run branch, loop log, inner loop, Stop hook as outer loop, `--attempts`, hand-off; review or overnight mode) |
+| **Loop** (lab, or any repo set up for it) | `creative-loop` (one run from a pitch or brief to a checked, recorded build in your session: run branch, loop log, inner loop, Stop hook as outer loop, `--attempts` in the lab, hand-off; review or overnight mode; game, experiment or site profile), `setup-creative-loop` (once per repo outside the lab: writes the adapter with its shot, check, verify and record commands) |
 | **Game design** | `game-design` (handbook by topic: loop, difficulty, first minute, play field, menus and HUD, copy, feel, sound, accessibility; rules with numbers and checks) |
 | **Game feel** (lab repo) | `game-feel` (event map, audio wiring, a sound and a reaction for every gameplay event) |
 | **Ship and learn** | `pr`, `retro` |
