@@ -70,6 +70,13 @@ assert_text "documents Status: stopped for the user" 'Status: stopped. is the us
 assert_text "log reference documents dry reviews" 'review: dry' "$SKILL_DIR/references/loop-log.md"
 assert_text "log reference documents stopped" 'stopped. is the user.s early exit' "$SKILL_DIR/references/loop-log.md"
 assert_text "hand-off sets done if not already" 'set .Status: done. if it is not already' "$SKILL_DIR/references/hand-off.md"
+DIRECTIONS="$SKILL_DIR/references/directions.md"
+assert_text "links the directions sources" 'references/directions.md'
+assert_text "directions: asks for the source" 'Ask the user which one' "$DIRECTIONS"
+assert_text "directions: GitHub sub-issues in order" 'sub_issues' "$DIRECTIONS"
+assert_text "directions: scratch tickets set to done" 'Status:. to .done' "$DIRECTIONS"
+assert_text "directions: GitHub closed only at hand-off" 'at hand-off.*gh issue close' "$DIRECTIONS"
+assert_text "directions: no other tracker writes" 'never assign, label, reopen or create tickets' "$DIRECTIONS"
 
 # start-run.sh, hermetic
 make_app() { # <dir>

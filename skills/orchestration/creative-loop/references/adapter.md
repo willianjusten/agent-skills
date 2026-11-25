@@ -19,7 +19,7 @@ Log which one was used as `Default: adapter <path>`.
 | ----- | ------- | -------- |
 | `profile` | `game`, `experiment` or `site`: which `references/profile-<name>.md` the run follows | yes |
 | `brief` | path of `BRIEF.md` from the repo root; `LOOP.md` goes next to it | yes |
-| `directions` | default source: `{"source": "brief"}`, `{"source": "github", "parent": <issue>}` or `{"source": "scratch", "feature": "<folder>"}` | yes |
+| `directions` | default source: `{"source": "brief"}`, `{"source": "github", "parent": <issue>}` or `{"source": "scratch", "feature": "<folder>"}` ([directions.md](directions.md)) | yes |
 | `install` | run once in a new worktree, before anything else | no |
 | `scaffold` | creates a new piece; `null` when the piece already exists | no |
 | `dev` | `command` starts the dev server; `url` is the page to open, `null` when the server prints it. Reuse a server already answering on that URL before starting one (some servers refuse a second copy in one folder) | yes |

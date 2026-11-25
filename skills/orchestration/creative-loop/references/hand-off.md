@@ -17,5 +17,6 @@ Run in order after the hook lets you stop.
    - **Next:** numbered choices, the recommended one first (for example merge the branch, reopen with new directions, or listen to the audio).
 4. **Run article.** Build and publish the frame-per-cycle page with the run's time and cost: [run-article.md](run-article.md).
 5. **Send files.** With SendUserFile, in this order: the screens sheet (lab: `screens.png` under `.verify/<app>/check/ui/`), so the user judges every screen at a glance, then the video and contact sheet (lab: `play.mp4`, `play-contact-sheet.png` under `.verify/<app>/record/`), then `summary.md`. Start the dev server in the background with `--host` on a free port, or reuse the one running, and print the summary in the chat with the real address and port filled in, the run article's link first.
-6. **Notify.** One PushNotification with the one line that matters: the verdict and the first open item, for example `loop/<app> ready: verify PASSED, 2 open items` (the run branch's name).
-7. **Stop.** Do not merge, push, deploy or delete anything. The branch waits for the user.
+6. **Tickets.** For a GitHub directions source, comment on and close each met ticket as [directions.md](directions.md) "Writing back" says, and list them in the summary under **Changes**.
+7. **Notify.** One PushNotification with the one line that matters: the verdict and the first open item, for example `loop/<app> ready: verify PASSED, 2 open items` (the run branch's name).
+8. **Stop.** Do not merge, push, deploy or delete anything. The branch waits for the user.
