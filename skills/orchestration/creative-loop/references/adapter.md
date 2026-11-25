@@ -34,7 +34,7 @@ Placeholders the loop fills: `{app}` (the piece's kebab-case name), `{kind}` (`g
 
 ## Example
 
-A site working on an existing page, directions from a GitHub parent issue:
+A site working on an existing page, directions from a GitHub parent issue, shots and record from the scripts `setup-creative-loop` adds:
 
 ```json
 {
@@ -43,12 +43,12 @@ A site working on an existing page, directions from a GitHub parent issue:
   "directions": { "source": "github", "parent": 317 },
   "install": "pnpm install --frozen-lockfile",
   "scaffold": null,
-  "dev": { "command": "pnpm dev", "url": "http://localhost:3000/next" },
-  "shot": "node scripts/world-loop/shot.mjs --url {url} --out .loop/shots",
+  "dev": { "command": "pnpm dev -p 3601", "url": "http://localhost:3601/next" },
+  "shot": "node scripts/creative-loop/shot.mjs --url {url} --pages \"?stop=wide&time=sunrise,?stop=wide&time=day,?stop=wide&time=sunset,?stop=wide&time=night,?stop=lab&time=day\" --sizes 1440x900,390x844 --ready \"[data-world-ready=true]\" --wait 2500 --out .loop/shots",
   "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test",
-  "checkSlow": "pnpm world:check --url {url}",
-  "verify": "pnpm world:check --url {url}",
-  "record": "node scripts/world-loop/record.mjs --url {url} --out .loop/record",
+  "checkSlow": "pnpm world:check --url http://localhost:3601",
+  "verify": "pnpm world:check --url http://localhost:3601",
+  "record": "node scripts/creative-loop/record.mjs --url {url} --pages \"?stop=wide&time=sunrise,?stop=wide&time=day,?stop=places&time=day,?stop=lab&time=day,?stop=nba&time=day,?stop=games&time=day,?stop=music&time=day,?stop=contact&time=day,?stop=wide&time=sunset,?stop=wide&time=night\" --size 1440x900 --ready \"[data-world-ready=true]\" --dwell 4000 --out .loop/record",
   "out": ".loop"
 }
 ```

@@ -38,7 +38,7 @@ Progress:
 
 **4. Map commands and add scripts.** Fill `check`, `checkSlow`, `verify`, `install` and `dev` from the repo's scripts as [references/mapping.md](references/mapping.md) says. For `shot` and `record`, use the repo's own tool if it has one; else copy `scripts/shot.mjs` and `scripts/record.mjs` from this skill into the repo's `scripts/creative-loop/` and build the commands from the answers (flags are in each script's header). Done when every required field has a command.
 
-**5. Write the adapter.** `.claude/creative-loop.json`, fields as `creative-loop` `references/adapter.md` lists them, `scaffold` `null` unless the repo creates pieces from a template. Add the `out` folder to `.gitignore`. Done when `jq . .claude/creative-loop.json` parses.
+**5. Write the adapter.** `.claude/creative-loop.json`, fields as `creative-loop` `references/adapter.md` lists them, `scaffold` `null` unless the repo creates pieces from a template. Add the `out` folder to `.gitignore`. If `git check-ignore .claude/creative-loop.json` matches (many repos ignore `.claude/`), turn that rule into `/.claude/*` plus `!/.claude/creative-loop.json`, so the adapter can be committed and every worktree has it. Done when `jq . .claude/creative-loop.json` parses and git does not ignore it.
 
 **6. Dry run.** Reuse the running dev server or start `dev` in the background. Fill the placeholders as the loop would and run, in order: `check`, `shot` (open two of the images and look at them), `checkSlow`, `record` (open the contact sheet), `verify`. A command that errors because of the adapter is fixed in it, and you go back to step 5. A command that runs but reports the repo's own failures stays as it is: report them. Done when each command ran and you have its result.
 

@@ -21,6 +21,7 @@ assert_text "follows the loop's adapter reference" 'creative-loop. .references/a
 assert_text "nothing committed" 'nothing committed'
 assert_text "asks before adding a dependency" 'ask first'
 assert_text "dry-runs every command" 'Every command runs once'
+assert_text "unignores the adapter when .claude/ is ignored" '!/\.claude/creative-loop\.json'
 assert_text "copies the bundled scripts into the repo" 'scripts/creative-loop/'
 
 for script in shot record; do
