@@ -1,8 +1,11 @@
 #!/bin/bash
-# Starts a loop run: fills the app's LOOP.md (header and directions from BRIEF.md),
-# writes .loop-active in the current folder and ignores .loop-active* in git.
+# Starts a loop run: fills <app-dir>/LOOP.md (header, and directions from <app-dir>/BRIEF.md or
+# from --directions-from), writes .loop-active in the current folder and ignores .loop-active* in git.
 # Usage: start-run.sh --app-dir <dir> --budget <45m|8h|20cycles> --mode <review|overnight>
-#        --title <title> [--session-id <id>] [--attempts <n>] [--no-marker] [--force]
+#        --title <title> [--directions-from <file>] [--session-id <id>] [--attempts <n>]
+#        [--no-marker] [--force]
+# --directions-from: one direction per line, used instead of the brief's list. A line may already be
+# "- [ ] text" or "- [x] text" (kept as is); any other non-empty line becomes "- [ ] text".
 # The marker takes the session id from --session-id, else $CLAUDE_SESSION_ID; with neither, the
 # Stop hook binds the marker to the first session that stops under it.
 # Log format: ../references/loop-log.md.
@@ -10,13 +13,14 @@ set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 command -v jq >/dev/null 2>&1 || { echo "jq is required (brew install jq)" >&2; exit 1; }
 
-app_dir="" budget="" mode="review" title="" session_id="" attempts=1 no_marker=0 force=0
+app_dir="" budget="" mode="review" title="" directions_file="" session_id="" attempts=1 no_marker=0 force=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --app-dir) option_value --app-dir $#; app_dir="$2"; shift 2 ;;
     --budget) option_value --budget $#; budget="$2"; shift 2 ;;
     --mode) option_value --mode $#; mode="$2"; shift 2 ;;
     --title) option_value --title $#; title="$2"; shift 2 ;;
+    --directions-from) option_value --directions-from $#; directions_file="$2"; shift 2 ;;
     --session-id) option_value --session-id $#; session_id="$2"; shift 2 ;;
     --attempts) option_value --attempts $#; attempts="$2"; shift 2 ;;
     --no-marker) no_marker=1; shift ;;
@@ -25,6 +29,7 @@ while [ $# -gt 0 ]; do
   esac
 done
 [ -d "$app_dir" ] || { echo "--app-dir must be an existing folder" >&2; exit 2; }
+[ -z "$directions_file" ] || [ -f "$directions_file" ] || { echo "--directions-from must be an existing file" >&2; exit 2; }
 case "$mode" in review | overnight) ;; *) echo "--mode must be review or overnight" >&2; exit 2 ;; esac
 [ -n "$title" ] || title="$(basename "$app_dir")"
 if [ -z "$budget" ]; then
@@ -54,7 +59,13 @@ esac
 
 brief_path="$app_dir/BRIEF.md"
 directions=""
-if [ -f "$brief_path" ]; then
+if [ -n "$directions_file" ]; then
+  directions="$(awk '
+    /^[ \t]*$/ { next }
+    /^- \[[ xX]\] / { sub(/^- \[X\]/, "- [x]"); print; next }
+    { sub(/^[ \t]*([-*]|[0-9]+[.)])[ \t]+/, ""); print "- [ ] " $0 }
+  ' "$directions_file")"
+elif [ -f "$brief_path" ]; then
   # The numbered lines under the heading that contains "Next directions".
   directions="$(awk '
     /^#+[ \t]/ { in_section = ($0 ~ /[Nn]ext [Dd]irections/); next }
@@ -92,7 +103,9 @@ fi
 rm -f "$run_folder/.loop-active.state"
 
 # Keep the marker out of commits: .gitignore in the run's repo, info/exclude in the session folder's repo.
-if repo_root="$(git -C "$app_dir" rev-parse --show-toplevel 2>/dev/null)"; then
+# When the session runs inside the run's repo, info/exclude alone keeps the marker out, so .gitignore is left alone.
+session_root="$(git -C "$run_folder" rev-parse --show-toplevel 2>/dev/null || true)"
+if repo_root="$(git -C "$app_dir" rev-parse --show-toplevel 2>/dev/null)" && [ "$repo_root" != "$session_root" ]; then
   grep -qxF '.loop-active*' "$repo_root/.gitignore" 2>/dev/null || echo '.loop-active*' >>"$repo_root/.gitignore"
 fi
 if exclude_file="$(git -C "$run_folder" rev-parse --git-path info/exclude 2>/dev/null)"; then

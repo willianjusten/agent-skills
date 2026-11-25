@@ -107,6 +107,28 @@ sed -i.bak '/^## Cycles/a\
 ' "$log" && rm -f "$log.bak"
 if ( cd "$session_folder" && "$START" --app-dir "$repo/apps/coin-dash" >/dev/null 2>&1 ); then fail "refuses to overwrite cycles"; else pass "refuses to overwrite cycles"; fi
 
+# --directions-from replaces the brief's list; ticked lines stay ticked
+printf -- '- [x] Build the hub (#327)\nTime of day (#318)\n\n2. Night city (#319)\n- [X] Entrance\n' >"$work/directions.txt"
+( cd "$session_folder" && "$START" --app-dir "$repo/apps/coin-dash" --directions-from "$work/directions.txt" --force >/dev/null 2>&1 ) &&
+  pass "start-run.sh takes --directions-from" || fail "start-run.sh takes --directions-from"
+directions_section=$(awk '/^## / { in_section = ($0 == "## Directions"); next } in_section && /^- /' "$log")
+expected_directions=$(printf -- '- [x] Build the hub (#327)\n- [ ] Time of day (#318)\n- [ ] Night city (#319)\n- [x] Entrance')
+[ "$directions_section" = "$expected_directions" ] && pass "directions come from the file, ticks kept" || fail "directions come from the file, ticks kept" "$directions_section"
+hook_output=$(jq -n --arg cwd "$session_folder" '{session_id: "s1", cwd: $cwd}' | bash "$HOOK" 2>&1)
+jq -r .reason <<<"$hook_output" | grep -qF 'Time of day (#318)' && pass "the hook skips a ticked direction" || fail "the hook skips a ticked direction" "$hook_output"
+if ( cd "$session_folder" && "$START" --app-dir "$repo/apps/coin-dash" --directions-from "$work/missing.txt" --force >/dev/null 2>&1 ); then fail "refuses a missing directions file"; else pass "refuses a missing directions file"; fi
+
+# A session inside the run's repo (working in place): info/exclude only, the tracked .gitignore is left alone
+in_place="$work/in-place"
+mkdir -p "$in_place"
+git -C "$in_place" init -q
+make_app "$in_place/docs/world"
+( cd "$in_place" && "$START" --app-dir "$in_place/docs/world" --budget 20cycles --session-id s2 >/dev/null 2>&1 ) &&
+  pass "start-run.sh runs in place" || fail "start-run.sh runs in place"
+[ ! -e "$in_place/.gitignore" ] && pass "in place: no .gitignore edit" || fail "in place: no .gitignore edit" "$(cat "$in_place/.gitignore")"
+grep -qxF '.loop-active*' "$in_place/.git/info/exclude" && pass "in place: info/exclude ignores the marker" || fail "in place: info/exclude ignores the marker"
+[ -z "$(git -C "$in_place" status --short --untracked-files=all -- .loop-active)" ] && pass "in place: marker is not untracked" || fail "in place: marker is not untracked"
+
 # Opt-in dry run against a lab checkout. Needs pnpm, a built lab and a browser; set LAB_ROOT to a throwaway lab worktree.
 if [ -n "${LAB_ROOT:-}" ]; then
   app=loop-dry-run
