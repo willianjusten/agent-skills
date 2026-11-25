@@ -8,7 +8,7 @@ The fast gate the loop runs before every commit, so it must finish in about a mi
 
 ## checkSlow and verify
 
-`checkSlow` is the slow gate run in review cycles: an e2e suite, a visual or performance check, a build plus a smoke run. Prefer a form that targets the running server (`--url {url}`, `BASE_URL={url}`) over one that needs a fresh build. `verify` is the hand-off gate: the slowest honest one the repo has, usually the same as `checkSlow`, or the build (`build`) when there is nothing else. Never `null`: the hand-off needs a verdict.
+`checkSlow` is the slow gate run in review cycles when a run passes `--slow-checks` (off by default): an e2e suite, a visual or performance check, a build plus a smoke run. Prefer a form that targets the running server (`--url {url}`, `BASE_URL={url}`) over one that needs a fresh build. `verify` is the hand-off gate, also only with `--slow-checks`: the slowest honest one the repo has, usually the same as `checkSlow`, or the build (`build`) when there is nothing else. Never `null`: the hand-off needs a verdict.
 
 ## dev and url
 

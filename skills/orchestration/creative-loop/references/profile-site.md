@@ -10,7 +10,7 @@ Used when the adapter's `profile` is `site`: a page or a set of pages in an exis
 
 ## Review cycle
 
-Check the fresh shots against the brief's pillars, Not this list and done condition, in that order, then name the three weakest things a first-time visitor would notice and one thing to remove or simplify (a section, label, effect or control that costs more attention than it gives). Run the UI pass ([ui-pass.md](ui-pass.md)) at every width the brief names, holding each screen to the repo's own UI rules. Run `checkSlow` in every review cycle.
+Check the fresh shots against the brief's pillars, Not this list and done condition, in that order, then name the three weakest things a first-time visitor would notice and one thing to remove or simplify (a section, label, effect or control that costs more attention than it gives). Run the UI pass ([ui-pass.md](ui-pass.md)) at every width the brief names, holding each screen to the repo's own UI rules. With `--slow-checks`, run `checkSlow` in every review cycle; without it, leave it to the user.
 
 ## Hand-off
 

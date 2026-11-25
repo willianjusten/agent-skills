@@ -1,6 +1,6 @@
 # Run article
 
-A private artifact page that shows the piece growing, one frame per cycle, with what the run cost. It is the page the user shares; the summary is the page they act on.
+A private artifact page that shows the piece growing, one frame per cycle, with what the run cost. It is the page the user shares; the summary is the page they act on. Made only when the run has `--article` or the user asks for it; otherwise no frames are saved and nothing is published.
 
 ## Frames
 

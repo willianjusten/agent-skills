@@ -25,9 +25,9 @@ Log which one was used as `Default: adapter <path>`.
 | `dev` | `command` starts the dev server; `url` is the page to open, `null` when the server prints it. Reuse a server already answering on that URL before starting one (some servers refuse a second copy in one folder) | yes |
 | `shot` | writes the cycle's images and prints their paths, exits non-zero on failure | yes |
 | `check` | the per-cycle gate, run before every commit; exit 0 is green, and every `FAIL` line it prints is a failure | yes |
-| `checkSlow` | the gate that needs a build or minutes; run in review cycles and at hand-off | no |
-| `verify` | the hand-off gate; exit 0 passes | yes |
-| `record` | writes a video and a contact sheet of the piece and prints their paths | yes |
+| `checkSlow` | the gate that needs a build or minutes; run in review cycles and at hand-off, only with `--slow-checks` | no |
+| `verify` | the hand-off gate, only with `--slow-checks`; exit 0 passes | yes |
+| `record` | writes a video and a contact sheet of the piece and prints their paths; at hand-off only with `--slow-checks` | yes |
 | `out` | folder (from the repo root, gitignored) for shots, `history/` frames and `summary.md` | yes |
 
 Placeholders the loop fills: `{app}` (the piece's kebab-case name), `{kind}` (`game` or `experiment`), `{category}` (`games` or `experiments`), `{seconds}` (demo seconds to shoot, space-separated), `{url}` (the running page). A command may chain with `&&`. Unknown fields are ignored.

@@ -13,9 +13,14 @@ One run, one attempt, one branch. The inner loop is edit, shot, look, check, com
 
 ## Arguments
 
-`/creative-loop <pitch, brief path or idea> [--budget 45m | 8h | 20cycles] [--mode review|overnight] [--attempts 1..3] [--lab <path>] [--app <name>]`
+`/creative-loop <pitch, brief path or idea> [--budget 45m | 8h | 20cycles] [--mode review|overnight] [--attempts 1..3] [--lab <path>] [--app <name>] [--slow-checks] [--article]`
 
-Defaults when an argument or an answer is missing (take them, never wait, log each under `## Notes` as `Default: ...`): mode `review`; budget 45 minutes (review) or 8 hours (overnight); repo and commands as [references/adapter.md](references/adapter.md) "Finding it" says (the lab is the current directory if its root `package.json` is named `lab`, else the `lab` checkout next to it); app name is a kebab-case name taken from the pitch.
+Defaults when an argument or an answer is missing (take them, never wait, log each under `## Notes` as `Default: ...`): mode `review`; budget 45 minutes (review) or 8 hours (overnight); repo and commands as [references/adapter.md](references/adapter.md) "Finding it" says (the lab is the current directory if its root `package.json` is named `lab`, else the `lab` checkout next to it); app name is a kebab-case name taken from the pitch; slow checks and the run article off.
+
+The two opt-in flags, each off unless the user passes it or asks for it in the conversation (log which are on as `Default: slow checks off, run article off` or the like):
+
+- `--slow-checks`: the gates that take minutes, the adapter's `checkSlow` in review cycles and `verify` and `record` at hand-off. Without it the per-cycle `check` is the only gate; the user runs the slow ones themselves, usually at the end of a bigger loop.
+- `--article`: the run article ([references/run-article.md](references/run-article.md)), its frame per cycle and its cost sum. Without it no frames are saved and no artifact page is published.
 
 ## Profiles
 
@@ -31,11 +36,11 @@ The adapter's `profile` picks the rules a run adds to steps 5, 7 and 8. Read the
    - edit; `shot` (lab: `pnpm shot <app> <seconds...>`), then read the images (a change you have not looked at is not done);
    - `check` (lab: `pnpm check <app>`); fix every FAIL;
    - when it is green, commit on the run branch and add one `## Cycles` line: `- <n> <UTC time> <what changed>; check <PASS|FAIL counts>; <minutes used>`.
-   - save the cycle's frame for the run article ([references/run-article.md](references/run-article.md), Frames).
+   - with `--article`, save the cycle's frame for the run article ([references/run-article.md](references/run-article.md), Frames).
    Follow the profile's direction rules. Done when the direction is met and the commit is green; tick it `- [x]`, and update its `.scratch/` ticket as [references/directions.md](references/directions.md) "Writing back" says.
 6. **Cut and keep.** Two failed tries at one problem: stop, log it under `## Open items` with the symptom, cut the feature or direction and move on. If a later try scores worse than an earlier one (check lines, shot, frame time), `git revert` or restore the earlier version: keep the best, not the latest. Done when no direction is retried a third time.
 7. **Let the hook drive.** Each time you stop, the hook may block with the next direction or, when the list is done, a review cycle: take fresh shots, review them as the profile says (each finding names its rule), name the three weakest things a player or visitor would notice and one thing to remove or simplify, fix them, and run the UI pass ([references/ui-pass.md](references/ui-pass.md)) with the profile's rules. Every blocked stop must be followed by tool calls (Claude Code ends the session after 8 consecutive blocked stops with none); never answer a block with prose only. The hook drives only the session this skill runs in. The list, not the clock, decides the end: when it is finished, run review cycles against the brief and every direction so far, and list new ideas for the piece, removals and simplifications among them, not only additions; each finding or idea worth doing becomes a new unchecked direction. A review that finds nothing and no idea worth doing is logged as a dry review (`review: dry`, with what was checked and the ideas rejected; format in the loop log reference). After two dry reviews in a row with every direction checked, set `Status: done`; the hook then lets you stop (set earlier, it is ignored while budget remains). The budget is a ceiling, and `Status: stopped` is the user's early exit (they write it, or you do when they ask in the conversation). Done when the hook lets you stop: two dry reviews and `Status: done`, the budget is spent, or the user wrote `Status: stopped`.
-8. **Hand off.** Follow [references/hand-off.md](references/hand-off.md): set `Status: done` if it is not already (it is after two dry reviews, and you set it now when the budget ran out; leave `stopped` as is), delete `.loop-active` and `.loop-active.state`, run the adapter's `verify` and `record` (lab: `pnpm verify <app>` and `pnpm record <app>`), write the summary, publish the run article, send the files with SendUserFile, close met GitHub tickets, and send a PushNotification. Done when the notification is sent and the worktree is clean.
+8. **Hand off.** Follow [references/hand-off.md](references/hand-off.md): set `Status: done` if it is not already (it is after two dry reviews, and you set it now when the budget ran out; leave `stopped` as is), delete `.loop-active` and `.loop-active.state`, with `--slow-checks` run the adapter's `verify` and `record` (lab: `pnpm verify <app>` and `pnpm record <app>`), write the summary, with `--article` publish the run article, send the files with SendUserFile, close met GitHub tickets, and send a PushNotification. Done when the notification is sent and the worktree is clean.
 
 ## Attempts mode
 

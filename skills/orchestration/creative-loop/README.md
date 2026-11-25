@@ -21,7 +21,7 @@ flowchart LR
 | Branch | `loop/<app>` in its own worktree, or the current branch when the piece already exists |
 | Log | `LOOP.md` header, directions from the brief, GitHub issues or `.scratch/` tickets, `.loop-active` |
 | Cycles | one commit and one log line per green cycle, an on-track verdict per direction |
-| Hand-off | `verify`, `record`, a summary, met tickets closed, a run article (one frame per cycle, time and cost, as a private artifact page), files sent to you, a push notification |
+| Hand-off | a summary, met tickets closed, files sent to you, a push notification; `verify` and `record` with `--slow-checks`, a run article (one frame per cycle, time and cost, as a private artifact page) with `--article` |
 
 ## Usage
 
@@ -31,6 +31,7 @@ flowchart LR
 /creative-loop a game about tides --budget 20cycles
 /creative-loop a game about tides --attempts 3 --mode overnight --budget 8h
 /creative-loop docs/world/BRIEF.md --mode overnight --budget 8h
+/creative-loop docs/world/BRIEF.md --budget 8h --slow-checks --article
 ```
 
 ## Output
