@@ -70,6 +70,15 @@ assert_text "documents Status: stopped for the user" 'Status: stopped. is the us
 assert_text "log reference documents dry reviews" 'review: dry' "$SKILL_DIR/references/loop-log.md"
 assert_text "log reference documents stopped" 'stopped. is the user.s early exit' "$SKILL_DIR/references/loop-log.md"
 assert_text "hand-off sets done if not already" 'set .Status: done. if it is not already' "$SKILL_DIR/references/hand-off.md"
+PROFILES="$SKILL_DIR/references"
+assert_text "game rules only under the game profile" 'Game rules apply only under the game profile'
+assert_text "game profile: sound the game-feel way" 'game-feel. way' "$PROFILES/profile-game.md"
+assert_text "game profile: game-design review order" 'Reviewing a build' "$PROFILES/profile-game.md"
+assert_text "game profile: holds screens to ui-ux" 'game-design.*ui-ux.md' "$PROFILES/profile-game.md"
+for profile in experiment site; do
+  if grep -qE 'game-feel|game-design|HUD' "$PROFILES/profile-$profile.md"; then fail "$profile profile has no game rules" "$(grep -nE 'game-feel|game-design|HUD' "$PROFILES/profile-$profile.md")"; else pass "$profile profile has no game rules"; fi
+done
+if awk 'NR > 1 && /^---$/ { body = 1; next } body' "$SKILL" | grep -qE 'game-feel|Reviewing a build'; then fail "SKILL.md leaves game rules to the profile"; else pass "SKILL.md leaves game rules to the profile"; fi
 DIRECTIONS="$SKILL_DIR/references/directions.md"
 assert_text "links the directions sources" 'references/directions.md'
 assert_text "directions: asks for the source" 'Ask the user which one' "$DIRECTIONS"

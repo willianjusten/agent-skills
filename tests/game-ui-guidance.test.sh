@@ -22,7 +22,7 @@ assert_text "brief cuts a feature that only adds to a full screen" 'what it disp
 LOOP="$REPO_ROOT/skills/orchestration/creative-loop"
 assert_text "loop review names one thing to remove or simplify" 'one thing to remove or simplify' "$LOOP/SKILL.md"
 assert_text "loop ideas include removals" 'removals and simplifications' "$LOOP/SKILL.md"
-assert_text "loop cycle line names what moved behind a button" 'moved behind a button' "$LOOP/SKILL.md"
+assert_text "loop cycle line names what moved behind a button" 'moved behind a button' "$LOOP/references/profile-game.md"
 assert_text "UI pass reads the screens sheet" 'check/ui/screens.png' "$LOOP/references/ui-pass.md"
 assert_text "UI pass removes one thing" 'Remove one thing' "$LOOP/references/ui-pass.md"
 assert_text "UI pass checks phones only when asked" 'only when the user asked for mobile' "$LOOP/references/ui-pass.md"

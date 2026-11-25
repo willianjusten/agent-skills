@@ -41,6 +41,9 @@ has_required_fields "adapter.md example" "$work/example.json"
 for field_name in $REQUIRED_FIELDS checkSlow install scaffold; do
   grep -qF "| \`$field_name\` |" "$ADAPTER_DOC" && pass "adapter.md documents $field_name" || fail "adapter.md documents $field_name"
 done
+for profile in $(jq -r '.profile' "$work/example.json") game experiment; do
+  [ -f "$SKILL_DIR/references/profile-$profile.md" ] && pass "profile $profile has a file" || fail "profile $profile has a file"
+done
 
 # The skill finds the adapter and stops without one
 grep -qF 'references/adapter.md' "$SKILL" && pass "SKILL.md links the adapter reference" || fail "SKILL.md links the adapter reference"
